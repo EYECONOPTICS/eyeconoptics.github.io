@@ -29,7 +29,14 @@ function doPost(e) {
 }
 
 /* ---------- helpers ---------- */
-function ss_() { return SpreadsheetApp.getActiveSpreadsheet(); }
+// Optional: if this script was created from script.google.com (not from the Sheet's Extensions menu),
+// paste the Sheet id here (the long part of the Sheet URL between /d/ and /edit).
+var SHEET_ID = '';
+function ss_() {
+  var s = SHEET_ID ? SpreadsheetApp.openById(SHEET_ID) : SpreadsheetApp.getActiveSpreadsheet();
+  if (!s) throw new Error('no_sheet');
+  return s;
+}
 function props_() { return PropertiesService.getScriptProperties(); }
 function sheet_(name, create) {
   var sh = ss_().getSheetByName(name);
