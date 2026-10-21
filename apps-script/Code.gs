@@ -112,13 +112,16 @@ function session_(token) {
   if (s.exp < now_()) { props_().deleteProperty('tok_' + token); throw new Error('auth'); }
   return s;
 }
-function writer_(token) { var s = session_(token); if (s.role === 'viewer') throw new Error('perm'); return s; }
-function admin_(token) { var s = session_(token); if (s.role !== 'admin') throw new Error('perm'); return s; }
+var LEGACY = { admin: 'owner', staff: 'user', viewer: 'user' };
+function role_(r) { r = String(r || ''); return LEGACY[r] || (['owner', 'manager', 'user'].indexOf(r) >= 0 ? r : 'user'); }
+function writer_(token) { return session_(token); }
+function admin_(token) { var s = session_(token); if (role_(s.role) !== 'owner' && role_(s.role) !== 'manager') throw new Error('perm'); s.role = role_(s.role); return s; }
+function owner_(token) { var s = session_(token); if (role_(s.role) !== 'owner') throw new Error('perm'); s.role = 'owner'; return s; }
 function users_() {
   var sh = sheet_('_users', true), n = sh.getLastRow();
   if (n < 2) return [];
   return sh.getRange(2, 1, n - 1, 7).getValues().map(function (r, i) {
-    return { row: i + 2, username: String(r[0]), name: String(r[1]), role: String(r[2]) || 'staff', active: r[3] === true || String(r[3]).toUpperCase() === 'TRUE', salt: String(r[4]), hash: String(r[5]) };
+    return { row: i + 2, username: String(r[0]), name: String(r[1]), role: role_(r[2]), active: r[3] === true || String(r[3]).toUpperCase() === 'TRUE', salt: String(r[4]), hash: String(r[5]) };
   });
 }
 function cleanTokens_() {
@@ -128,7 +131,7 @@ function cleanTokens_() {
 function issue_(u) {
   cleanTokens_();
   var tok = uid_() + uid_();
-  props_().setProperty('tok_' + tok, JSON.stringify({ u: u.username, role: u.role, name: u.name, exp: now_() + TOKEN_TTL }));
+  props_().setProperty('tok_' + tok, JSON.stringify({ u: u.username, role: role_(u.role), name: u.name, exp: now_() + TOKEN_TTL }));
   return { token: tok, user: { username: u.username, name: u.name, role: u.role } };
 }
 
@@ -141,8 +144,8 @@ function api_setup(username, password, name) {
     username = String(username || '').trim().toLowerCase();
     if (!/^[a-z0-9_.\-]{3,30}$/.test(username) || String(password || '').length < 6) throw new Error('weak');
     var salt = uid_();
-    sheet_('_users', true).appendRow([username, String(name || username), 'admin', true, salt, hash_(salt, password), new Date()]);
-    return JSON.stringify(issue_({ username: username, name: String(name || username), role: 'admin' }));
+    sheet_('_users', true).appendRow([username, String(name || username), 'owner', true, salt, hash_(salt, password), new Date()]);
+    return JSON.stringify(issue_({ username: username, name: String(name || username), role: 'owner' }));
   } finally { lock.releaseLock(); }
 }
 
@@ -156,7 +159,7 @@ function api_login(username, password) {
 
 function api_logout(token) { props_().deleteProperty('tok_' + token); return '1'; }
 
-function api_me(token) { var s = session_(token); return JSON.stringify({ username: s.u, name: s.name, role: s.role }); }
+function api_me(token) { var s = session_(token); return JSON.stringify({ username: s.u, name: s.name, role: role_(s.role) }); }
 
 function api_users(token) {
   admin_(token);
@@ -169,10 +172,13 @@ function api_saveUser(token, o) {
   try {
     var username = String(o.username || '').trim().toLowerCase();
     if (!/^[a-z0-9_.\-]{3,30}$/.test(username)) throw new Error('weak');
-    var role = ['admin', 'staff', 'viewer'].indexOf(o.role) >= 0 ? o.role : 'staff';
+    var role = role_(o.role);
     var list = users_(), u = list.filter(function (x) { return x.username === username; })[0];
     var sh = sheet_('_users', true);
-    if (u && username === me.u && (role !== 'admin' || o.active === false)) throw new Error('self');
+    if (me.role !== 'owner' && (role !== 'user' || (u && u.role !== 'user'))) throw new Error('perm');
+    if (u && username === me.u && (role !== me.role || o.active === false)) throw new Error('self');
+    if (u && u.role === 'owner' && (role !== 'owner' || o.active === false) &&
+        list.filter(function (x) { return x.role === 'owner' && x.active && x.username !== username; }).length === 0) throw new Error('last_owner');
     if (!u) {
       if (String(o.password || '').length < 6) throw new Error('weak');
       var salt = uid_();
@@ -285,7 +291,7 @@ function api_incr(token, path, min) {
 
 /** Import an app backup (JSON from «تحميل نسخة احتياطية»). Admin only; existing ids are overwritten. */
 function api_import(token, json) {
-  admin_(token);
+  owner_(token);
   var data = JSON.parse(json), n = 0;
   var lock = LockService.getScriptLock(); lock.waitLock(30000);
   try {
