@@ -6,7 +6,8 @@
  */
 var CHUNK = 45000;
 var TOKEN_TTL = 12 * 3600 * 1000;
-var RESERVED = { _users: 1, _deleted: 1 };
+var RESERVED = { _users: 1, _deleted: 1, _log: 1 };
+var VIEW_PREFIX = 'عرض - ';
 
 function doGet() {
   return HtmlService.createHtmlOutputFromFile('index')
@@ -43,7 +44,8 @@ function sheet_(name, create) {
   if (!sh && create) {
     sh = ss_().insertSheet(name);
     if (name === '_users') sh.appendRow(['username', 'name', 'role', 'active', 'salt', 'hash', 'created']);
-    else if (name === '_deleted') sh.appendRow(['collection', 'id', 'time']);
+    else if (name === '_deleted') sh.appendRow(['collection', 'id', 'time', 'by', 'deleted record (JSON)']);
+    else if (name === '_log') sh.appendRow(['الوقت', 'المستخدم', 'العملية', 'القسم', 'رقم السجل', 'ملخص', 'تفاصيل']);
     else sh.appendRow(['id', 'updatedAt', 'summary', 'data']);
     sh.setFrozenRows(1);
   }
@@ -103,6 +105,22 @@ function writeRow_(sh, rowNo, row) {
 function touch_(c, t) { props_().setProperty('m_' + c, String(t)); props_().setProperty('ver', String(t)); }
 function now_() { return Date.now(); }
 
+/* ---------- activity log (sheet _log) ---------- */
+var AR_COL = { patients: 'الزبائن', exams: 'الفحوصات', sales: 'المبيعات', items: 'المخزون', purchases: 'المشتريات', expenses: 'المصاريف', vouchers: 'سندات الصرف', partners: 'الشركاء', withdrawals: 'سحوبات الشركاء', fixedAssets: 'الأصول', exchanges: 'صرف العملة', campaigns: 'حملات واتساب', branches: 'الفروع', guides: 'النماذج التثقيفية', settings: 'الإعدادات', rates: 'أسعار الصرف', counters: 'العدادات' };
+function cut_(v, n) { v = String(v == null ? '' : v); return v.length > n ? v.slice(0, n) + '…' : v; }
+function safe_(v) { return typeof v === 'string' && /^[=+@]/.test(v) ? "'" + v : v; }
+function log_(user, action, c, id, sum, details) {
+  try {
+    sheet_('_log', true).appendRow([new Date(), String(user || ''), action, AR_COL[c] || c || '', id || '', safe_(cut_(sum, 300)), safe_(cut_(details, 2000))]);
+  } catch (e) {}
+}
+function changed_(a, b) {
+  var keys = {}, out = [];
+  for (var k in a) keys[k] = 1; for (var k2 in b) keys[k2] = 1;
+  for (var x in keys) { if (x === 'updatedAt' || x === 'createdAt') continue; if (JSON.stringify(a[x]) !== JSON.stringify(b[x])) out.push(x + ': ' + cut_(JSON.stringify(a[x] === undefined ? '' : a[x]), 60) + ' → ' + cut_(JSON.stringify(b[x] === undefined ? '' : b[x]), 60)); }
+  return out.join(' | ');
+}
+
 /* ---------- auth ---------- */
 function session_(token) {
   if (!token || typeof token !== 'string') throw new Error('auth');
@@ -145,6 +163,7 @@ function api_setup(username, password, name) {
     if (!/^[a-z0-9_.\-]{3,30}$/.test(username) || String(password || '').length < 6) throw new Error('weak');
     var salt = uid_();
     sheet_('_users', true).appendRow([username, String(name || username), 'owner', true, salt, hash_(salt, password), new Date()]);
+    log_(username, 'إنشاء حساب المالك', '', '', String(name || username), '');
     return JSON.stringify(issue_({ username: username, name: String(name || username), role: 'owner' }));
   } finally { lock.releaseLock(); }
 }
@@ -153,11 +172,12 @@ function api_login(username, password) {
   username = String(username || '').trim().toLowerCase();
   var u = users_().filter(function (x) { return x.username === username; })[0];
   Utilities.sleep(300);
-  if (!u || !u.active || hash_(u.salt, String(password || '')) !== u.hash) throw new Error('login');
+  if (!u || !u.active || hash_(u.salt, String(password || '')) !== u.hash) { log_(username, 'محاولة دخول فاشلة', '', '', '', ''); throw new Error('login'); }
+  log_(u.username, 'تسجيل دخول', '', '', u.name, '');
   return JSON.stringify(issue_(u));
 }
 
-function api_logout(token) { props_().deleteProperty('tok_' + token); return '1'; }
+function api_logout(token) { try { log_(session_(token).u, 'تسجيل خروج', '', '', '', ''); } catch (e) {} props_().deleteProperty('tok_' + token); return '1'; }
 
 function api_me(token) { var s = session_(token); return JSON.stringify({ username: s.u, name: s.name, role: role_(s.role) }); }
 
@@ -194,6 +214,7 @@ function api_saveUser(token, o) {
         for (var k in all) if (k.indexOf('tok_') === 0) { try { if (JSON.parse(all[k]).u === username) props_().deleteProperty(k); } catch (e) {} }
       }
     }
+    log_(me.u, u ? 'تعديل مستخدم' : 'إضافة مستخدم', '', username, String(o.name || ''), 'الصلاحية: ' + role + ' | فعّال: ' + (o.active !== false) + (o.password ? ' | كلمة مرور جديدة' : ''));
     return '1';
   } finally { lock.releaseLock(); }
 }
@@ -205,6 +226,7 @@ function api_changePassword(token, oldPass, newPass) {
   if (String(newPass || '').length < 6) throw new Error('weak');
   var salt = uid_();
   sheet_('_users', true).getRange(u.row, 5, 1, 2).setValues([[salt, hash_(salt, newPass)]]);
+  log_(s.u, 'تغيير كلمة المرور', '', '', '', '');
   return '1';
 }
 
@@ -249,16 +271,18 @@ function api_poll(token, since) {
 }
 
 function api_set(token, c, id, json, merge) {
-  writer_(token); validCol_(c); validId_(id);
+  var me = writer_(token); validCol_(c); validId_(id);
   var d = JSON.parse(json);
   var lock = LockService.getScriptLock(); lock.waitLock(20000);
   try {
-    var sh = sheet_(c, true), rowNo = findRow_(sh, id), t = now_();
-    if (merge && rowNo) {
-      var old = readRow_(sh.getRange(rowNo, 1, 1, sh.getLastColumn()).getValues()[0]);
+    var sh = sheet_(c, true), rowNo = findRow_(sh, id), t = now_(), prev = null;
+    if (rowNo) prev = readRow_(sh.getRange(rowNo, 1, 1, sh.getLastColumn()).getValues()[0]);
+    if (merge && prev) {
+      var old = JSON.parse(JSON.stringify(prev));
       for (var k in d) old[k] = d[k];
       d = old;
     }
+    log_(me.u, prev ? 'تعديل' : 'إضافة', c, id, summary_(c, d), prev ? changed_(prev, d) : '');
     if (rowNo) sh.getRange(rowNo, 4, 1, Math.max(1, sh.getLastColumn() - 3)).clearContent();
     writeRow_(sh, rowNo || sh.getLastRow() + 1, rowFor_(c, id, d, t));
     touch_(c, t);
@@ -267,12 +291,14 @@ function api_set(token, c, id, json, merge) {
 }
 
 function api_del(token, c, id) {
-  writer_(token); validCol_(c); validId_(id);
+  var me = writer_(token); validCol_(c); validId_(id);
   var lock = LockService.getScriptLock(); lock.waitLock(20000);
   try {
-    var sh = sheet_(c, false), rowNo = sh ? findRow_(sh, id) : 0, t = now_();
-    if (rowNo) sh.deleteRow(rowNo);
-    sheet_('_deleted', true).appendRow([c, id, t]);
+    var sh = sheet_(c, false), rowNo = sh ? findRow_(sh, id) : 0, t = now_(), prev = {};
+    if (rowNo) { prev = readRow_(sh.getRange(rowNo, 1, 1, sh.getLastColumn()).getValues()[0]); sh.deleteRow(rowNo); }
+    var pj = JSON.stringify(prev);
+    sheet_('_deleted', true).appendRow([c, id, t, me.u, '~' + (pj.length > 49000 ? pj.slice(0, 49000) : pj)]);
+    log_(me.u, 'حذف', c, id, summary_(c, prev), 'السجل المحذوف محفوظ في ورقة _deleted');
     touch_('_deleted', t);
     return JSON.stringify({ t: t });
   } finally { lock.releaseLock(); }
@@ -285,6 +311,8 @@ function api_incr(token, path, min) {
     var key = 'ctr_' + String(path).replace(/[^A-Za-z0-9_\/]/g, '');
     var n = Math.max(Number(props_().getProperty(key) || 0) + 1, Number(min) || 0);
     props_().setProperty(key, String(n));
+    var cid = String(path).split('/').pop().replace(/[^A-Za-z0-9_]/g, '') || 'n', csh = sheet_('counters', true), cr = findRow_(csh, cid), ct = now_();
+    writeRow_(csh, cr || csh.getLastRow() + 1, rowFor_('counters', cid, { n: n }, ct)); touch_('counters', ct);
     return String(n);
   } finally { lock.releaseLock(); }
 }
@@ -312,6 +340,75 @@ function api_import(token, json) {
       touched[c] = 1;
     }
     for (var k2 in touched) touch_(k2, t);
+    log_(session_(token).u, 'استيراد نسخة احتياطية', '', '', n + ' سجل', Object.keys(touched).join(', '));
     return String(n);
   } finally { lock.releaseLock(); }
 }
+
+
+/* ---------- hourly readable archive inside this Sheet ---------- */
+/** Run once from the Apps Script editor (choose setupHourly → Run) to refresh the readable sheets every hour. */
+function setupHourly() {
+  ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === 'hourlySnapshot') ScriptApp.deleteTrigger(t); });
+  ScriptApp.newTrigger('hourlySnapshot').timeBased().everyHours(1).create();
+  return snapshot_(true);
+}
+function hourlySnapshot() { snapshot_(false); }
+
+function flat_(o, pre, out) {
+  out = out || {};
+  for (var k in o) {
+    if (k === 'updatedAt' || k === 'createdAt') continue;
+    var v = o[k], key = pre ? pre + '.' + k : k;
+    if (v === null || v === undefined) out[key] = '';
+    else if (Array.isArray(v)) out[key] = v.length && typeof v[0] !== 'object' ? v.join(', ') : (v.length ? cut_(JSON.stringify(v), 45000) : '');
+    else if (typeof v === 'object') flat_(v, key, out);
+    else if (typeof v === 'string' && v.indexOf('data:') === 0) out[key] = '[صورة]';
+    else out[key] = typeof v === 'string' ? safe_(cut_(v, 45000)) : v;
+  }
+  return out;
+}
+function writeView_(name, rows) {
+  var sh = ss_().getSheetByName(name) || ss_().insertSheet(name);
+  sh.clear();
+  if (!rows.length) { sh.getRange(1, 1).setValue('—'); return; }
+  var cols = [], seen = {};
+  rows.forEach(function (r) { for (var k in r) if (!seen[k] && cols.length < 120) { seen[k] = 1; cols.push(k); } });
+  var data = [cols].concat(rows.map(function (r) { return cols.map(function (c) { return r[c] === undefined ? '' : r[c]; }); }));
+  sh.getRange(1, 1, data.length, cols.length).setValues(data);
+  sh.setFrozenRows(1);
+  sh.getRange(1, 1, 1, cols.length).setFontWeight('bold').setBackground('#E1F1FB');
+}
+function snapshot_(force) {
+  var ver = props_().getProperty('ver') || '0';
+  if (!force && props_().getProperty('snap_ver') === ver) return 'unchanged';
+  var lock = LockService.getScriptLock(); lock.waitLock(30000);
+  try {
+    var all = {};
+    ss_().getSheets().forEach(function (sh) { var n = sh.getName(); if (RESERVED[n] || !/^[A-Za-z][A-Za-z0-9_]{0,40}$/.test(n)) return; all[n] = readCol_(n, 0); });
+    var pname = {}; (all.patients || []).forEach(function (x) { pname[x[0]] = (x[1].code ? x[1].code + ' · ' : '') + (x[1].name || ''); });
+    var stamp = function (x) { var o = { id: x[0] }; var f = flat_(x[1]); for (var k in f) o[k] = f[k]; o['آخر تعديل'] = x[2] ? new Date(x[2]) : ''; return o; };
+    for (var c in all) {
+      var rows = all[c].map(stamp);
+      if (c === 'exams' || c === 'sales') rows.forEach(function (r, i) { r['الزبون'] = pname[all[c][i][1].patientId] || all[c][i][1].customer || ''; });
+      writeView_(VIEW_PREFIX + (AR_COL[c] || c), rows);
+    }
+    var lines = [], pays = [];
+    (all.sales || []).forEach(function (x) {
+      var s = x[1], cust = pname[s.patientId] || s.customer || '';
+      (s.lines || []).forEach(function (l) { lines.push({ 'رقم الفاتورة': s.no || '', 'التاريخ': s.date || '', 'الزبون': cust, 'المادة': l.name || '', 'الدرجة': l.pow || '', 'الكمية': l.qty, 'السعر': l.price, 'المجموع': (Number(l.qty) || 0) * (Number(l.price) || 0), 'العملة': s.currency || '' }); });
+      (s.payments || []).forEach(function (p) { pays.push({ 'رقم الفاتورة': s.no || '', 'الزبون': cust, 'التاريخ': p.date || '', 'المبلغ': p.amount, 'العملة': p.cur || s.currency || '', 'الصندوق': p.method || '' }); });
+    });
+    writeView_(VIEW_PREFIX + 'مواد الفواتير', lines);
+    writeView_(VIEW_PREFIX + 'الدفعات', pays);
+    props_().setProperty('snap_ver', ver);
+    props_().setProperty('snap_last', String(now_()));
+    return 'ok';
+  } finally { lock.releaseLock(); }
+}
+function api_archiveStatus(token) {
+  admin_(token);
+  var on = false; try { on = ScriptApp.getProjectTriggers().some(function (t) { return t.getHandlerFunction() === 'hourlySnapshot'; }); } catch (e) {}
+  return JSON.stringify({ on: on, last: Number(props_().getProperty('snap_last') || 0), url: ss_().getUrl() });
+}
+function api_archiveNow(token) { var s = admin_(token); var r = snapshot_(true); log_(s.u, 'تحديث الأرشيف المقروء', '', '', '', ''); return r; }
