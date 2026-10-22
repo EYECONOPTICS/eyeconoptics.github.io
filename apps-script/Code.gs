@@ -10,6 +10,9 @@ var RESERVED = { _users: 1, _deleted: 1, _log: 1 };
 var VIEW_PREFIX = 'عرض - ';
 
 function doGet() {
+  try { HtmlService.createHtmlOutputFromFile('index'); } catch (e) {
+    return ContentService.createTextOutput('EYECON server OK — ' + (ss_() ? ss_().getName() : '') + ' — ' + new Date().toISOString());
+  }
   return HtmlService.createHtmlOutputFromFile('index')
     .setTitle('EYECON OPTICS')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1')
