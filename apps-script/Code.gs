@@ -46,7 +46,7 @@ function sheet_(name, create) {
   var sh = ss_().getSheetByName(name);
   if (!sh && create) {
     sh = ss_().insertSheet(name);
-    if (name === '_users') sh.appendRow(['username', 'name', 'role', 'active', 'salt', 'hash', 'created']);
+    if (name === '_users') sh.appendRow(['username', 'name', 'role', 'active', 'salt', 'hash', 'created', 'branches']);
     else if (name === '_deleted') sh.appendRow(['collection', 'id', 'time', 'by', 'deleted record (JSON)']);
     else if (name === '_log') sh.appendRow(['الوقت', 'المستخدم', 'العملية', 'القسم', 'رقم السجل', 'ملخص', 'تفاصيل']);
     else sh.appendRow(['id', 'updatedAt', 'summary', 'data']);
@@ -141,9 +141,38 @@ function owner_(token) { var s = session_(token); if (role_(s.role) !== 'owner')
 function users_() {
   var sh = sheet_('_users', true), n = sh.getLastRow();
   if (n < 2) return [];
-  return sh.getRange(2, 1, n - 1, 7).getValues().map(function (r, i) {
-    return { row: i + 2, username: String(r[0]), name: String(r[1]), role: role_(r[2]), active: r[3] === true || String(r[3]).toUpperCase() === 'TRUE', salt: String(r[4]), hash: String(r[5]) };
+  return sh.getRange(2, 1, n - 1, 8).getValues().map(function (r, i) {
+    return { row: i + 2, username: String(r[0]), name: String(r[1]), role: role_(r[2]), active: r[3] === true || String(r[3]).toUpperCase() === 'TRUE', salt: String(r[4]), hash: String(r[5]), branches: brList_(r[7]) };
   });
+}
+/* ---------- branches: every branch is isolated; a user with a branches list only receives and changes that branch's records ---------- */
+var SCOPED = { items: 1, patients: 1, exams: 1, sales: 1, purchases: 1, expenses: 1, fixedAssets: 1, vouchers: 1, exchanges: 1, campaigns: 1 };
+function brList_(v) {
+  if (Array.isArray(v)) v = v.join(',');
+  var a = String(v == null ? '' : v).split(',').map(function (x) { return x.trim(); }).filter(function (x) { return /^[A-Za-z0-9_\-]{1,60}$/.test(x); });
+  return a.length ? a : null;
+}
+function vis_(s) {
+  if (!s.br || role_(s.role) === 'owner') return null;
+  var m = {}; s.br.forEach(function (b) { m[b] = 1; }); return m;
+}
+function setOwner_(id) {
+  var m = /^(?:b|logo|brands)_(.+)$/.exec(id); if (m) return m[1];
+  return (id === 'main' || id === 'logo' || id === 'brands') ? 'main' : null;
+}
+function docOk_(al, c, id, d, pv) {
+  if (!al) return true; d = d || {};
+  if (SCOPED[c]) return !!al[d.branchId || 'main'];
+  if (c === 'branches') return !!al[id];
+  if (c === 'settings') { var o = setOwner_(id); return !o || !!al[o]; }
+  if (c === 'partners') return !!al[d.scope && d.scope !== 'group' ? d.scope : 'main'];
+  if (c === 'withdrawals') return !!(pv && pv[d.partnerId]);
+  return true;
+}
+function partnersVis_(al) {
+  if (!al) return null; var m = {};
+  readCol_('partners', 0).forEach(function (x) { if (docOk_(al, 'partners', x[0], x[1])) m[x[0]] = 1; });
+  return m;
 }
 function cleanTokens_() {
   var all = props_().getProperties(), t = now_();
@@ -152,8 +181,9 @@ function cleanTokens_() {
 function issue_(u) {
   cleanTokens_();
   var tok = uid_() + uid_();
-  props_().setProperty('tok_' + tok, JSON.stringify({ u: u.username, role: role_(u.role), name: u.name, exp: now_() + TOKEN_TTL }));
-  return { token: tok, user: { username: u.username, name: u.name, role: u.role } };
+  var br = role_(u.role) === 'owner' ? null : (u.branches || null);
+  props_().setProperty('tok_' + tok, JSON.stringify({ u: u.username, role: role_(u.role), name: u.name, br: br, exp: now_() + TOKEN_TTL }));
+  return { token: tok, user: { username: u.username, name: u.name, role: u.role, branches: br } };
 }
 
 function api_status() { return JSON.stringify({ hasUsers: users_().length > 0 }); }
@@ -182,11 +212,11 @@ function api_login(username, password) {
 
 function api_logout(token) { try { log_(session_(token).u, 'تسجيل خروج', '', '', '', ''); } catch (e) {} props_().deleteProperty('tok_' + token); return '1'; }
 
-function api_me(token) { var s = session_(token); return JSON.stringify({ username: s.u, name: s.name, role: role_(s.role) }); }
+function api_me(token) { var s = session_(token); return JSON.stringify({ username: s.u, name: s.name, role: role_(s.role), branches: vis_(s) ? s.br : null }); }
 
 function api_users(token) {
   admin_(token);
-  return JSON.stringify(users_().map(function (u) { return { username: u.username, name: u.name, role: u.role, active: u.active }; }));
+  return JSON.stringify(users_().map(function (u) { return { username: u.username, name: u.name, role: u.role, active: u.active, branches: u.role === 'owner' ? null : u.branches }; }));
 }
 
 function api_saveUser(token, o) {
@@ -198,6 +228,10 @@ function api_saveUser(token, o) {
     var role = role_(o.role);
     var list = users_(), u = list.filter(function (x) { return x.username === username; })[0];
     var sh = sheet_('_users', true);
+    if (sh.getRange(1, 8).getValue() === '') sh.getRange(1, 8).setValue('branches');
+    var br = role === 'owner' ? null : brList_(o.branches), mine = vis_(me);
+    if (mine) { if (!br) throw new Error('perm'); br.forEach(function (b) { if (!mine[b]) throw new Error('perm'); }); if (u && u.branches && u.branches.some(function (b) { return !mine[b]; })) throw new Error('perm'); }
+    var brTxt = br ? br.join(',') : '';
     if (me.role !== 'owner' && (role !== 'user' || (u && u.role !== 'user'))) throw new Error('perm');
     if (u && username === me.u && (role !== me.role || o.active === false)) throw new Error('self');
     if (u && u.role === 'owner' && (role !== 'owner' || o.active === false) &&
@@ -205,19 +239,21 @@ function api_saveUser(token, o) {
     if (!u) {
       if (String(o.password || '').length < 6) throw new Error('weak');
       var salt = uid_();
-      sh.appendRow([username, String(o.name || username), role, o.active !== false, salt, hash_(salt, o.password), new Date()]);
+      sh.appendRow([username, String(o.name || username), role, o.active !== false, salt, hash_(salt, o.password), new Date(), brTxt]);
     } else {
       sh.getRange(u.row, 2, 1, 3).setValues([[String(o.name || u.name), role, o.active !== false]]);
+      var brChanged = (u.branches ? u.branches.join(',') : '') !== brTxt;
+      sh.getRange(u.row, 8).setValue(brTxt);
       if (o.password) {
         if (String(o.password).length < 6) throw new Error('weak');
         var s2 = uid_(); sh.getRange(u.row, 5, 1, 2).setValues([[s2, hash_(s2, o.password)]]);
       }
-      if (o.password || o.active === false || role !== u.role) {
+      if (o.password || o.active === false || role !== u.role || brChanged) {
         var all = props_().getProperties();
         for (var k in all) if (k.indexOf('tok_') === 0) { try { if (JSON.parse(all[k]).u === username) props_().deleteProperty(k); } catch (e) {} }
       }
     }
-    log_(me.u, u ? 'تعديل مستخدم' : 'إضافة مستخدم', '', username, String(o.name || ''), 'الصلاحية: ' + role + ' | فعّال: ' + (o.active !== false) + (o.password ? ' | كلمة مرور جديدة' : ''));
+    log_(me.u, u ? 'تعديل مستخدم' : 'إضافة مستخدم', '', username, String(o.name || ''), 'الصلاحية: ' + role + ' | الفروع: ' + (brTxt || 'الكل') + ' | فعّال: ' + (o.active !== false) + (o.password ? ' | كلمة مرور جديدة' : ''));
     return '1';
   } finally { lock.releaseLock(); }
 }
@@ -248,17 +284,17 @@ function readCol_(c, since) {
 }
 
 function api_load(token) {
-  session_(token);
+  var s = session_(token), al = vis_(s), pv = partnersVis_(al);
   var res = { t: now_(), cols: {} };
   ss_().getSheets().forEach(function (sh) {
     var n = sh.getName(); if (RESERVED[n] || !/^[A-Za-z][A-Za-z0-9_]{0,40}$/.test(n)) return;
-    res.cols[n] = readCol_(n, 0).map(function (x) { return [x[0], x[1]]; });
+    res.cols[n] = readCol_(n, 0).filter(function (x) { return docOk_(al, n, x[0], x[1], pv); }).map(function (x) { return [x[0], x[1]]; });
   });
   return JSON.stringify(res);
 }
 
 function api_poll(token, since) {
-  session_(token);
+  var s = session_(token), al = vis_(s), pv = null;
   since = Number(since) || 0;
   var t = now_(), all = props_().getProperties(), res = { t: t, cols: {}, del: [] };
   if (Number(all.ver || 0) <= since) return JSON.stringify(res);
@@ -268,7 +304,10 @@ function api_poll(token, since) {
     if (c === '_deleted') {
       var dsh = sheet_('_deleted', false);
       if (dsh && dsh.getLastRow() > 1) dsh.getRange(2, 1, dsh.getLastRow() - 1, 3).getValues().forEach(function (r) { if (Number(r[2]) > since) res.del.push([String(r[0]), String(r[1])]); });
-    } else res.cols[c] = readCol_(c, since).map(function (x) { return [x[0], x[1]]; });
+    } else {
+      if (al && c === 'withdrawals' && !pv) pv = partnersVis_(al);
+      res.cols[c] = readCol_(c, since).filter(function (x) { return docOk_(al, c, x[0], x[1], pv); }).map(function (x) { return [x[0], x[1]]; });
+    }
   }
   return JSON.stringify(res);
 }
@@ -285,6 +324,8 @@ function api_set(token, c, id, json, merge) {
       for (var k in d) old[k] = d[k];
       d = old;
     }
+    var al = vis_(me);
+    if (al) { var pv = c === 'withdrawals' ? partnersVis_(al) : null; if (!docOk_(al, c, id, d, pv) || (prev && !docOk_(al, c, id, prev, pv))) throw new Error('perm'); }
     log_(me.u, prev ? 'تعديل' : 'إضافة', c, id, summary_(c, d), prev ? changed_(prev, d) : '');
     if (rowNo) sh.getRange(rowNo, 4, 1, Math.max(1, sh.getLastColumn() - 3)).clearContent();
     writeRow_(sh, rowNo || sh.getLastRow() + 1, rowFor_(c, id, d, t));
@@ -298,7 +339,11 @@ function api_del(token, c, id) {
   var lock = LockService.getScriptLock(); lock.waitLock(20000);
   try {
     var sh = sheet_(c, false), rowNo = sh ? findRow_(sh, id) : 0, t = now_(), prev = {};
-    if (rowNo) { prev = readRow_(sh.getRange(rowNo, 1, 1, sh.getLastColumn()).getValues()[0]); sh.deleteRow(rowNo); }
+    if (rowNo) {
+      prev = readRow_(sh.getRange(rowNo, 1, 1, sh.getLastColumn()).getValues()[0]);
+      var al = vis_(me); if (al && !docOk_(al, c, id, prev, c === 'withdrawals' ? partnersVis_(al) : null)) throw new Error('perm');
+      sh.deleteRow(rowNo);
+    }
     var pj = JSON.stringify(prev);
     sheet_('_deleted', true).appendRow([c, id, t, me.u, '~' + (pj.length > 49000 ? pj.slice(0, 49000) : pj)]);
     log_(me.u, 'حذف', c, id, summary_(c, prev), 'السجل المحذوف محفوظ في ورقة _deleted');
