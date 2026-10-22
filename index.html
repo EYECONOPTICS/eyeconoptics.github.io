@@ -1037,6 +1037,10 @@ A(document.querySelectorAll('.doc')).forEach(function(d0){if(d0.querySelector('.
  [1,.95,.9,.86].some(function(sc){var c=d0.cloneNode(true);if(sc<1){c.style.fontSize=(sc*100)+'%';c.classList.add('tight')}d0.parentNode.insertBefore(c,d0);var ps=pag(c);
   if(!best||ps.length<best.length){if(best)best.forEach(function(x){x.remove()});best=ps}else ps.forEach(function(x){x.remove()});return best.length===1});
  d0.remove()});
+/* an educational flyer joins the page before it when it fits there (images at least 45 mm tall) */
+A(document.querySelectorAll('.doc')).forEach(function(d){var fc=d.querySelector(':scope>.flyc'),pv=d.previousElementSibling;if(!fc||!pv||!pv.classList.contains('doc')||pv.querySelector('.flyc'))return;
+ var gr=pv.querySelector(':scope>.grow')||pv.querySelector(':scope>.ft'),im=A(fc.querySelectorAll('.gimgs img'));im.forEach(function(x){x.style.maxHeight=(48*mm)+'px'});pv.insertBefore(fc,gr);
+ if(over(pv)){d.insertBefore(fc,d.querySelector(':scope>.grow'));im.forEach(function(x){x.style.maxHeight=''})}else{im.forEach(function(x){x.style.maxHeight=''});d.remove()}});
 [].slice.call(document.querySelectorAll('.doc')).forEach(function(d){var g=d.querySelector('.flyc .gimgs');if(!g)return;var n=g.querySelectorAll('img').length,gp=8;g.style.display='none';var per=(PH-nat(d)-14-(n-1)*gp)/n;
  if(per<45*mm){var c=d.cloneNode(true),fc=c.querySelector('.flyc');fc.querySelector('.gbody').remove();var cg=fc.querySelector('.gimgs');g.remove();d.parentNode.insertBefore(c,d.nextSibling);d=c;g=cg;per=Math.max(30*mm,(PH-nat(d)-14-(n-1)*gp)/n)}
  [].slice.call(g.querySelectorAll('img')).forEach(function(x){x.style.maxHeight=Math.floor(per)+'px'});g.style.display=''})}catch(e){}finally{B.setAttribute('data-fit','1')}}
@@ -1106,12 +1110,16 @@ function saleDoc(s,opt={}){const p=s.patientId?byId('patients',s.patientId):null
   <div class="tot">${num(s.discount)?`<div><span>${t('subtotal')}</span><span class="n">${fmt(s.subtotal??s.total,cur)}</span></div><div><span>${t('discount')}${discLbl(s)}</span><span class="n">− ${fmt(s.discount,cur)}</span></div>`:''}<div class="big"><span>${t('total')}</span><span class="n">${fmt(s.total,cur)}</span></div><div><span>${t('paid')}</span><span class="n">${fmt(s.paid,cur)}</span></div><div class="due"><span>${t('remainCust')}</span><span class="n">${fmt(rem,cur)}</span></div></div>`;
   if(pays.length)body+=`<div class="chips">${pays.map(x=>`<span class="chip"><span class="n">${esc(x.date)}</span> · ${boxName(x.method)} · <b>${fmt(x.amount,payCur(x,s))}</b></span>`).join('')}</div>`;
   if(ord)body+=`<div class="box pri"><span class="l">${t('deliveryM')}</span>${s.delivery==='courier'?t('dl_courier')+(s.courier?' · '+esc(s.courier):'')+(s.dAddress?' · '+esc(s.dAddress):''):t('dl_pickup')}${rem>0.009?`<br><span class="l" style="display:inline">${t('remainVia')}: </span>${t('rv_'+(s.remainVia||'shop'))}`:''}</div>`;
+  const invEnd=body.length;
   if(opt.exam&&ex){const iop=ex.iop&&(ex.iop.od||ex.iop.os);body+=`<div class="st">${t('examSec')} · ${esc(ex.date||'')} <small>EYE EXAM</small></div>`+(ex.complaint?`<div class="box"><span class="l">${t('complaintL')}</span>${esc(ex.complaint)}</div>`:'')+vaRows(ex).replace(/<div class="st">[\s\S]*?<\/div>/,'')+oldSection(ex).replace('class="st"','class="st sub"')+((iop||ex.diagnosis)?`<div class="two">${iop?`<div class="box"><span class="l">IOP</span><span class="rx">R ${esc(ex.iop.od||'—')} · L ${esc(ex.iop.os||'—')} mmHg</span></div>`:''}${ex.diagnosis?`<div class="box pri"><span class="l">${t('diagnosis')}</span><b>${esc(ex.diagnosis)}</b></div>`:''}</div>`:'')}
   const src=s.rxSrc==='manual'?` · ${t('src_'+(s.rxFrom||'external'))}`:ex&&ex.date?` · ${esc(ex.date)}`:'';
   if(hasEye(rx,['sph','cyl','add']))body+=`<div class="st">${t('glassesRx')}${rx.type?' · '+esc(tx(rx.type)):''}${src} <small>Rx</small></div>`+rxSection(rx,!!opt.rx,!opt.rx)+(opt.rx&&rx.lensRec?`<div class="box pri"><span class="l">${t('lensRec')}</span><b>${esc(rx.lensRec)}</b></div>`:'');
   if(hasEye(cl,['pwr','bc'])&&((s.lines||[]).some(l=>l.type==='contact')||!hasEye(rx,['sph','cyl','add'])))body+=`<div class="st">${t('clShort')}${cl.brand?' · '+esc(cl.brand):''} <small>CONTACT LENS Rx</small></div>`+eyeTable(cl,[['pwr','PWR'],['cyl','CYL'],['axis','AXIS'],['bc','BC'],['dia','DIA']],rxVal);
   if(opt.exam||opt.rx)body+=signBlock(ex);
   const nb=notesBlock(s.guides);if(nb)body=body.replace(/(<div class="sign">[\s\S]*$)|$/,m=>nb+m);
+  /* page 1: the invoice; page 2: exam, glasses Rx, lens notes and signature; educational flyers join page 2 when they fit */
+  const rest=body.slice(invEnd);if(rest.trim()&&S.settings.paper!=='80mm'){const p2=printHead(b,'inv',s.no,s.date)+(p?patientGrid(p,ex):`<div class="grid">${fld(t('customer'),esc(s.customer||t('walkIn')))}</div>`)+rest;
+    return printShell(docT('inv')+' '+(s.no||''),body.slice(0,invEnd),b,true,[p2,...flyerPages(s.guides,b)])}
   return printShell(docT('inv')+' '+(s.no||''),body,b,true,flyerPages(s.guides,b))}
 function saleText(s){const p=s.patientId?byId('patients',s.patientId):null,cur=s.currency;
   return `${S.settings.shopName||'EYECON OPTICS'}\n${t('invoice')} #${s.no||''} · ${s.date||''}\n${p?p.name:(s.customer||'')}\n\n${(s.lines||[]).map(l=>`${l.name} ×${l.qty} = ${fmt(num(l.price)*num(l.qty),cur)}`).join('\n')}\n\n${num(s.discount)?t('discount')+': '+fmt(s.discount,cur)+'\n':''}${t('total')}: ${fmt(s.total,cur)}\n${t('paid')}: ${fmt(s.paid,cur)}\n${t('remainCust')}: ${fmt(Math.max(0,num(s.total)-num(s.paid)),cur)}`}
