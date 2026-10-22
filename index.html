@@ -535,20 +535,20 @@ const fs=(label,name,val,opts,extra='')=>{if(val!=null&&val!==''&&!opts.some(o=>
 const keyOpts=keys=>[['','—'],...keys.map(k=>[k,t(k)])];
 const ft=(label,name,val,extra='')=>`<label class="f"><span>${label}</span><textarea id="${fid(name)}" name="${name}" ${extra}>${esc(val??'')}</textarea></label>`;
 function formObj(form){const o={};new FormData(form).forEach((v,k)=>setP(o,k,typeof v==='string'?v.trim():v));form.querySelectorAll('input[type=checkbox]').forEach(c=>{if(c.name)setP(o,c.name,c.checked)});return o}
-function openModal(title,bodyHTML,{onSubmit,submitLabel=t('save'),extraFooter='',wide=false,onMount}={}){
-  $('#modalRoot').innerHTML=`<div class="ov" id="ov"><form class="md" id="mdForm" novalidate ${wide?'style="width:min(980px,100%)"':''}>
-    <header><h3>${title}</h3><button type="button" class="btn ghost" data-close aria-label="${t('close')}">✕</button></header>
+function openModal(title,bodyHTML,{onSubmit,submitLabel=t('save'),extraFooter='',wide=false,onMount,locked=false}={}){
+  $('#modalRoot').innerHTML=`<div class="ov" id="ov" ${locked?'data-locked="1"':''}><form class="md" id="mdForm" novalidate ${wide?'style="width:min(980px,100%)"':''}>
+    <header><h3>${title}</h3>${locked?'':`<button type="button" class="btn ghost" data-close aria-label="${t('close')}">✕</button>`}</header>
     <div class="body">${bodyHTML}</div>
-    <footer>${onSubmit?`<button class="btn primary" type="submit" ${canWrite?'':'disabled'}>${submitLabel}</button>`:''}<button class="btn" type="button" data-close>${t('close')}</button>${extraFooter}</footer></form></div>`;
+    <footer>${onSubmit?`<button class="btn primary" type="submit" ${canWrite?'':'disabled'}>${submitLabel}</button>`:''}${locked?'':`<button class="btn" type="button" data-close>${t('close')}</button>`}${extraFooter}</footer></form></div>`;
   const form=$('#mdForm');
   form.querySelectorAll('[data-close]').forEach(b=>b.onclick=closeModal);
-  $('#ov').addEventListener('mousedown',e=>{if(e.target.id==='ov')closeModal()});
+  $('#ov').addEventListener('mousedown',e=>{if(e.target.id==='ov'&&!e.target.dataset.locked)closeModal()});
   form.onsubmit=async e=>{e.preventDefault();if(!onSubmit)return;const b=form.querySelector('[type=submit]');b.disabled=true;const ok=await onSubmit(form);b.disabled=false;if(ok!==false)closeModal()};
   if(onMount)onMount(form);
   const first=form.querySelector('input:not([readonly]),select,textarea');if(first)first.focus({preventScroll:true});
   return form}
 function closeModal(){$('#modalRoot').innerHTML='';schedule()}
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#ov'))closeModal()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#ov')&&!$('#ov').dataset.locked)closeModal()});
 function armDelete(btn,fn){if(btn.dataset.armed){fn();return}btn.dataset.armed='1';const o=btn.textContent;btn.textContent=t('confirmDel');setTimeout(()=>{if(btn.isConnected){btn.textContent=o;delete btn.dataset.armed}},3500)}
 const delBtn=(id,label)=>isUserRole()?'':`<button type="button" class="btn danger" id="${id}" style="margin-inline-start:auto">${label}</button>`;
 
@@ -1622,9 +1622,10 @@ document.addEventListener('click',e=>{
   }});
 document.addEventListener('input',e=>{const m=['patQ','invQ','salesQ'].includes(e.target.id);if(m&&!e.target.closest('#modalRoot')){UI[e.target.id]=e.target.value;keepFocus(e.target.id)}});
 async function saveSettings(patch){if(!db)return toast(t('noDb'));try{await db.doc('settings/main').set({...S.settings,...patch,updatedAt:Date.now()});Object.assign(S.settings,patch);render()}catch(err){toast(errMsg(err))}}
-function rateForm(){if(!canWrite||!db)return;openModal(t('todayRate'),`<p class="note" style="font-size:.9rem">${t('rateAsk')}</p><div class="fr">${fi(t('rate'),'rate',rate(),'number','step="any" min="1"')}</div>`,
-  {submitLabel:t('setRate'),onSubmit:async f=>{const r=num(formObj(f).rate);if(!r){toast(t('needAmt'));return false}try{await db.doc('settings/main').set({...S.settings,rate:r,rateDate:today(),updatedAt:Date.now()});await db.doc('rates/'+today()).set({rate:r,date:today(),updatedAt:Date.now()});Object.assign(S.settings,{rate:r,rateDate:today()});toast(t('rateSaved'))}catch(err){toast(errMsg(err));return false}}})}
-function maybeAskRate(){if(rateAsked||!canWrite||isUserRole()||!db||S.settings.rateDate===today())return;if($('#ov'))return setTimeout(maybeAskRate,4000);rateAsked=true;rateForm()}
+function rateForm(force){if(!canWrite||!db)return;openModal(t('todayRate'),`<p class="note" style="font-size:.9rem">${t('rateAsk')}</p><div class="fr">${fi(t('rate'),'rate',rate(),'number','step="any" min="1"')}</div>`,
+  {submitLabel:t('setRate'),locked:!!force,onSubmit:async f=>{const r=num(formObj(f).rate);if(!r){toast(t('needAmt'));return false}try{await db.doc('settings/main').set({...S.settings,rate:r,rateDate:today(),updatedAt:Date.now()});await db.doc('rates/'+today()).set({rate:r,date:today(),updatedAt:Date.now()});Object.assign(S.settings,{rate:r,rateDate:today()});toast(t('rateSaved'))}catch(err){toast(errMsg(err));return false}}})}
+function maybeAskRate(){if(!db)return;const ov=$('#ov');if(S.settings.rateDate===today()){if(ov&&ov.dataset.locked)closeModal();return}if(!canWrite||rateAsked===today())return;if(ov)return setTimeout(maybeAskRate,4000);rateAsked=today();rateForm(true)}
+setInterval(()=>{if(rateAsked&&rateAsked!==today())rateAsked=false;maybeAskRate()},60000);
 async function setBrandLogo(name,file){if(!db||!file||!canWrite)return;const url=URL.createObjectURL(file);try{const img=new Image();await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;img.src=url});
   const sc=Math.min(1,240/(img.naturalWidth||240),80/(img.naturalHeight||80)),c=document.createElement('canvas');c.width=Math.max(1,Math.round((img.naturalWidth||240)*sc));c.height=Math.max(1,Math.round((img.naturalHeight||80)*sc));c.getContext('2d').drawImage(img,0,0,c.width,c.height);
   let data=c.toDataURL('image/webp',0.92);if(!data.startsWith('data:image/webp'))data=c.toDataURL('image/png');const logos={...S.brandLogos,[name]:data};await db.doc('settings/brands').set({logos,updatedAt:Date.now()});S.brandLogos=logos;toast(t('savedLogo'));render()}catch(err){toast(errMsg(err))}finally{URL.revokeObjectURL(url)}}
