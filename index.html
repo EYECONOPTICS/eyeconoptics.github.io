@@ -329,7 +329,7 @@ window.EYECON_BRANDS={"ESSILOR": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA
 /* ================= i18n ================= */
 const D={
  tab_dash:['الرئيسية','Overview'],tab_patients:['الزبائن والفحوصات','Customers & exams'],tab_inventory:['المخزون','Inventory'],tab_sales:['المبيعات','Sales'],tab_purchases:['المشتريات','Purchases'],tab_expenses:['المصاريف','Expenses'],tab_accounts:['الحسابات والشركاء','Accounts & partners'],tab_campaigns:['واتساب والعروض','WhatsApp & offers'],tab_settings:['الإعدادات والفروع','Settings & branches'],
- subline:['المخزون · الفحوصات · الحسابات','Inventory · Exams · Accounts'],allBranches:['كل الفروع','All branches'],mainBranch:['الفرع الرئيسي','Main branch'],branch:['الفرع','Branch'],setFor:['أنت تعدّل إعدادات وهوية فرع:','You are editing the settings and identity of:'],setForHint:['الاسم والشعار والعنوان والأرقام والألوان وتصميم الفاتورة والوصفة خاصة بهذا الفرع فقط. لتعديل فرع آخر اختره من أعلى الصفحة.','Name, logo, address, phones, colours and invoice/Rx design belong to this branch only. Pick another branch at the top to edit it.'],themeColor:['لون الهوية (الفاتورة والوصفة والتطبيق)','Brand colour (invoice, Rx and app)'],codePrefix:['بادئة رقم الزبون','Customer code prefix'],isoHint:['كل فرع معزول تماماً: زبائنه ومخزونه ومبيعاته ومشترياته ومصاريفه وهويته خاصة به. الربط الحسابي اختياري ويظهر فقط في الحسابات الموحدة.','Every branch is fully separate: its own customers, stock, sales, purchases, expenses and identity. Linking only affects the consolidated accounts.'],uBranches:['الفروع المسموحة','Allowed branches'],uAllBr:['كل الفروع','All branches'],uBrHint:['المستخدم يرى ويستخدم الفروع المحددة فقط. المالك يرى كل الفروع دائماً.','The user sees and uses only the ticked branches. Owners always see every branch.'],uNeedBr:['اختر فرعاً واحداً على الأقل.','Pick at least one branch.'],
+ subline:['المخزون · الفحوصات · الحسابات','Inventory · Exams · Accounts'],allBranches:['كل الفروع','All branches'],mainBranch:['آيكون للبصريات - Eyecon Optics','آيكون للبصريات - Eyecon Optics'],branch:['الفرع','Branch'],setFor:['أنت تعدّل إعدادات وهوية فرع:','You are editing the settings and identity of:'],setForHint:['الاسم والشعار والعنوان والأرقام والألوان وتصميم الفاتورة والوصفة خاصة بهذا الفرع فقط. لتعديل فرع آخر اختره من أعلى الصفحة.','Name, logo, address, phones, colours and invoice/Rx design belong to this branch only. Pick another branch at the top to edit it.'],themeColor:['لون الهوية (الفاتورة والوصفة والتطبيق)','Brand colour (invoice, Rx and app)'],codePrefix:['بادئة رقم الزبون','Customer code prefix'],isoHint:['كل فرع معزول تماماً: زبائنه ومخزونه ومبيعاته ومشترياته ومصاريفه وهويته خاصة به. الربط الحسابي اختياري ويظهر فقط في الحسابات الموحدة.','Every branch is fully separate: its own customers, stock, sales, purchases, expenses and identity. Linking only affects the consolidated accounts.'],uBranches:['الفروع المسموحة','Allowed branches'],uAllBr:['كل الفروع','All branches'],uBrHint:['المستخدم يرى ويستخدم الفروع المحددة فقط. المالك يرى كل الفروع دائماً.','The user sees and uses only the ticked branches. Owners always see every branch.'],uNeedBr:['اختر فرعاً واحداً على الأقل.','Pick at least one branch.'],
  save:['حفظ','Save'],close:['إغلاق','Close'],del:['حذف','Delete'],edit:['تعديل','Edit'],confirmDel:['اضغط مرة أخرى للتأكيد','Tap again to confirm'],loading:['جارٍ التحميل…','Loading…'],
  iqd:['دينار عراقي','Iraqi dinar'],usd:['دولار','US dollar'],currency:['العملة','Currency'],rate:['سعر الصرف (دينار لكل دولار)','Exchange rate (IQD per USD)'],date:['التاريخ','Date'],notes:['ملاحظات','Notes'],amount:['المبلغ','Amount'],
  noDb:['قاعدة البيانات المشتركة غير متاحة في هذا العرض. افتح الرابط من حسابك في Claude لحفظ البيانات ومشاركتها مع الموظفين.','The shared database is not available in this view. Open the link from your Claude account to save data and share it with staff.'],
@@ -596,6 +596,12 @@ function phoneOk(raw){const r=String(raw||'').replace(/\D/g,'');if(r.startsWith(
 function waLink(phone,text){return 'https://wa.me/'+normPhone(phone)+(text?'?text='+encodeURIComponent(text):'')}
 function tpl(type,l){const s=S.settings.tpl||{};return (s[type]&&s[type][l])||TPL_DEFAULT[type][l==='ar'?0:1]}
 const fillTpl=(str,v)=>str.replace(/\{(\w+)\}/g,(m,k)=>v[k]!=null&&v[k]!==''?v[k]:m);
+/* customer messages name the shop by the branch the record belongs to, so one branch never speaks with another's name */
+const msgShop=id=>branch(id||'main').name||setFor(id).shopName;
+const fillMsg=(str,v)=>{let o=fillTpl(str,v);if(v.shop&&v.branch&&v.shop===v.branch)o=o.split(v.shop+' – '+v.shop).join(v.shop).split(v.shop+' - '+v.shop).join(v.shop);return o};
+/* one-time: the main branch gets its shop name (owner session only) */
+let brMigDone=false;
+function brMigrate(){if(brMigDone||!db||!canWrite||(gRole()&&gRole()!=='owner')||loading('branches'))return;brMigDone=true;const m=byId('branches','main'),NEW='آيكون للبصريات - Eyecon Optics';if(m&&(m.nameSet47||m.name===NEW))return;put('branches','main',{name:NEW,linked:true,nameSet47:1}).catch(()=>{})}
 
 let toastT;
 function toast(msg){let el=$('#toast');if(!el){el=document.createElement('div');el.id='toast';el.className='toast';el.setAttribute('role','status');document.body.appendChild(el)}el.textContent=msg;el.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>el.hidden=true,2800)}
@@ -1121,7 +1127,7 @@ function vDoctor(){const m=window.__gas.me,q=(UI.drQ||'').trim().toLowerCase();
    ${loading('exams')?`<div class="panel">${emptyBox(t('loading'))}</div>`:list.length?`<div style="display:grid;gap:12px">${list.map(card).join('')}</div>`:`<div class="panel">${emptyBox(t('drNone'))}</div>`}`}
 function rxText(e){const p=byId('patients',e.patientId)||{};const rx=e.rx||{},cl=e.cl||{};
   const line=k=>{const r=rx[k]||{};return `${k==='od'?'R':'L'}: ${fmtRx(r)}${r.add?' Add '+rxNum(r.add):''}${r.prism?' Prism '+r.prism:''}`};
-  let s=`${setFor(bid(e)).shopName}\n${t('patient')}: ${p.name||''} ${p.code?'('+p.code+')':''}\n${t('date')}: ${e.date||''}`;
+  let s=`${msgShop(bid(e))}\n${t('patient')}: ${p.name||''} ${p.code?'('+p.code+')':''}\n${t('date')}: ${e.date||''}`;
   if(hasEye(rx,['sph','cyl','add'])){s+=`\n\n${t('glassesRx')}\n${line('od')}\n${line('os')}`;if(pdText(rx).length)s+='\n'+pdText(rx).join('\n');if(rx.notes)s+='\n'+t('rxNotes')+': '+rx.notes}
   if(hasEye(cl,['pwr','bc']))s+=`\n\n${t('clShort')}${cl.brand?' ('+cl.brand+')':''}\n`+['od','os'].map(k=>{const c=cl[k]||{};return `${k==='od'?'R':'L'}: ${rxNum(c.pwr)}${c.cyl?' / '+rxNum(c.cyl)+' x'+(c.axis||''):''} BC ${c.bc||'-'} DIA ${c.dia||'-'}`}).join('\n');
   if(e.examiner)s+=`\n\n${t('examiner')}: ${e.examiner}`;return s}
@@ -1132,8 +1138,8 @@ function waForm(pid,type,ctx={}){
   const ml=p.lang||lang;
   const vars=()=>{const ex=ctx.exam?byId('exams',ctx.exam):S.exams.filter(e=>e.patientId===pid&&e.followUp&&!e.followDone).sort((a,b)=>a.followUp.localeCompare(b.followUp))[0];
     const sa=ctx.sale?byId('sales',ctx.sale):null;const b=branch(bid(sa||ex||p));
-    return{name:p.name,shop:setFor(b.id).shopName,branch:b.name,phone:b.phone||'',date:(sa&&sa.dueDate)||(ex&&ex.followUp)||'',no:sa?sa.no||'':'',remain:sa?fmt(Math.max(0,num(sa.total)-num(sa.paid)),sa.currency):'',address:(sa&&sa.dAddress)||p.address||''}};
-  const build=ty=>fillTpl(tpl(ty,ml),vars());const ty0=type||'followup';
+    return{name:p.name,shop:msgShop(b.id),branch:b.name,phone:b.phone||'',date:(sa&&sa.dueDate)||(ex&&ex.followUp)||'',no:sa?sa.no||'':'',remain:sa?fmt(Math.max(0,num(sa.total)-num(sa.paid)),sa.currency):'',address:(sa&&sa.dAddress)||p.address||''}};
+  const build=ty=>fillMsg(tpl(ty,ml),vars());const ty0=type||'followup';
   openModal(t('waMsg')+' · '+esc(p.name),`
    ${p.waVerified?'':`<div class="banner">${t('unverifiedWarn')}</div>`}
    <div class="fr">${fs(t('msgType'),'mtype',ty0,MSG_TYPES.map(k=>[k,t('mt_'+k)]))}<label class="f"><span>${t('phone')}</span><input id="f_waNum" class="ltr" value="+${esc(normPhone(p.phone))}" readonly></label></div>
@@ -1403,7 +1409,7 @@ function saleDoc(s,opt={}){const p=s.patientId?byId('patients',s.patientId):null
     return printShell(docT('inv')+' '+(s.no||''),body.slice(0,invEnd),b,true,[p2,...flyerPages(s.guides,b)])}
   return printShell(docT('inv')+' '+(s.no||''),body,b,true,flyerPages(s.guides,b))}
 function saleText(s){const p=s.patientId?byId('patients',s.patientId):null,cur=s.currency;
-  return `${setFor(bid(s)).shopName}\n${t('invoice')} #${s.no||''} · ${s.date||''}\n${p?p.name:(s.customer||'')}\n\n${(s.lines||[]).map(l=>`${l.name} ×${l.qty} = ${fmt(num(l.price)*num(l.qty),cur)}`).join('\n')}\n\n${num(s.discount)?t('discount')+': '+fmt(s.discount,cur)+'\n':''}${t('total')}: ${fmt(s.total,cur)}\n${t('paid')}: ${fmt(s.paid,cur)}\n${t('remainCust')}: ${fmt(Math.max(0,num(s.total)-num(s.paid)),cur)}`}
+  return `${msgShop(bid(s))}\n${t('invoice')} #${s.no||''} · ${s.date||''}\n${p?p.name:(s.customer||'')}\n\n${(s.lines||[]).map(l=>`${l.name} ×${l.qty} = ${fmt(num(l.price)*num(l.qty),cur)}`).join('\n')}\n\n${num(s.discount)?t('discount')+': '+fmt(s.discount,cur)+'\n':''}${t('total')}: ${fmt(s.total,cur)}\n${t('paid')}: ${fmt(s.paid,cur)}\n${t('remainCust')}: ${fmt(Math.max(0,num(s.total)-num(s.paid)),cur)}`}
 const LIBS={h2c:'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',pdf:'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',xlsx:'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'},libP={};
 function lib(k){return libP[k]||(libP[k]=new Promise((res,rej)=>{const s=document.createElement('script');s.src=LIBS[k];s.onload=res;s.onerror=()=>{delete libP[k];rej(new Error('lib'))};document.head.appendChild(s)}))}
 async function makePdf(fr){await Promise.all([lib('h2c'),lib('pdf')]);const d=fr.contentDocument;try{await d.fonts.ready}catch(_){}for(let i=0;i<60&&!d.body.hasAttribute('data-fit');i++)await new Promise(r=>setTimeout(r,100));
@@ -1871,7 +1877,7 @@ function vCampaigns(){
   ${camps.length>1?`<div class="seg" role="group" aria-label="${t('campaigns')}">${camps.map(x=>`<button type="button" data-act="pickCamp" data-id="${x.id}" aria-pressed="${c&&c.id===x.id}">${esc(x.title||'—')}</button>`).join('')}</div>`:''}
   ${c?`<section class="panel" style="display:grid;gap:10px"><div class="bar"><h3>${esc(c.title||'')}</h3><div class="seg"><span class="chip acc">${t('progress')} <span class="ltr">${doneN}/${aud.length}</span></span><button class="btn sm" data-act="editCampaign" data-id="${c.id}">${t('edit')}</button></div></div>
      <div class="rxcard" style="white-space:pre-wrap">${esc(c.text||'')}</div></section>
-     ${aud.length?`<div class="tw"><table><thead><tr><th>${t('pid')}</th><th>${t('name')}</th><th>${t('phone')}</th><th></th></tr></thead><tbody>${aud.map(p=>{const b=branch(bid(p));const msg=fillTpl(c.text||'',{name:p.name,shop:setFor(b.id).shopName,branch:b.name,phone:b.phone||''});
+     ${aud.length?`<div class="tw"><table><thead><tr><th>${t('pid')}</th><th>${t('name')}</th><th>${t('phone')}</th><th></th></tr></thead><tbody>${aud.map(p=>{const b=branch(bid(p));const msg=fillMsg(c.text||'',{name:p.name,shop:msgShop(b.id),branch:b.name,phone:b.phone||''});
        return `<tr><td class="n">${esc(p.code||'')}</td><td>${esc(p.name)}</td><td class="n">+${esc(normPhone(p.phone))}</td><td><div class="seg">${sent.has(p.id)?`<span class="chip good">${t('sent')} ✓</span>`:''}<a class="btn sm wa" href="${esc(waLink(p.phone,msg))}" target="_blank" rel="noopener" data-sendcamp="${c.id}" data-pid="${p.id}">${t('openChat')}</a></div></td></tr>`}).join('')}</tbody></table></div>`:`<div class="panel">${emptyBox(t('noAudience'))}</div>`}`
   :`<div class="panel">${emptyBox(loading('campaigns')?t('loading'):t('noCampaigns'),`<button class="btn primary" data-act="newCampaign">${t('newCampaign')}</button>`)}</div>`}
   <p class="note" style="max-width:70ch">${t('waLimits')}</p>`}
@@ -1933,7 +1939,7 @@ async function gasUsersForm(){let list=[];try{list=await window.__gas.users()}ca
       const q=n=>f.querySelector(`[name="${n}"]`);if(gRole()!=='owner'&&u.role!=='user'&&u.role!=='doctor'){toast(t('uOwnerOnly'));return}q('username').value=u.username;q('udoc').value=(u.doctors||[])[0]||'';q('username').readOnly=true;q('name').value=u.name;q('role').value=u.role;q('active').checked=u.active;f.__setBr(u);q('password').value='';f.querySelector('#uPL').textContent=t('uPassNew');f.querySelector('#uLeg').textContent=u.username})},
    onSubmit:async f=>{const o=formObj(f),all=f.querySelector('#uBrAll');let branches=[],doctors=[];if(o.role==='doctor'){if(!o.udoc){toast(t('uNeedDr'));return false}doctors=[o.udoc];branches=gBr()||[]}else if(o.role!=='owner'&&f.querySelector('#uBrBox')&&!(all&&all.checked)){branches=[...f.querySelectorAll('[data-br]:checked')].map(c=>c.dataset.br);if(!branches.length){toast(t('uNeedBr'));return false}}
      try{await window.__gas.saveUser({username:o.username,name:o.name,role:o.role,active:!!o.active,password:o.password||'',branches,doctors})}catch(e){toast(/last_owner/.test(e.message)?t('uLastOwner'):/perm/.test(e.message)?t('uOwnerOnly'):/self/.test(e.message)?t('uSelf'):/weak/.test(e.message)?t('uErr'):errMsg(e));return false}toast(t('uSaved'));setTimeout(()=>o.role==='doctor'?drInvite(o):gasUsersForm(),50)}})}
-function drInvite(o){const d=byId('doctors',o.udoc)||{},url=location.origin+location.pathname,txt=`${setFor(bid(d)).shopName||'EYECON OPTICS'}\n${t('drHello')} ${drName(d.id)||o.name||''}\n${t('drSub')}:\n${url}\n${t('uName').replace(/\s*\(.*\)/,'')}: ${o.username}${o.password?`\n${t('uPass')}: ${o.password}`:''}`;
+function drInvite(o){const d=byId('doctors',o.udoc)||{},url=location.origin+location.pathname,txt=`${msgShop(bid(d))}\n${t('drHello')} ${drName(d.id)||o.name||''}\n${t('drSub')}:\n${url}\n${t('uName').replace(/\s*\(.*\)/,'')}: ${o.username}${o.password?`\n${t('uPass')}: ${o.password}`:''}`;
   openModal(t('drInvite'),`<p class="note">${t('drInviteTxt')}</p><textarea id="drInv" dir="auto" style="min-height:150px" readonly>${esc(txt)}</textarea><div class="seg" style="gap:8px"><button type="button" class="btn" id="drCopy">${t('copy')}</button>${d.phone?`<a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/${normPhone(d.phone)}?text=${encodeURIComponent(txt)}">WhatsApp</a>`:''}</div>`,
   {submitLabel:t('whDone'),onMount:f=>{f.querySelector('#drCopy').onclick=()=>navigator.clipboard.writeText(txt).then(()=>toast(t('copiedOk'))).catch(()=>f.querySelector('#drInv').select())},onSubmit:async()=>{setTimeout(gasUsersForm,50)}})}
 function gasPassForm(){openModal(t('gasPass'),`<div class="fr">${fi(t('oldPass'),'old','','password','dir="ltr" autocomplete="current-password"')}${fi(t('uPass'),'nw','','password','dir="ltr" autocomplete="new-password"')}</div>`,
@@ -2044,7 +2050,7 @@ const CH_EMO=['👍','❤️','😂','😮','🙏','✅'],CH_EDIT_MS=60000,CH_MA
 const chMe=()=>myU()||'me',myName=()=>(window.__gas&&window.__gas.me&&(window.__gas.me.name||window.__gas.me.username))||t('chMeName');
 const chAt=m=>num(m._at||m.createdAt);
 function chRooms(){const r=[];
-  if(isDoctor()){((window.__gas.me||{}).doctors||[]).forEach(id=>{const d=byId('doctors',id)||{branchId:'main'};r.push({id:'dr_'+id,aud:['dr:'+id,'br:'+bid(d)],name:setFor(bid(d)).shopName||'EYECON OPTICS',sub:t('chDrMine'),ic:'🩺'})});return r}
+  if(isDoctor()){((window.__gas.me||{}).doctors||[]).forEach(id=>{const d=byId('doctors',id)||{branchId:'main'};r.push({id:'dr_'+id,aud:['dr:'+id,'br:'+bid(d)],name:msgShop(bid(d)),sub:t('chDrMine'),ic:'🩺'})});return r}
   r.push({id:'all',aud:['all'],name:t('chAll'),sub:t('chAllSub'),ic:'🏢'});
   branchList().forEach(b=>r.push({id:'br_'+b.id,aud:['br:'+b.id],name:b.name,sub:t('chBranchSub'),ic:'🏬'}));
   S.doctors.filter(d=>branchList().some(b=>b.id===bid(d))).sort((a,b)=>(a.name||'').localeCompare(b.name||'')).forEach(d=>r.push({id:'dr_'+d.id,aud:['dr:'+d.id,'br:'+bid(d)],name:drT(d.name),sub:t('chDrSub')+(multi()?' · '+branch(bid(d)).name:''),ic:'🩺'}));
@@ -2270,7 +2276,7 @@ render();
   db.collection('settings').onSnapshot(s=>{[SET,LOGO,BRANDS].forEach(o=>Object.keys(o).forEach(k=>delete o[k]));RATE=null;
     s.docs.forEach(d=>{const id=d.id,v=d.data()||{};let m;if(id==='main')SET.main=v;else if(id==='rate')RATE=v;else if(id==='logo')LOGO.main=v;else if(id==='brands')BRANDS.main=v.logos||{};
       else if((m=id.match(/^b_(.+)$/)))SET[m[1]]=v;else if((m=id.match(/^logo_(.+)$/)))LOGO[m[1]]=v;else if((m=id.match(/^brands_(.+)$/)))BRANDS[m[1]]=v.logos||{}});
-    applyBranch();try{applyLang()}catch(_){}setTimeout(maybeAskRate,300);const ae=document.activeElement;if(!(ae&&ae.closest&&ae.closest('#setForm')))schedule()},()=>{});
+    applyBranch();try{applyLang()}catch(_){}setTimeout(maybeAskRate,300);setTimeout(brMigrate,900);const ae=document.activeElement;if(!(ae&&ae.closest&&ae.closest('#setForm')))schedule()},()=>{});
   render();
 })();
 </script>
