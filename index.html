@@ -99,7 +99,7 @@ tr.total td{font-weight:600;background:var(--bg)}
 .ov{position:fixed;inset:0;z-index:20;background:rgb(10 20 22 / .45);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:max(16px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
 .md{background:var(--surface);border-radius:14px;width:min(860px,100%);border:1px solid var(--line);margin-block:auto}
 .md header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line);gap:10px}
-.md .body{padding:16px 18px;display:grid;gap:16px}
+.md .body{padding:16px 18px;display:grid;gap:16px}.vofs{border:0;padding:0;margin:0;min-width:0;display:grid;gap:16px}.note.vo{margin:0;padding:8px 10px;border-radius:8px;background:var(--soft,rgba(0,0,0,.05))}
 .md footer{display:flex;gap:8px;flex-wrap:wrap;padding:12px 18px;border-top:1px solid var(--line)}
 fieldset,details.sec{border:1px solid var(--line);border-radius:10px;padding:12px;margin:0;display:grid;gap:12px;min-width:0}
 details.sec{display:block}
@@ -334,7 +334,7 @@ const D={
  iqd:['دينار عراقي','Iraqi dinar'],usd:['دولار','US dollar'],currency:['العملة','Currency'],rate:['سعر الصرف (دينار لكل دولار)','Exchange rate (IQD per USD)'],date:['التاريخ','Date'],notes:['ملاحظات','Notes'],amount:['المبلغ','Amount'],
  noDb:['قاعدة البيانات المشتركة غير متاحة في هذا العرض. افتح الرابط من حسابك في Claude لحفظ البيانات ومشاركتها مع الموظفين.','The shared database is not available in this view. Open the link from your Claude account to save data and share it with staff.'],
  readOnly:['لديك صلاحية العرض فقط. اطلب من مالك الصفحة صلاحية «مساهم» أو «محرر».','You have view-only access. Ask the owner for Contributor or Editor access.'],
- viewOnlyToast:['لديك صلاحية العرض فقط.','You have view-only access.'],
+ viewOnlyToast:['لديك صلاحية العرض فقط.','You have view-only access.'],voNote:['🔒 للعرض فقط: تعديل السجلات المحفوظة وحذفها للمالك والمدير.','🔒 View only: editing and deleting saved records is for the owner and manager.'],mgrOnly:['التعديل والحذف للمالك والمدير فقط.','Only the owner or manager can edit or delete.'],editVoucher:['تعديل سند','Edit voucher'],vDistEdit:['لتغيير مبالغ التوزيع احذفه ثم أعد التوزيع؛ هنا تعدّل التاريخ والبيان، وينعكس التاريخ على سحوبات التوزيع.','To change the amounts, delete the distribution and distribute again; here you edit the date and description, and the date is applied to its withdrawals.'],
  errPerm:['لا تملك صلاحية التعديل، أو البيانات غير صالحة.','You cannot edit, or the data is invalid.'],errQuota:['امتلأت قاعدة البيانات. احذف سجلات قديمة ثم حاول مرة أخرى.','The database is full. Delete old records and try again.'],errRate:['طلبات كثيرة في وقت قصير. انتظر قليلاً ثم حاول.','Too many requests. Wait a moment and try again.'],errNet:['تعذّر الحفظ. تحقق من الاتصال ثم حاول مرة أخرى.','Could not save. Check the connection and try again.'],
  overview:['نظرة عامة','Overview'],newExam:['فحص جديد','New exam'],newSale:['بيع جديد','New sale'],salesToday:['مبيعات اليوم','Sales today'],invoices:['فاتورة','invoices'],salesMonth:['مبيعات الشهر','Sales this month'],netMonth:['صافي ربح الشهر','Net profit this month'],afterCost:['بعد الكلفة والمصاريف','after cost and expenses'],receivables:['ديون على الزبائن','Customer balances due'],unpaid:['مبالغ غير مسددة','unpaid amounts'],
  followups:['مواعيد المراجعة','Follow-up visits'],due:['مستحقة','due'],noFollow:['لا توجد مراجعات مفتوحة. حدّد «تاريخ المراجعة القادمة» عند حفظ أي فحص ليظهر هنا.','No open follow-ups. Set a next visit date on any exam to see it here.'],
@@ -503,7 +503,7 @@ const PAT_REQ=[['name','fullName'],['phone','phone'],['gender','gender'],['age',
 const patMissK=p=>PAT_REQ.filter(([k])=>k==='age'?!(p.dob||(p.ageY!==''&&p.ageY!=null)):k==='phone'?!(p.phone&&phoneOk(p.phone)):!String(p[k]||'').trim());
 const patMissing=p=>!p?[t('patient')]:patMissK(p).map(([,l])=>t(l));
 function patFixHtml(pid,all){const p=byId('patients',pid);if(!p)return '';const m=all?PAT_REQ.map(([k])=>k):patMissK(p).map(([k])=>k);
-  const lnk=canWrite?`<button type="button" class="btn ghost sm" data-pfedit="${esc(p.id)}">${t('editPatFile')}</button>`:'';if(!m.length)return `<div class="seg">${lnk}</div>`;
+  const lnk=canWrite&&isMgr()?`<button type="button" class="btn ghost sm" data-pfedit="${esc(p.id)}">${t('editPatFile')}</button>`:'';if(!m.length)return `<div class="seg">${lnk}</div>`;
   const F={name:()=>`<label class="f"><span class="req">${t('fullName')}</span><input id="pf_name" value="${esc(p.name||'')}"></label>`,phone:()=>`<label class="f"><span class="req">${t('phone')}</span><input id="pf_phone" type="tel" dir="ltr" placeholder="07701234567" value="${esc(p.phone||'')}"></label>`,
     gender:()=>`<label class="f"><span class="req">${t('gender')}</span><select id="pf_gender"><option value="">—</option><option value="male" ${p.gender==='male'?'selected':''}>${t('male')}</option><option value="female" ${p.gender==='female'?'selected':''}>${t('female')}</option></select></label>`,
     age:()=>`<label class="f"><span class="req">${t('ageY')}</span><input id="pf_age" type="number" step="1" min="0" inputmode="numeric" value="${esc(p.dob||p.ageY===''||p.ageY==null?'':patientAge(p))}"></label>`,address:()=>`<label class="f" style="grid-column:span 2"><span class="req">${t('address2')}</span><input id="pf_address" value="${esc(p.address||'')}"></label>`};
@@ -604,6 +604,14 @@ const msgShop=id=>branch(id||'main').name||setFor(id).shopName;
 const fillMsg=(str,v)=>{let o=fillTpl(str,v);if(v.shop&&v.branch&&v.shop===v.branch)o=o.split(v.shop+' – '+v.shop).join(v.shop).split(v.shop+' - '+v.shop).join(v.shop);return o};
 /* one-time: the main branch gets its shop name (owner session only) */
 let brMigDone=false;
+/* v50: saved records may be changed or deleted only by the owner and manager. Staff keep: their own sale within 10 minutes plus adding payments and order stages (sales base rule),
+   stock movements from sales and purchases, filling a patient's missing details, the last-contact mark and campaign sent marks. */
+let RULES=null,rulesDone=false;const RULES_V=50;
+function rulesSync(){if(rulesDone||!db||!canWrite||gRole()!=='owner'||dbState==='loading')return;rulesDone=true;if(RULES&&num(RULES.v)>=RULES_V)return;
+  const A=['owner','manager'],r=(...x)=>({update:[...A,...x],del:A}),cols={...((RULES&&RULES.cols)||{}),
+    items:r('append:_x,qty,cost'),patients:r('append:_x,lastWa,name,phone,gender,ageY,ageYAt,address'),exams:r(),purchases:r('append:payments,paid,method'),expenses:r(),
+    withdrawals:r(),vouchers:r(),exchanges:r(),partners:r(),fixedAssets:r(),doctors:r(),guides:r(),branches:r(),campaigns:r('append:sent')};
+  db.doc('settings/rules').set({v:RULES_V,cols,updatedAt:Date.now()}).then(()=>{RULES={v:RULES_V,cols}}).catch(()=>{rulesDone=false})}
 function brMigrate(){if(brMigDone||!db||!canWrite||(gRole()&&gRole()!=='owner')||loading('branches'))return;brMigDone=true;const m=byId('branches','main'),NEW='آيكون للبصريات - Eyecon Optics';if(m&&(m.nameSet47||m.name===NEW))return;put('branches','main',{name:NEW,linked:true,nameSet47:1}).catch(()=>{})}
 
 let toastT;
@@ -634,7 +642,7 @@ const fs=(label,name,val,opts,extra='')=>{if(val!=null&&val!==''&&!opts.some(o=>
 const keyOpts=keys=>[['','—'],...keys.map(k=>[k,t(k)])];
 const ft=(label,name,val,extra='')=>`<label class="f"><span>${label}</span><textarea id="${fid(name)}" name="${name}" ${extra}>${esc(val??'')}</textarea></label>`;
 function formObj(form){const o={};new FormData(form).forEach((v,k)=>setP(o,k,typeof v==='string'?v.trim():v));form.querySelectorAll('input[type=checkbox]').forEach(c=>{if(c.name)setP(o,c.name,c.checked)});return o}
-function openModal(title,bodyHTML,{onSubmit,submitLabel=t('save'),extraFooter='',wide=false,onMount,locked=false}={}){
+function openModal(title,bodyHTML,{onSubmit,submitLabel=t('save'),extraFooter='',wide=false,onMount,locked=false}={}){const vo=VO;VO=false;if(vo){onSubmit=null;bodyHTML=`<p class="note vo">${t('voNote')}</p><fieldset disabled class="vofs">${bodyHTML}</fieldset>`}
   $('#modalRoot').innerHTML=`<div class="ov" id="ov" ${locked?'data-locked="1"':''}><form class="md" id="mdForm" novalidate ${wide?'style="width:min(980px,100%)"':''}>
     <header><h3>${title}</h3>${locked?'':`<button type="button" class="btn ghost" data-close aria-label="${t('close')}">✕</button>`}</header>
     <div class="body">${bodyHTML}</div>
@@ -643,9 +651,11 @@ function openModal(title,bodyHTML,{onSubmit,submitLabel=t('save'),extraFooter=''
   form.querySelectorAll('[data-close]').forEach(b=>b.onclick=closeModal);
   $('#ov').addEventListener('mousedown',e=>{if(e.target.id==='ov'&&!e.target.dataset.locked)closeModal()});
   form.onsubmit=async e=>{e.preventDefault();if(!onSubmit)return;const b=form.querySelector('[type=submit]');b.disabled=true;const ok=await onSubmit(form);b.disabled=false;if(ok!==false)closeModal()};
-  hPush('o');if(onMount)onMount(form);
+  hPush('o');if(onMount)onMount(form);if(vo)form.querySelectorAll('footer .danger,footer [id^=del],footer #gDel').forEach(b=>b.remove());
   const first=form.querySelector('input:not([readonly]),select,textarea');if(first)first.focus({preventScroll:true});
   return form}
+/* Saved records open read-only for staff: only the owner and manager may change or delete them (the server enforces the same through settings/rules) */
+let VO=false;const voOpen=fn=>{VO=!isMgr();try{fn()}finally{VO=false}};
 function closeModal(){$('#modalRoot').innerHTML='';schedule()}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#ov')&&!$('#ov').dataset.locked)closeModal()});
 /* Back button (phone gesture, browser, mouse): close the open window first, then step back through tabs and screens; leave only after a second press on the main screen */
@@ -1786,7 +1796,7 @@ function distTable(title,net,scope,range){
   ${ps.map(p=>{const sh=net*num(p.share)/100;const cum=computeAcc(['0000-01-01','9999-12-31'],scopeFilt(scope)).net*num(p.share)/100-S.withdrawals.filter(x=>x.partnerId===p.id).reduce((s,x)=>s+toIQD(x.amount,x.currency,x.rate),0);const w=S.withdrawals.filter(x=>x.partnerId===p.id&&inR(x.date,range)).reduce((s,x)=>s+toIQD(x.amount,x.currency,x.rate),0);
     return `<tr><td>${esc(p.name)}</td><td class="n">${fmtN(p.share,2)}%</td><td class="n">${fmtIQD(sh)}</td><td class="n">${fmtIQD(w)}</td><td class="n"><b style="color:${sh-w<0?'var(--bad)':'var(--ink)'}">${fmtIQD(sh-w)}</b></td><td class="n"><b style="color:${cum<0?'var(--bad)':'var(--ink)'}">${fmtIQD(cum)}</b></td><td><div class="seg"><button class="btn sm" data-act="partnerSt" data-id="${p.id}">${t('statement')}</button><button class="btn sm" data-act="editPartner" data-id="${p.id}">${t('edit')}</button></div></td></tr>`}).join('')}</tbody></table></div>`
   :`<div class="panel">${emptyBox(t('noPartners'),`<button class="btn primary" data-act="newPartner" data-scope="${esc(scope)}">${t('addPartner')}</button>`)}</div>`}
-  ${dl.length?`<details class="sec"><summary>${t('distLog')} (${dl.length})</summary><div class="in"><div class="tw"><table><thead><tr><th>${t('date')}</th><th>${t('distBasis')}</th><th>${t('distAmtShort')}</th><th>${t('distKeepShort')}</th><th></th></tr></thead><tbody>${dl.map(d=>`<tr><td class="n">${esc(d.date||'')}</td><td>${esc(distBasisTxt(d))}</td><td class="n"><b>${fmtIQD(d.total)}</b></td><td class="n">${d.avail!=null&&d.avail!==''?fmtIQD(num(d.avail)-d.total):'—'}</td><td>${canWrite?`<button class="btn ghost danger sm" data-act="delDist" data-id="${esc(d.id)}">${t('del')}</button>`:''}</td></tr>`).join('')}</tbody></table></div></div></details>`:''}</section>`}
+  ${dl.length?`<details class="sec"><summary>${t('distLog')} (${dl.length})</summary><div class="in"><div class="tw"><table><thead><tr><th>${t('date')}</th><th>${t('distBasis')}</th><th>${t('distAmtShort')}</th><th>${t('distKeepShort')}</th><th></th></tr></thead><tbody>${dl.map(d=>`<tr><td class="n">${esc(d.date||'')}</td><td>${esc(distBasisTxt(d))}</td><td class="n"><b>${fmtIQD(d.total)}</b></td><td class="n">${d.avail!=null&&d.avail!==''?fmtIQD(num(d.avail)-d.total):'—'}</td><td>${canWrite&&isMgr()?`<button class="btn ghost danger sm" data-act="delDist" data-id="${esc(d.id)}">${t('del')}</button>`:''}</td></tr>`).join('')}</tbody></table></div></div></details>`:''}</section>`}
 function vAccounts(){
   const r=periodRange(UI.period,UI.from,UI.to);const bl=branchList();let body='';
   if(curBranch==='all'){
@@ -1824,7 +1834,7 @@ function exchangeForm(x={}){openModal(x.id?t('exchange'):t('exchange'),`<div cla
    onSubmit:async f=>{const o=formObj(f);o.amount=num(o.amount);o.rate=num(o.rate)||rate();if(!o.amount){toast(t('needAmt'));return false}o.result=+(o.fromCur==='USD'?o.amount*o.rate:o.amount/o.rate).toFixed(o.fromCur==='USD'?0:2);if(!o.branchId)o.branchId=x.branchId||defBranch();if(!await put('exchanges',x.id,o))return false;toast(t('savedEx'))}})}
 function vouchersSec(range){const list=S.vouchers.filter(v=>inBranch(v)&&inR(v.date,range)).sort(sortDate);
   return `<section style="display:grid;gap:10px"><div class="bar"><h3>${t('vouchers')}</h3><button class="btn sm" data-act="newVoucher">${t('newVoucher')}</button></div>
-  ${list.length?`<div class="tw"><table><thead><tr><th>${t('date')}</th><th>${t('no')}</th><th>${t('vType')}</th><th>${t('payTo')}</th><th>${t('box')}</th><th>${t('amount')}</th><th></th></tr></thead><tbody>${list.map(v=>`<tr class="click" data-act="printVoucher" data-id="${v.id}"><td class="n">${esc(v.date)}</td><td class="n">${esc(v.no||'')}</td><td>${t('vt_'+v.type)}</td><td>${esc(v.payee||'')}</td><td>${boxName(v.box)}</td><td class="n">${fmt(v.amount,v.currency)}</td><td><button type="button" class="btn sm danger" data-act="delVoucher" data-id="${v.id}">${t('del')}</button></td></tr>`).join('')}</tbody></table></div>`:`<p class="note">${t('noVouchers')}</p>`}</section>`}
+  ${list.length?`<div class="tw"><table><thead><tr><th>${t('date')}</th><th>${t('no')}</th><th>${t('vType')}</th><th>${t('payTo')}</th><th>${t('box')}</th><th>${t('amount')}</th><th></th></tr></thead><tbody>${list.map(v=>`<tr class="click" data-act="printVoucher" data-id="${v.id}"><td class="n">${esc(v.date)}</td><td class="n">${esc(v.no||'')}</td><td>${t('vt_'+v.type)}</td><td>${esc(v.payee||'')}</td><td>${boxName(v.box)}</td><td class="n">${fmt(v.amount,v.currency)}</td><td>${isMgr()&&canWrite?`<span class="seg" style="flex-wrap:nowrap"><button type="button" class="btn sm" data-act="editVoucher" data-id="${v.id}">${t('edit')}</button><button type="button" class="btn sm danger" data-act="delVoucher" data-id="${v.id}">${t('del')}</button></span>`:''}</td></tr>`).join('')}</tbody></table></div>`:`<p class="note">${t('noVouchers')}</p>`}</section>`}
 function voucherForm(){if(!canWrite)return toast(t('viewOnlyToast'));const unpaid=S.purchases.filter(p=>inBranch(p)&&num(p.total)-num(p.paid)>0.009).sort(sortDate);
   openModal(t('newVoucher'),`<div class="fr">${fs(t('vType'),'type','supplier',['supplier','partner'].map(k=>[k,t('vt_'+k)]))}${fi(t('date'),'date',today(),'date')}${brF(defBranch())}</div>
    <div id="vSup" class="fr">${unpaid.length?fs(t('pickPurch'),'purchaseId','',unpaid.map(p=>[p.id,(p.supplier||'—')+' · #'+(p.invoice||'')+' · '+t('remaining')+' '+fmt(num(p.total)-num(p.paid),p.currency)])):`<p class="note">${t('noUnpaid')}</p>`}</div>
@@ -1839,6 +1849,20 @@ function voucherForm(){if(!canWrite)return toast(t('viewOnlyToast'));const unpai
      else if(o.type==='partner'){const pa=byId('partners',o.partnerId);if(!pa){toast(t('addPartnersFirst'));return false}if(!pa.phone){toast(t('partnerIncomplete'));return false}const id=await put('withdrawals',null,{partnerId:pa.id,date:o.date,amount:o.amount,currency:o.currency,rate:o.rate,box:o.box,note:o.note,vid,branchId:b});if(!id)return false;v.payee=pa.name;v.refId=id}
      else return false;
      if(!await put('vouchers',vid,v))return false;toast(t('savedVoucher')+v.no);setTimeout(()=>printVoucher({id:vid,...v}),60)}})}
+/* Owner/manager: edit a voucher and keep what it is linked to in step (the supplier payment inside its purchase, the partner withdrawal, the expense), so boxes and ledgers stay consistent */
+function voucherEdit(v){if(!v||!canWrite||!isMgr())return;const dist=v.type==='dist';
+  openModal(t('editVoucher')+' #'+esc(v.no||''),`<div class="fr">${fi(t('date'),'date',v.date||today(),'date')}${dist?'':brF(bid(v))}</div>
+   ${dist?`<p class="note">${t('vDistEdit')}</p>`:`<div class="fr">${fi(`<span class="req">${t('amount')}</span>`,'amount',v.amount??'','number','step="any"')}${fs(t('currency'),'currency',v.currency||'IQD',curOpts())}${fi(t('rate'),'rate',v.rate||rate(),'number','step="any"')}${fs(t('box'),'box',v.box||'cash',boxOpts())}</div>`}${fi(`<span class="req">${t('forWhat')}</span>`,'note',v.note||'')}`,
+  {extraFooter:`<button type="button" class="btn" id="vPr">${t('print')}</button>`+delBtn('delV',t('del')),onMount:f=>{f.querySelector('#vPr').onclick=()=>printVoucher(byId('vouchers',v.id)||v);const d=f.querySelector('#delV');if(d)d.onclick=()=>armDelete(d,async()=>{await delVoucher(v);closeModal()})},
+   onSubmit:async f=>{const o=formObj(f);if(!(o.note||'').trim()){toast(t('needDesc'));return false}
+     if(dist){for(const id of v.refIds||[])if(byId('withdrawals',id)&&!await put('withdrawals',id,{date:o.date}))return false;if(!await put('vouchers',v.id,{date:o.date,note:o.note}))return false;toast(t('savedChanges'));return}
+     o.amount=num(o.amount);o.rate=num(o.rate)||rate();if(!o.amount){toast(t('needAmt'));return false}const b=o.branchId||bid(v);
+     if(v.type==='supplier'){const p=byId('purchases',v.refId);if(p){const val=+convCur(o.amount,o.currency,p.currency||'IQD',o.rate).toFixed(2),old=payList(p).filter(x=>x.vid===v.id).reduce((a,x)=>a+payVal(x),0);if(val>num(p.total)-num(p.paid)+old+0.01){toast(t('overpay'));return false}
+       let hit=false;const pays=payList(p).map(x=>x.vid===v.id?(hit=true,{...x,date:o.date,amount:o.amount,cur:o.currency,rate:o.rate,val,method:o.box}):x);if(!hit)pays.push({date:o.date,amount:o.amount,cur:o.currency,rate:o.rate,val,method:o.box,vid:v.id,...payStamp()});
+       if(!await put('purchases',p.id,{payments:pays,paid:pays.reduce((a,x)=>a+payVal(x),0)}))return false}}
+     else if(v.type==='partner'){const w=byId('withdrawals',v.refId);if(w&&!await put('withdrawals',w.id,{date:o.date,amount:o.amount,currency:o.currency,rate:o.rate,box:o.box,note:o.note,branchId:b}))return false}
+     else if(v.type==='expense'){const e=byId('expenses',v.refId);if(e&&!await put('expenses',e.id,{date:o.date,amount:o.amount,currency:o.currency,box:o.box,branchId:b}))return false}
+     if(!await put('vouchers',v.id,{date:o.date,amount:o.amount,currency:o.currency,rate:o.rate,box:o.box,note:o.note,branchId:b}))return false;toast(t('savedChanges'))}})}
 async function delVoucher(v){if(!v)return;if(v.type==='supplier'){const p=byId('purchases',v.refId);if(p){const pays=payList(p).filter(x=>x.vid!==v.id);if(!await put('purchases',p.id,{payments:pays,paid:pays.reduce((a,x)=>a+payVal(x),0)}))return}}
   else if(v.type==='dist'){for(const id of v.refIds||[])if(byId('withdrawals',id)&&!await del('withdrawals',id))return}
   else if(v.refId){if(byId(v.type==='partner'?'withdrawals':'expenses',v.refId)&&!await del(v.type==='partner'?'withdrawals':'expenses',v.refId))return}if(await del('vouchers',v.id))toast(t('deleted'))}
@@ -2048,12 +2072,12 @@ document.addEventListener('click',e=>{
   const a=e.target.closest('[data-act]');if(!a)return;e.preventDefault();
   const id=a.dataset.id,act=a.dataset.act;if(act.startsWith('ch')&&chAct(act,a))return;if(isDoctor()&&!['printRx','gasPass','gasLogout'].includes(act))return;const need=()=>{if(!canWrite){toast(t('viewOnlyToast'));return false}return true};
   switch(act){
-    case 'newExam':if(need())examForm({},a.dataset.pid||UI.patientId);break;case 'editExam':examForm(byId('exams',id));break;
-    case 'newPatient':if(need())patientForm();break;case 'editPatient':patientForm(byId('patients',id));break;
+    case 'newExam':if(need())examForm({},a.dataset.pid||UI.patientId);break;case 'editExam':voOpen(()=>examForm(byId('exams',id)));break;
+    case 'newPatient':if(need())patientForm();break;case 'editPatient':voOpen(()=>patientForm(byId('patients',id)));break;
     case 'openPatient':UI.patientId=id;view='patients';render();window.scrollTo(0,0);break;case 'backPatients':UI.patientId=null;render();break;
     case 'orderUpd':orderForm(byId('sales',id));break;
     case 'waPatient':waForm(id,a.dataset.type,{exam:a.dataset.exam,sale:a.dataset.sale});break;
-    case 'newItem':if(isUserRole()){toast(t('noPerm'));break}if(need())itemForm();break;case 'editItem':if(isUserRole()){toast(t('noPerm'));break}itemForm(byId('items',id));break;
+    case 'newItem':if(isUserRole()){toast(t('noPerm'));break}if(need())itemForm();break;case 'editItem':voOpen(()=>itemForm(byId('items',id)));break;
     case 'boxLedger':ledgerForm(id||null);break;
     case 'holdPrint':holdingsPrint();break;
     case 'fixWdV':if(canWrite)fixWdVouchers();break;
@@ -2061,21 +2085,21 @@ document.addEventListener('click',e=>{
     case 'fixPurPaid':if(canWrite)fixPaid('purchases');break;
     case 'prodInfo':if(isUserRole()){toast(t('noPerm'));break}prodInfoForm(id);break;
     case 'newSale':if(need())saleForm({},a.dataset.pid||'');break;case 'editSale':saleForm(byId('sales',id));break;
-    case 'newPurchase':if(need())purchaseForm();break;case 'editPurchase':purchaseForm(byId('purchases',id));break;
-    case 'newExpense':if(need())expenseForm();break;case 'editExpense':expenseForm(byId('expenses',id));break;case 'editCat':catForm(id);break;
-    case 'newPartner':if(need())partnerForm({},a.dataset.scope);break;case 'editPartner':partnerForm(byId('partners',id));break;
-    case 'newWithdrawal':if(need())withdrawalForm();break;case 'editWithdrawal':withdrawalForm(byId('withdrawals',id));break;
-    case 'newCampaign':if(need())campaignForm();break;case 'editCampaign':campaignForm(byId('campaigns',id));break;case 'pickCamp':UI.campId=id;render();break;
-    case 'newTask':if(need())taskForm();break;case 'openTask':taskForm(byId('tasks',id));break;case 'taskMove':if(need())taskMove(id,+a.dataset.d);break;case 'taskF':UI.taskF=id;render();break;case 'newDoctor':if(need())doctorForm();break;case 'editDoctor':doctorForm(byId('doctors',id));break;case 'newBranch':if(need())branchForm();break;case 'editBranch':branchForm(id);break;case 'pickBranch':setBranch(id);break;
+    case 'newPurchase':if(need())purchaseForm();break;case 'editPurchase':voOpen(()=>purchaseForm(byId('purchases',id)));break;
+    case 'newExpense':if(need())expenseForm();break;case 'editExpense':voOpen(()=>expenseForm(byId('expenses',id)));break;case 'editCat':catForm(id);break;
+    case 'newPartner':if(need())partnerForm({},a.dataset.scope);break;case 'editPartner':voOpen(()=>partnerForm(byId('partners',id)));break;
+    case 'newWithdrawal':if(need())withdrawalForm();break;case 'editWithdrawal':voOpen(()=>withdrawalForm(byId('withdrawals',id)));break;
+    case 'newCampaign':if(need())campaignForm();break;case 'editCampaign':voOpen(()=>campaignForm(byId('campaigns',id)));break;case 'pickCamp':UI.campId=id;render();break;
+    case 'newTask':if(need())taskForm();break;case 'openTask':taskForm(byId('tasks',id));break;case 'taskMove':if(need())taskMove(id,+a.dataset.d);break;case 'taskF':UI.taskF=id;render();break;case 'newDoctor':if(need())doctorForm();break;case 'editDoctor':voOpen(()=>doctorForm(byId('doctors',id)));break;case 'newBranch':if(need())branchForm();break;case 'editBranch':voOpen(()=>branchForm(id));break;case 'pickBranch':setBranch(id);break;
     case 'copyRx':{const txt=rxText(byId('exams',id));navigator.clipboard.writeText(txt).then(()=>toast(t('copied'))).catch(()=>openModal(t('rxText'),`<textarea id="rxTxt" style="min-height:220px">${esc(txt)}</textarea>`,{onMount:f=>f.querySelector('#rxTxt').select()}));break}
     case 'backup':doBackup();break;case 'repType':UI.repType=id;render();break;case 'repPdf':if(REP_LAST)printPreview(t('tab_reports')+' · '+repTitle(),repDoc,{fname:'eyecon-report-'+REP_LAST.type+'-'+today()});break;case 'repXlsx':repXlsx(false);break;case 'repShare':repXlsx(true);break;case 'gasUsers':gasUsersForm();break;case 'bkNow':a.disabled=true;window.__gas.archiveNow().then(()=>{toast(t('bkDone'));bkFill(true)}).catch(()=>toast(t('bkAuth'))).finally(()=>a.disabled=false);break;case 'gasPass':gasPassForm();break;case 'gasLogout':window.__gas&&window.__gas.logout();break;case 'sheets':doSheets();break;
     case 'printRx':printExam(byId('exams',id),a.dataset.kind||'exam');break;
     case 'newVoucher':voucherForm();break;case 'printVoucher':printVoucher(byId('vouchers',id));break;
-    case 'delVoucher':if(need())armDelete(a,()=>delVoucher(byId('vouchers',id)));break;
-    case 'newExchange':if(need())exchangeForm();break;case 'editExchange':exchangeForm(byId('exchanges',id));break;
-    case 'partnerSt':partnerSt(byId('partners',id));break;case 'distProfit':distForm(a.dataset.scope);break;case 'delDist':if(need())armDelete(a,()=>delDist(id));break;case 'askRate':rateForm();break;
+    case 'delVoucher':if(!isMgr()){toast(t('mgrOnly'));break}if(need())armDelete(a,()=>delVoucher(byId('vouchers',id)));break;case 'editVoucher':if(!isMgr()){toast(t('mgrOnly'));break}voucherEdit(byId('vouchers',id));break;
+    case 'newExchange':if(need())exchangeForm();break;case 'editExchange':voOpen(()=>exchangeForm(byId('exchanges',id)));break;
+    case 'partnerSt':partnerSt(byId('partners',id));break;case 'distProfit':distForm(a.dataset.scope);break;case 'delDist':if(!isMgr()){toast(t('mgrOnly'));break}if(need())armDelete(a,()=>delDist(id));break;case 'askRate':rateForm();break;
     case 'newGuide':guideForm({kind:'note'});break;
-    case 'editGuide':guideForm(guides().find(g=>g.id===id));break;
+    case 'editGuide':voOpen(()=>guideForm(guides().find(g=>g.id===id)));break;
     case 'printGuide':{const g=guides().find(x=>x.id===id);if(g)printPreview(g.title,()=>printShell(gT(g),flyerPage(g,branch(defBranch())),branch(defBranch()),false),{fname:'guide-'+g.id});break}
     case 'addBrand':{const el=$('#newBrand'),v=(el&&el.value||'').trim();if(!v||!canWrite)break;if(partners().includes(v)){toast(t('specExists'));break}saveSettings({partners:[...partners(),v]});break}
     case 'delBrand':{if(!canWrite)break;saveSettings({partners:partners().filter(x=>x!==id)});const lg={...S.brandLogos};delete lg[id];BRANDS[activeB()]=lg;if(db)db.doc(sdoc('brands',activeB())).set({logos:lg,updatedAt:Date.now()}).catch(()=>{});break}
@@ -2085,7 +2109,7 @@ document.addEventListener('click',e=>{
       if(c.add.includes(v))c.add=c.add.filter(x=>x!==v);else c.hide.push(v);sp[k]=c;saveSettings({specs:sp});break}
     case 'addCat':{const el=$('#newCat'),v=(el&&el.value||'').trim();if(!v||!isAdmin)break;if(expCats().some(k=>catLbl(k)===v)){toast(t('catExists'));break}saveSettings({expCats:[...(S.settings.expCats||[]),v]});break}
     case 'delCat':if(isAdmin)armDelete(a,()=>saveSettings({expCats:(S.settings.expCats||[]).filter(k=>k!==id)}));break;
-    case 'newAsset':if(need())assetForm();break;case 'editAsset':assetForm(byId('fixedAssets',id));break;
+    case 'newAsset':if(need())assetForm();break;case 'editAsset':voOpen(()=>assetForm(byId('fixedAssets',id)));break;
     case 'delLogo':if(need()&&db)db.doc(sdoc('logo',activeB())).delete().then(()=>{delete LOGO[activeB()];render()}).catch(err=>toast(errMsg(err)));break;
     case 'toggleUnpaid':UI.salesUnpaid=!UI.salesUnpaid;render();break;
     case 'openDebts':view='sales';UI.salesPeriod='all';UI.salesUnpaid=true;UI.patientId=null;render();window.scrollTo(0,0);break;
@@ -2360,9 +2384,9 @@ render();
   try{const u=await claude.use('user');if(u){const c=await u.can('data.write');if(c===false)canWrite=false;try{isAdmin=!!(await u.canEdit())}catch(_){}}}catch(_){}
   COLS.forEach(c=>db.collection(c).onSnapshot(s=>{S[c]=s.docs.map(d=>({id:d.id,...d.data()}));loaded[c]=true;schedule()},err=>{loaded[c]=true;if(err&&err.code==='revoked')canWrite=false;schedule()}));
   db.collection('settings').onSnapshot(s=>{[SET,LOGO,BRANDS].forEach(o=>Object.keys(o).forEach(k=>delete o[k]));RATE=null;
-    s.docs.forEach(d=>{const id=d.id,v=d.data()||{};let m;if(id==='main')SET.main=v;else if(id==='rate')RATE=v;else if(id==='logo')LOGO.main=v;else if(id==='brands')BRANDS.main=v.logos||{};
+    s.docs.forEach(d=>{const id=d.id,v=d.data()||{};let m;if(id==='main')SET.main=v;else if(id==='rate')RATE=v;else if(id==='rules')RULES=v;else if(id==='logo')LOGO.main=v;else if(id==='brands')BRANDS.main=v.logos||{};
       else if((m=id.match(/^b_(.+)$/)))SET[m[1]]=v;else if((m=id.match(/^logo_(.+)$/)))LOGO[m[1]]=v;else if((m=id.match(/^brands_(.+)$/)))BRANDS[m[1]]=v.logos||{}});
-    applyBranch();try{applyLang()}catch(_){}setTimeout(maybeAskRate,300);setTimeout(brMigrate,900);const ae=document.activeElement;if(!(ae&&ae.closest&&ae.closest('#setForm')))schedule()},()=>{});
+    applyBranch();try{applyLang()}catch(_){}setTimeout(maybeAskRate,300);setTimeout(brMigrate,900);setTimeout(rulesSync,1100);const ae=document.activeElement;if(!(ae&&ae.closest&&ae.closest('#setForm')))schedule()},()=>{});
   render();
 })();
 </script>
