@@ -109,7 +109,7 @@ function touch_(c, t) { props_().setProperty('m_' + c, String(t)); props_().setP
 function now_() { return Date.now(); }
 
 /* ---------- activity log (sheet _log) ---------- */
-var AR_COL = { patients: 'الزبائن', exams: 'الفحوصات', sales: 'المبيعات', items: 'المخزون', purchases: 'المشتريات', expenses: 'المصاريف', vouchers: 'سندات الصرف', partners: 'الشركاء', withdrawals: 'سحوبات الشركاء', fixedAssets: 'الأصول', exchanges: 'صرف العملة', campaigns: 'حملات واتساب', doctors: 'أطباء العيون', branches: 'الفروع', guides: 'النماذج التثقيفية', settings: 'الإعدادات', rates: 'أسعار الصرف', counters: 'العدادات' };
+var AR_COL = { patients: 'الزبائن', exams: 'الفحوصات', sales: 'المبيعات', items: 'المخزون', purchases: 'المشتريات', expenses: 'المصاريف', vouchers: 'سندات الصرف', partners: 'الشركاء', withdrawals: 'سحوبات الشركاء', fixedAssets: 'الأصول', exchanges: 'صرف العملة', campaigns: 'حملات واتساب', doctors: 'أطباء العيون', chat: 'المحادثات', chatRe: 'تفاعلات المحادثات', chatRead: 'قراءة المحادثات', files: 'الملفات', tasks: 'المهام', branches: 'الفروع', guides: 'النماذج التثقيفية', settings: 'الإعدادات', rates: 'أسعار الصرف', counters: 'العدادات' };
 function cut_(v, n) { v = String(v == null ? '' : v); return v.length > n ? v.slice(0, n) + '…' : v; }
 function safe_(v) { return typeof v === 'string' && /^[=+@]/.test(v) ? "'" + v : v; }
 function log_(user, action, c, id, sum, details) {
@@ -135,7 +135,7 @@ function session_(token) {
 }
 var LEGACY = { admin: 'owner', staff: 'user', viewer: 'user' };
 function role_(r) { r = String(r || ''); return LEGACY[r] || (['owner', 'manager', 'user', 'doctor'].indexOf(r) >= 0 ? r : 'user'); }
-/* a referring doctor's account only reads; it can never add, change or delete anything */
+/* a referring doctor's account cannot use counters or admin functions; record writes are checked by rules (allowed_) */
 function writer_(token) { var s = session_(token); if (role_(s.role) === 'doctor') throw new Error('perm'); return s; }
 function admin_(token) { var s = session_(token); if (role_(s.role) !== 'owner' && role_(s.role) !== 'manager') throw new Error('perm'); s.role = role_(s.role); return s; }
 function owner_(token) { var s = session_(token); if (role_(s.role) !== 'owner') throw new Error('perm'); s.role = 'owner'; return s; }
@@ -175,6 +175,110 @@ function partnersVis_(al) {
   readCol_('partners', 0).forEach(function (x) { if (docOk_(al, 'partners', x[0], x[1])) m[x[0]] = 1; });
   return m;
 }
+/* ---------- rule-driven permissions ----------
+ * Every collection follows a rule: who may read it (scope) and who may create, update or delete (lists of tokens).
+ * The owner can adjust rules from the app (settings/rules), so new sections and permission changes need no new server code.
+ * Tokens: a role name (owner, manager, user, doctor), 'staff' (owner+manager+user), 'own' (the record's author),
+ * 'own:N' (the author within N seconds of creating it), 'append:field,f2,…' (may only add items to the array `field`
+ * and change f2…; everything else must stay the same).
+ * Scopes: branch (branchId), auto (branchId when present), aud (record.aud tokens: all, br:X, dr:X, u:name),
+ * settings, branches, partners, withdrawals, global. lazy:true keeps big records (files) out of load/poll; read them with api_get.
+ */
+var STAFF = { owner: 1, manager: 1, user: 1 };
+var SCOPES = { branch: 1, auto: 1, aud: 1, settings: 1, branches: 1, partners: 1, withdrawals: 1, global: 1 };
+var ALL3 = ['staff'], ADM = ['owner', 'manager'];
+var BASE_RULES = {
+  _default: { scope: 'auto', create: ALL3, update: ALL3, del: ALL3 },
+  settings: { scope: 'settings', create: ALL3, update: ALL3, del: ADM },
+  branches: { scope: 'branches', create: ALL3, update: ALL3, del: ALL3 },
+  partners: { scope: 'partners', create: ALL3, update: ALL3, del: ALL3 },
+  withdrawals: { scope: 'withdrawals', create: ALL3, update: ALL3, del: ALL3 },
+  sales: { scope: 'branch', create: ALL3, update: ['owner', 'manager', 'own:600', 'append:payments,paid,method', 'append:stageLog,stage,status,dueDate'], del: ['owner', 'manager', 'own:600'] },
+  chat: { scope: 'aud', create: ['staff', 'doctor'], update: ['own:60'], del: ['own:60'] },
+  chatRe: { scope: 'aud', create: ['staff', 'doctor'], update: ['own'], del: ['own'] },
+  chatRead: { scope: 'aud', create: ['staff', 'doctor'], update: ['own'], del: ['own'] },
+  files: { scope: 'aud', create: ['staff', 'doctor'], update: [], del: ['own:60', 'owner', 'manager'], lazy: true },
+  tasks: { scope: 'branch', create: ALL3, update: ALL3, del: ['owner', 'manager', 'own'] }
+};
+var RULES_CACHE = null;
+function ruleOverrides_() {
+  if (RULES_CACHE) return RULES_CACHE; RULES_CACHE = {};
+  try {
+    var sh = sheet_('settings', false), r = sh ? findRow_(sh, 'rules') : 0;
+    var d = r ? readRow_(sh.getRange(r, 1, 1, sh.getLastColumn()).getValues()[0]) : {};
+    var cols = d && d.cols || {};
+    for (var c in cols) { if (!/^[A-Za-z][A-Za-z0-9_]{0,40}$/.test(c)) continue; var o = cleanRule_(cols[c]); if (o) RULES_CACHE[c] = o; }
+  } catch (e) {}
+  return RULES_CACHE;
+}
+function cleanRule_(x) {
+  if (!x || typeof x !== 'object') return null; var o = {};
+  if (SCOPES[x.scope]) o.scope = x.scope;
+  ['create', 'update', 'del'].forEach(function (k) { if (Array.isArray(x[k])) o[k] = x[k].filter(function (t) { return typeof t === 'string' && /^(owner|manager|user|doctor|staff|own|own:\d{1,7}|append:[A-Za-z0-9_,]{1,200})$/.test(t); }); });
+  if (typeof x.lazy === 'boolean') o.lazy = x.lazy;
+  return o;
+}
+function rule_(c) {
+  var b = BASE_RULES[c] || (SCOPED[c] ? { scope: 'branch', create: ALL3, update: ALL3, del: ALL3 } : BASE_RULES._default), o = ruleOverrides_()[c] || {}, r = {};
+  for (var k in b) r[k] = b[k]; for (var k2 in o) r[k2] = o[k2];
+  return r;
+}
+function audHas_(aud, s) {
+  if (!Array.isArray(aud)) return false;
+  var role = role_(s.role), al = vis_(s), dm = {};
+  (s.dr || []).forEach(function (x) { dm[x] = 1; });
+  for (var i = 0; i < aud.length; i++) {
+    var t = String(aud[i]), m;
+    if (role === 'owner') return true;
+    if (t === 'u:' + s.u) return true;
+    if (role === 'doctor') { if ((m = /^dr:(.+)$/.exec(t)) && dm[m[1]]) return true; continue; }
+    if (t === 'all') return true;
+    if ((m = /^br:(.+)$/.exec(t)) && (!al || al[m[1]])) return true;
+  }
+  return false;
+}
+/** May this session see the record? (doctors see only aud records here; exams/patients come from drData_) */
+function see_(s, c, id, d) {
+  var role = role_(s.role), R = rule_(c); d = d || {};
+  if (role === 'owner') return true;
+  if (R.scope === 'aud') return audHas_(d.aud, s);
+  if (role === 'doctor') return false;
+  var al = vis_(s); if (!al) return true;
+  switch (R.scope) {
+    case 'branch': return !!al[d.branchId || 'main'];
+    case 'auto': return !d.branchId || !!al[d.branchId];
+    case 'global': return true;
+    case 'withdrawals': if (!s._pv) s._pv = partnersVis_(al); return docOk_(al, c, id, d, s._pv);
+    default: return docOk_(al, c, id, d, null);
+  }
+}
+function sameBut_(a, b, skip) {
+  var keys = {}, k; for (k in a) keys[k] = 1; for (k in b) keys[k] = 1;
+  for (k in keys) { if (skip[k]) continue; if (JSON.stringify(a[k]) !== JSON.stringify(b[k])) return false; }
+  return true;
+}
+function allowed_(s, c, id, prev, d) {
+  var role = role_(s.role), op = !prev ? 'create' : d === null ? 'del' : 'update';
+  if (c === 'settings' && id === 'rules') return role === 'owner';
+  if (prev && !see_(s, c, id, prev)) return false;
+  if (d && !see_(s, c, id, d)) return false;
+  var list = rule_(c)[op] || [], t = now_();
+  for (var i = 0; i < list.length; i++) {
+    var k = list[i], m;
+    if (k === role || (k === 'staff' && STAFF[role])) return true;
+    if (!prev) continue;
+    var mine = prev._by && prev._by === s.u;
+    if (k === 'own' && mine) return true;
+    if ((m = /^own:(\d+)$/.exec(k)) && mine && t - Number(prev._at || 0) <= Number(m[1]) * 1000) return true;
+    if ((m = /^append:(.+)$/.exec(k)) && op === 'update' && role !== 'doctor') {
+      var f = m[1].split(','), arr = f[0], skip = { updatedAt: 1, createdAt: 1, _by: 1, _at: 1, _byName: 1 };
+      f.forEach(function (x) { skip[x] = 1; });
+      var a = Array.isArray(prev[arr]) ? prev[arr] : [], b = Array.isArray(d[arr]) ? d[arr] : [];
+      if (b.length >= a.length && JSON.stringify(b.slice(0, a.length)) === JSON.stringify(a) && sameBut_(prev, d, skip)) return true;
+    }
+  }
+  return false;
+}
 function cleanTokens_() {
   var all = props_().getProperties(), t = now_();
   for (var k in all) if (k.indexOf('tok_') === 0) { try { if (JSON.parse(all[k]).exp < t) props_().deleteProperty(k); } catch (e) { props_().deleteProperty(k); } }
@@ -205,6 +309,12 @@ function drData_(s) {
     branches: readCol_('branches', 0).filter(function (x) { return brs[x[0]]; }).map(function (x) { return [x[0], x[1]]; }),
     doctors: readCol_('doctors', 0).filter(function (x) { return dm[x[0]]; }).map(function (x) { return [x[0], pick(x[1], ['name', 'clinic', 'branchId'])]; })
   };
+}
+var DR_FULL = ['exams', 'patients', 'settings', 'branches', 'doctors'];
+function audCols_() {
+  var out = [];
+  ss_().getSheets().forEach(function (sh) { var n = sh.getName(); if (RESERVED[n] || !/^[A-Za-z][A-Za-z0-9_]{0,40}$/.test(n)) return; var R = rule_(n); if (R.scope === 'aud' && !R.lazy) out.push(n); });
+  return out;
 }
 
 function api_status() { return JSON.stringify({ hasUsers: users_().length > 0 }); }
@@ -311,12 +421,15 @@ function readCol_(c, since) {
 
 function api_load(token) {
   var s = session_(token);
-  if (isDoctor_(s)) return JSON.stringify({ t: now_(), cols: drData_(s) });
-  var al = vis_(s), pv = partnersVis_(al);
   var res = { t: now_(), cols: {} };
+  if (isDoctor_(s)) {
+    res.cols = drData_(s);
+    audCols_().forEach(function (n) { res.cols[n] = readCol_(n, 0).filter(function (x) { return audHas_(x[1].aud, s); }).map(function (x) { return [x[0], x[1]]; }); });
+    return JSON.stringify(res);
+  }
   ss_().getSheets().forEach(function (sh) {
-    var n = sh.getName(); if (RESERVED[n] || !/^[A-Za-z][A-Za-z0-9_]{0,40}$/.test(n)) return;
-    res.cols[n] = readCol_(n, 0).filter(function (x) { return docOk_(al, n, x[0], x[1], pv); }).map(function (x) { return [x[0], x[1]]; });
+    var n = sh.getName(); if (RESERVED[n] || !/^[A-Za-z][A-Za-z0-9_]{0,40}$/.test(n) || rule_(n).lazy) return;
+    res.cols[n] = readCol_(n, 0).filter(function (x) { return see_(s, n, x[0], x[1]); }).map(function (x) { return [x[0], x[1]]; });
   });
   return JSON.stringify(res);
 }
@@ -327,9 +440,11 @@ function api_poll(token, since) {
   var t = now_(), all = props_().getProperties(), res = { t: t, cols: {}, del: [] };
   if (Number(all.ver || 0) <= since) return JSON.stringify(res);
   if (isDoctor_(s)) {
-    var hit = ['exams', 'patients', 'settings', 'branches', 'doctors', '_deleted'].some(function (c) { return Number(all['m_' + c] || 0) > since; });
-    if (!hit) return JSON.stringify(res);
-    res.cols = drData_(s); res.full = 1; // the whole (small) set: the app drops anything no longer shared with this doctor
+    var hit = DR_FULL.concat(['_deleted']).some(function (c) { return Number(all['m_' + c] || 0) > since; });
+    if (hit) { res.cols = drData_(s); res.full = 1; res.fullCols = DR_FULL; } // the whole (small) set: the app drops anything no longer shared with this doctor
+    audCols_().forEach(function (n) { if (Number(all['m_' + n] || 0) > since) res.cols[n] = readCol_(n, since).filter(function (x) { return audHas_(x[1].aud, s); }).map(function (x) { return [x[0], x[1]]; }); });
+    if (Number(all.m__deleted || 0) > since) { var ac = {}; audCols_().forEach(function (n) { ac[n] = 1; }); var ds = sheet_('_deleted', false);
+      if (ds && ds.getLastRow() > 1) ds.getRange(2, 1, ds.getLastRow() - 1, 3).getValues().forEach(function (r) { if (Number(r[2]) > since && ac[String(r[0])]) res.del.push([String(r[0]), String(r[1])]); }); }
     return JSON.stringify(res);
   }
   for (var k in all) {
@@ -339,15 +454,15 @@ function api_poll(token, since) {
       var dsh = sheet_('_deleted', false);
       if (dsh && dsh.getLastRow() > 1) dsh.getRange(2, 1, dsh.getLastRow() - 1, 3).getValues().forEach(function (r) { if (Number(r[2]) > since) res.del.push([String(r[0]), String(r[1])]); });
     } else {
-      if (al && c === 'withdrawals' && !pv) pv = partnersVis_(al);
-      res.cols[c] = readCol_(c, since).filter(function (x) { return docOk_(al, c, x[0], x[1], pv); }).map(function (x) { return [x[0], x[1]]; });
+      if (rule_(c).lazy || RESERVED[c] || !/^[A-Za-z][A-Za-z0-9_]{0,40}$/.test(c)) continue;
+      res.cols[c] = readCol_(c, since).filter(function (x) { return see_(s, c, x[0], x[1]); }).map(function (x) { return [x[0], x[1]]; });
     }
   }
   return JSON.stringify(res);
 }
 
 function api_set(token, c, id, json, merge) {
-  var me = writer_(token); validCol_(c); validId_(id);
+  var me = session_(token); validCol_(c); validId_(id);
   var d = JSON.parse(json);
   var lock = LockService.getScriptLock(); lock.waitLock(20000);
   try {
@@ -358,8 +473,10 @@ function api_set(token, c, id, json, merge) {
       for (var k in d) old[k] = d[k];
       d = old;
     }
-    var al = vis_(me);
-    if (al) { var pv = c === 'withdrawals' ? partnersVis_(al) : null; if (!docOk_(al, c, id, d, pv) || (prev && !docOk_(al, c, id, prev, pv))) throw new Error('perm'); }
+    if (prev) { d._by = prev._by; d._at = prev._at; d._byName = prev._byName; if (prev._by === undefined) { delete d._by; delete d._at; delete d._byName; } }
+    else { d._by = me.u; d._at = t; d._byName = me.name || me.u; }
+    if (!allowed_(me, c, id, prev, d)) throw new Error('perm');
+    if (c === 'settings' && id === 'rules') d = { v: d.v || 0, cols: (function () { var o = {}; for (var k in (d.cols || {})) { var r = cleanRule_(d.cols[k]); if (r && /^[A-Za-z][A-Za-z0-9_]{0,40}$/.test(k)) o[k] = r; } return o; })(), _by: d._by, _at: d._at, _byName: d._byName };
     log_(me.u, prev ? 'تعديل' : 'إضافة', c, id, summary_(c, d), prev ? changed_(prev, d) : '');
     if (rowNo) sh.getRange(rowNo, 4, 1, Math.max(1, sh.getLastColumn() - 3)).clearContent();
     writeRow_(sh, rowNo || sh.getLastRow() + 1, rowFor_(c, id, d, t));
@@ -369,13 +486,13 @@ function api_set(token, c, id, json, merge) {
 }
 
 function api_del(token, c, id) {
-  var me = writer_(token); validCol_(c); validId_(id);
+  var me = session_(token); validCol_(c); validId_(id);
   var lock = LockService.getScriptLock(); lock.waitLock(20000);
   try {
     var sh = sheet_(c, false), rowNo = sh ? findRow_(sh, id) : 0, t = now_(), prev = {};
     if (rowNo) {
       prev = readRow_(sh.getRange(rowNo, 1, 1, sh.getLastColumn()).getValues()[0]);
-      var al = vis_(me); if (al && !docOk_(al, c, id, prev, c === 'withdrawals' ? partnersVis_(al) : null)) throw new Error('perm');
+      if (!allowed_(me, c, id, prev, null)) throw new Error('perm');
       sh.deleteRow(rowNo);
     }
     var pj = JSON.stringify(prev);
@@ -386,6 +503,19 @@ function api_del(token, c, id) {
   } finally { lock.releaseLock(); }
 }
 
+/** Read one record (also lazy ones such as files) if this session may see it. */
+function api_get(token, c, id) {
+  var s = session_(token); validCol_(c); validId_(id);
+  var sh = sheet_(c, false), r = sh ? findRow_(sh, id) : 0; if (!r) throw new Error('missing');
+  var d = readRow_(sh.getRange(r, 1, 1, sh.getLastColumn()).getValues()[0]);
+  if (!see_(s, c, id, d)) throw new Error('perm');
+  return JSON.stringify({ id: id, data: d });
+}
+/** Names of the staff (for chat, tasks and assignments). Doctors get none. */
+function api_people(token) {
+  var s = session_(token); if (role_(s.role) === 'doctor') return '[]';
+  return JSON.stringify(users_().filter(function (u) { return u.active && u.role !== 'doctor'; }).map(function (u) { return { username: u.username, name: u.name, role: u.role, branches: u.role === 'owner' ? null : u.branches }; }));
+}
 function api_incr(token, path, min) {
   writer_(token);
   var lock = LockService.getScriptLock(); lock.waitLock(20000);
@@ -467,7 +597,7 @@ function snapshot_(force) {
   var lock = LockService.getScriptLock(); lock.waitLock(30000);
   try {
     var all = {};
-    ss_().getSheets().forEach(function (sh) { var n = sh.getName(); if (RESERVED[n] || !/^[A-Za-z][A-Za-z0-9_]{0,40}$/.test(n)) return; all[n] = readCol_(n, 0); });
+    ss_().getSheets().forEach(function (sh) { var n = sh.getName(); if (RESERVED[n] || !/^[A-Za-z][A-Za-z0-9_]{0,40}$/.test(n) || rule_(n).lazy) return; all[n] = readCol_(n, 0); });
     var pname = {}; (all.patients || []).forEach(function (x) { pname[x[0]] = (x[1].code ? x[1].code + ' · ' : '') + (x[1].name || ''); });
     var stamp = function (x) { var o = { id: x[0] }; var f = flat_(x[1]); for (var k in f) o[k] = f[k]; o['آخر تعديل'] = x[2] ? new Date(x[2]) : ''; return o; };
     for (var c in all) {
