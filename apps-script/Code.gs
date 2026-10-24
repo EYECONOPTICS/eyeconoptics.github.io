@@ -46,7 +46,7 @@ function sheet_(name, create) {
   var sh = ss_().getSheetByName(name);
   if (!sh && create) {
     sh = ss_().insertSheet(name);
-    if (name === '_users') sh.appendRow(['username', 'name', 'role', 'active', 'salt', 'hash', 'created', 'branches']);
+    if (name === '_users') sh.appendRow(['username', 'name', 'role', 'active', 'salt', 'hash', 'created', 'branches', 'doctors']);
     else if (name === '_deleted') sh.appendRow(['collection', 'id', 'time', 'by', 'deleted record (JSON)']);
     else if (name === '_log') sh.appendRow(['الوقت', 'المستخدم', 'العملية', 'القسم', 'رقم السجل', 'ملخص', 'تفاصيل']);
     else sh.appendRow(['id', 'updatedAt', 'summary', 'data']);
@@ -109,7 +109,7 @@ function touch_(c, t) { props_().setProperty('m_' + c, String(t)); props_().setP
 function now_() { return Date.now(); }
 
 /* ---------- activity log (sheet _log) ---------- */
-var AR_COL = { patients: 'الزبائن', exams: 'الفحوصات', sales: 'المبيعات', items: 'المخزون', purchases: 'المشتريات', expenses: 'المصاريف', vouchers: 'سندات الصرف', partners: 'الشركاء', withdrawals: 'سحوبات الشركاء', fixedAssets: 'الأصول', exchanges: 'صرف العملة', campaigns: 'حملات واتساب', branches: 'الفروع', guides: 'النماذج التثقيفية', settings: 'الإعدادات', rates: 'أسعار الصرف', counters: 'العدادات' };
+var AR_COL = { patients: 'الزبائن', exams: 'الفحوصات', sales: 'المبيعات', items: 'المخزون', purchases: 'المشتريات', expenses: 'المصاريف', vouchers: 'سندات الصرف', partners: 'الشركاء', withdrawals: 'سحوبات الشركاء', fixedAssets: 'الأصول', exchanges: 'صرف العملة', campaigns: 'حملات واتساب', doctors: 'أطباء العيون', branches: 'الفروع', guides: 'النماذج التثقيفية', settings: 'الإعدادات', rates: 'أسعار الصرف', counters: 'العدادات' };
 function cut_(v, n) { v = String(v == null ? '' : v); return v.length > n ? v.slice(0, n) + '…' : v; }
 function safe_(v) { return typeof v === 'string' && /^[=+@]/.test(v) ? "'" + v : v; }
 function log_(user, action, c, id, sum, details) {
@@ -134,19 +134,20 @@ function session_(token) {
   return s;
 }
 var LEGACY = { admin: 'owner', staff: 'user', viewer: 'user' };
-function role_(r) { r = String(r || ''); return LEGACY[r] || (['owner', 'manager', 'user'].indexOf(r) >= 0 ? r : 'user'); }
-function writer_(token) { return session_(token); }
+function role_(r) { r = String(r || ''); return LEGACY[r] || (['owner', 'manager', 'user', 'doctor'].indexOf(r) >= 0 ? r : 'user'); }
+/* a referring doctor's account only reads; it can never add, change or delete anything */
+function writer_(token) { var s = session_(token); if (role_(s.role) === 'doctor') throw new Error('perm'); return s; }
 function admin_(token) { var s = session_(token); if (role_(s.role) !== 'owner' && role_(s.role) !== 'manager') throw new Error('perm'); s.role = role_(s.role); return s; }
 function owner_(token) { var s = session_(token); if (role_(s.role) !== 'owner') throw new Error('perm'); s.role = 'owner'; return s; }
 function users_() {
   var sh = sheet_('_users', true), n = sh.getLastRow();
   if (n < 2) return [];
-  return sh.getRange(2, 1, n - 1, 8).getValues().map(function (r, i) {
-    return { row: i + 2, username: String(r[0]), name: String(r[1]), role: role_(r[2]), active: r[3] === true || String(r[3]).toUpperCase() === 'TRUE', salt: String(r[4]), hash: String(r[5]), branches: brList_(r[7]) };
+  return sh.getRange(2, 1, n - 1, 9).getValues().map(function (r, i) {
+    return { row: i + 2, username: String(r[0]), name: String(r[1]), role: role_(r[2]), active: r[3] === true || String(r[3]).toUpperCase() === 'TRUE', salt: String(r[4]), hash: String(r[5]), branches: brList_(r[7]), doctors: brList_(r[8]) };
   });
 }
 /* ---------- branches: every branch is isolated; a user with a branches list only receives and changes that branch's records ---------- */
-var SCOPED = { items: 1, patients: 1, exams: 1, sales: 1, purchases: 1, expenses: 1, fixedAssets: 1, vouchers: 1, exchanges: 1, campaigns: 1 };
+var SCOPED = { items: 1, patients: 1, exams: 1, sales: 1, purchases: 1, expenses: 1, fixedAssets: 1, vouchers: 1, exchanges: 1, campaigns: 1, doctors: 1 };
 function brList_(v) {
   if (Array.isArray(v)) v = v.join(',');
   var a = String(v == null ? '' : v).split(',').map(function (x) { return x.trim(); }).filter(function (x) { return /^[A-Za-z0-9_\-]{1,60}$/.test(x); });
@@ -166,7 +167,7 @@ function docOk_(al, c, id, d, pv) {
   if (c === 'branches') return !!al[id];
   if (c === 'settings') { var o = setOwner_(id); return !o || !!al[o]; }
   if (c === 'partners') return !!al[d.scope && d.scope !== 'group' ? d.scope : 'main'];
-  if (c === 'withdrawals') return !!(pv && pv[d.partnerId]);
+  if (c === 'withdrawals') return !!(pv && pv[d.partnerId]) || (!!d.branchId && !!al[d.branchId]);
   return true;
 }
 function partnersVis_(al) {
@@ -182,8 +183,28 @@ function issue_(u) {
   cleanTokens_();
   var tok = uid_() + uid_();
   var br = role_(u.role) === 'owner' ? null : (u.branches || null);
-  props_().setProperty('tok_' + tok, JSON.stringify({ u: u.username, role: role_(u.role), name: u.name, br: br, exp: now_() + TOKEN_TTL }));
-  return { token: tok, user: { username: u.username, name: u.name, role: u.role, branches: br } };
+  var dr = role_(u.role) === 'doctor' ? (u.doctors || []) : null;
+  props_().setProperty('tok_' + tok, JSON.stringify({ u: u.username, role: role_(u.role), name: u.name, br: br, dr: dr, exp: now_() + TOKEN_TTL }));
+  return { token: tok, user: { username: u.username, name: u.name, role: u.role, branches: br, doctors: dr } };
+}
+/* ---------- referring doctors: a doctor account receives only the exams of the patients it referred (exam.refDoctor), those patients' basic details, and the shop identity needed to print them ---------- */
+var DR_PATIENT = ['code', 'name', 'gender', 'dob', 'ageY', 'ageYAt', 'branchId'];
+var DR_HIDE_SET = ['expCats', 'expCatNames', 'expCatsHidden', 'suppliers', 'supPhone', 'specs', 'tpl', 'partners'];
+function isDoctor_(s) { return role_(s.role) === 'doctor'; }
+function drData_(s) {
+  var dm = {}, al = vis_(s); (s.dr || []).forEach(function (x) { dm[x] = 1; });
+  var ex = readCol_('exams', 0).filter(function (x) { return x[1].refDoctor && dm[x[1].refDoctor] && (!al || al[x[1].branchId || 'main']); });
+  var pids = {}, brs = {}; ex.forEach(function (x) { pids[x[1].patientId] = 1; brs[x[1].branchId || 'main'] = 1; });
+  var pick = function (d, keys) { var o = {}; keys.forEach(function (k) { if (d[k] !== undefined) o[k] = d[k]; }); return o; };
+  var st = readCol_('settings', 0).filter(function (x) { var o = setOwner_(x[0]); return x[0] === 'rate' || (o && brs[o]); }).map(function (x) {
+    var d = JSON.parse(JSON.stringify(x[1])); if (/^(main|b_.+)$/.test(x[0])) DR_HIDE_SET.forEach(function (k) { delete d[k]; }); return [x[0], d]; });
+  return {
+    exams: ex.map(function (x) { return [x[0], x[1]]; }),
+    patients: readCol_('patients', 0).filter(function (x) { return pids[x[0]]; }).map(function (x) { return [x[0], pick(x[1], DR_PATIENT)]; }),
+    settings: st,
+    branches: readCol_('branches', 0).filter(function (x) { return brs[x[0]]; }).map(function (x) { return [x[0], x[1]]; }),
+    doctors: readCol_('doctors', 0).filter(function (x) { return dm[x[0]]; }).map(function (x) { return [x[0], pick(x[1], ['name', 'clinic', 'branchId'])]; })
+  };
 }
 
 function api_status() { return JSON.stringify({ hasUsers: users_().length > 0 }); }
@@ -212,11 +233,11 @@ function api_login(username, password) {
 
 function api_logout(token) { try { log_(session_(token).u, 'تسجيل خروج', '', '', '', ''); } catch (e) {} props_().deleteProperty('tok_' + token); return '1'; }
 
-function api_me(token) { var s = session_(token); return JSON.stringify({ username: s.u, name: s.name, role: role_(s.role), branches: vis_(s) ? s.br : null }); }
+function api_me(token) { var s = session_(token); return JSON.stringify({ username: s.u, name: s.name, role: role_(s.role), branches: vis_(s) ? s.br : null, doctors: isDoctor_(s) ? (s.dr || []) : null }); }
 
 function api_users(token) {
   admin_(token);
-  return JSON.stringify(users_().map(function (u) { return { username: u.username, name: u.name, role: u.role, active: u.active, branches: u.role === 'owner' ? null : u.branches }; }));
+  return JSON.stringify(users_().map(function (u) { return { username: u.username, name: u.name, role: u.role, active: u.active, branches: u.role === 'owner' ? null : u.branches, doctors: u.role === 'doctor' ? u.doctors : null }; }));
 }
 
 function api_saveUser(token, o) {
@@ -229,21 +250,26 @@ function api_saveUser(token, o) {
     var list = users_(), u = list.filter(function (x) { return x.username === username; })[0];
     var sh = sheet_('_users', true);
     if (sh.getRange(1, 8).getValue() === '') sh.getRange(1, 8).setValue('branches');
+    if (sh.getRange(1, 9).getValue() === '') sh.getRange(1, 9).setValue('doctors');
     var br = role === 'owner' ? null : brList_(o.branches), mine = vis_(me);
     if (mine) { if (!br) throw new Error('perm'); br.forEach(function (b) { if (!mine[b]) throw new Error('perm'); }); if (u && u.branches && u.branches.some(function (b) { return !mine[b]; })) throw new Error('perm'); }
     var brTxt = br ? br.join(',') : '';
-    if (me.role !== 'owner' && (role !== 'user' || (u && u.role !== 'user'))) throw new Error('perm');
+    var dr = role === 'doctor' ? brList_(o.doctors) : null, drTxt = dr ? dr.join(',') : '';
+    if (role === 'doctor' && !dr) throw new Error('weak');
+    if (dr && mine) { var dd = {}; readCol_('doctors', 0).forEach(function (x) { dd[x[0]] = x[1].branchId || 'main'; }); dr.forEach(function (x) { if (!dd[x] || !mine[dd[x]]) throw new Error('perm'); }); }
+    var low = function (r) { return r === 'user' || r === 'doctor'; };
+    if (me.role !== 'owner' && (!low(role) || (u && !low(u.role)))) throw new Error('perm');
     if (u && username === me.u && (role !== me.role || o.active === false)) throw new Error('self');
     if (u && u.role === 'owner' && (role !== 'owner' || o.active === false) &&
         list.filter(function (x) { return x.role === 'owner' && x.active && x.username !== username; }).length === 0) throw new Error('last_owner');
     if (!u) {
       if (String(o.password || '').length < 6) throw new Error('weak');
       var salt = uid_();
-      sh.appendRow([username, String(o.name || username), role, o.active !== false, salt, hash_(salt, o.password), new Date(), brTxt]);
+      sh.appendRow([username, String(o.name || username), role, o.active !== false, salt, hash_(salt, o.password), new Date(), brTxt, drTxt]);
     } else {
       sh.getRange(u.row, 2, 1, 3).setValues([[String(o.name || u.name), role, o.active !== false]]);
-      var brChanged = (u.branches ? u.branches.join(',') : '') !== brTxt;
-      sh.getRange(u.row, 8).setValue(brTxt);
+      var brChanged = (u.branches ? u.branches.join(',') : '') !== brTxt || (u.doctors ? u.doctors.join(',') : '') !== drTxt;
+      sh.getRange(u.row, 8, 1, 2).setValues([[brTxt, drTxt]]);
       if (o.password) {
         if (String(o.password).length < 6) throw new Error('weak');
         var s2 = uid_(); sh.getRange(u.row, 5, 1, 2).setValues([[s2, hash_(s2, o.password)]]);
@@ -253,7 +279,7 @@ function api_saveUser(token, o) {
         for (var k in all) if (k.indexOf('tok_') === 0) { try { if (JSON.parse(all[k]).u === username) props_().deleteProperty(k); } catch (e) {} }
       }
     }
-    log_(me.u, u ? 'تعديل مستخدم' : 'إضافة مستخدم', '', username, String(o.name || ''), 'الصلاحية: ' + role + ' | الفروع: ' + (brTxt || 'الكل') + ' | فعّال: ' + (o.active !== false) + (o.password ? ' | كلمة مرور جديدة' : ''));
+    log_(me.u, u ? 'تعديل مستخدم' : 'إضافة مستخدم', '', username, String(o.name || ''), 'الصلاحية: ' + role + ' | الفروع: ' + (brTxt || 'الكل') + (drTxt ? ' | الطبيب: ' + drTxt : '') + ' | فعّال: ' + (o.active !== false) + (o.password ? ' | كلمة مرور جديدة' : ''));
     return '1';
   } finally { lock.releaseLock(); }
 }
@@ -284,7 +310,9 @@ function readCol_(c, since) {
 }
 
 function api_load(token) {
-  var s = session_(token), al = vis_(s), pv = partnersVis_(al);
+  var s = session_(token);
+  if (isDoctor_(s)) return JSON.stringify({ t: now_(), cols: drData_(s) });
+  var al = vis_(s), pv = partnersVis_(al);
   var res = { t: now_(), cols: {} };
   ss_().getSheets().forEach(function (sh) {
     var n = sh.getName(); if (RESERVED[n] || !/^[A-Za-z][A-Za-z0-9_]{0,40}$/.test(n)) return;
@@ -298,6 +326,12 @@ function api_poll(token, since) {
   since = Number(since) || 0;
   var t = now_(), all = props_().getProperties(), res = { t: t, cols: {}, del: [] };
   if (Number(all.ver || 0) <= since) return JSON.stringify(res);
+  if (isDoctor_(s)) {
+    var hit = ['exams', 'patients', 'settings', 'branches', 'doctors', '_deleted'].some(function (c) { return Number(all['m_' + c] || 0) > since; });
+    if (!hit) return JSON.stringify(res);
+    res.cols = drData_(s); res.full = 1; // the whole (small) set: the app drops anything no longer shared with this doctor
+    return JSON.stringify(res);
+  }
   for (var k in all) {
     if (k.indexOf('m_') !== 0 || Number(all[k]) <= since) continue;
     var c = k.slice(2);
