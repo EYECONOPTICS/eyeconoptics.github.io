@@ -32,8 +32,11 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background
 .brand small{color:var(--muted);display:block;font-size:.76rem}
 .picks{display:flex;gap:8px;align-items:center}
 .picks select{width:auto;max-width:190px;padding:5px 8px;font-size:.85rem}
-nav.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
-nav.tabs::-webkit-scrollbar{display:none}
+nav.tabs{display:flex;gap:2px;overflow-x:auto;padding-bottom:2px}
+nav.tabs,.tw,.rxwrap,.chRooms,.hscroll{scrollbar-width:thin;scrollbar-color:var(--sky) transparent}
+nav.tabs::-webkit-scrollbar,.tw::-webkit-scrollbar,.rxwrap::-webkit-scrollbar,.chRooms::-webkit-scrollbar{height:9px}
+nav.tabs::-webkit-scrollbar-thumb,.tw::-webkit-scrollbar-thumb,.rxwrap::-webkit-scrollbar-thumb,.chRooms::-webkit-scrollbar-thumb{background:var(--sky);border-radius:9px}
+.canpan{cursor:grab}.panning,.panning *{cursor:grabbing!important;user-select:none!important}
 nav.tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:10px 12px;font:inherit;font-size:.9rem;color:var(--muted);white-space:nowrap;cursor:pointer}
 nav.tabs button[aria-current="true"]{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}
 main{padding-block:20px 60px;display:grid;gap:20px}
@@ -634,6 +637,17 @@ function openModal(title,bodyHTML,{onSubmit,submitLabel=t('save'),extraFooter=''
 function closeModal(){$('#modalRoot').innerHTML='';schedule()}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#ov')&&!$('#ov').dataset.locked)closeModal()});
 /* ---- scroll-wheel picker: lens powers in 0.25 steps (minus, zero, plus) and axis 1–180 (circular), by mouse wheel, drag with momentum, touch or the side bar ---- */
+/* drag to pan: press and drag with the mouse on any area that scrolls sideways (tabs, wide tables, Rx grids) — like a finger on a phone */
+(()=>{const SKIP='input,select,textarea,[contenteditable],#whOv,.chMsgs,.chComp';let P=null,block=false;
+  const hx=el=>{for(;el&&el!==document.body;el=el.parentElement){if(el.scrollWidth>el.clientWidth+2){const o=getComputedStyle(el).overflowX;if(o==='auto'||o==='scroll')return el}}return null};
+  document.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse'||e.button!==0||e.target.closest(SKIP))return;const el=hx(e.target);if(!el)return;P={el,x:e.clientX,s:el.scrollLeft,moved:false,id:e.pointerId}},true);
+  document.addEventListener('pointermove',e=>{if(!P||e.pointerId!==P.id)return;const dx=e.clientX-P.x;if(!P.moved&&Math.abs(dx)<6)return;if(!P.moved){P.moved=true;document.documentElement.classList.add('panning');try{window.getSelection().removeAllRanges()}catch(_){}}P.el.scrollLeft=P.s-dx;e.preventDefault()},true);
+  const end=()=>{if(!P)return;if(P.moved){block=true;setTimeout(()=>block=false,0)}document.documentElement.classList.remove('panning');P=null};
+  document.addEventListener('pointerup',end,true);document.addEventListener('pointercancel',end,true);
+  document.addEventListener('click',e=>{if(block){e.preventDefault();e.stopPropagation();block=false}},true);
+  document.addEventListener('mouseover',e=>{const el=hx(e.target);document.querySelectorAll('.canpan').forEach(x=>x!==el&&x.classList.remove('canpan'));if(el&&!e.target.closest(SKIP))el.classList.add('canpan')},{passive:true});
+  /* the mouse wheel scrolls the tab bar sideways */
+  document.addEventListener('wheel',e=>{const n=e.target.closest&&e.target.closest('nav.tabs');if(n&&Math.abs(e.deltaY)>Math.abs(e.deltaX)&&n.scrollWidth>n.clientWidth){n.scrollLeft+=(document.documentElement.dir==='rtl'?-1:1)*e.deltaY;e.preventDefault()}},{passive:false})})();
 const WH_H=40;
 document.addEventListener('wheel',e=>{const a=document.activeElement;if(a&&a.tagName==='INPUT'&&a.type==='number'&&(e.target===a||a.contains(e.target))&&!whKind(a))a.blur()},{capture:true,passive:true});
 function whKind(el){if(!el||el.tagName!=='INPUT'||el.type!=='number'||el.disabled||el.dataset.kb)return null;const n=el.name||el.id||'';
