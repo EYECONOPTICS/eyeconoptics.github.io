@@ -1302,7 +1302,9 @@ var pag=function(d){var pg=d,guard=0,out=[d];
    while(over(pg)){var e=G[G.length-1],tb=e.tagName==='TABLE'&&e.tBodies[0]&&e.tBodies[0].rows.length>1?e:null;if(!tb&&G.length<2)break;
     if(tb){var t2=tb.cloneNode(false);if(tb.tHead)t2.appendChild(tb.tHead.cloneNode(true));var b2=document.createElement('tbody');t2.appendChild(b2);put(t2);
      while(over(pg)&&tb.tBodies[0].rows.length>1)b2.insertBefore(tb.tBodies[0].rows[tb.tBodies[0].rows.length-1],b2.firstChild);moved++;break}
-    G.pop();put(e);moved++}}
+    G.pop();put(e);moved++}
+   /* never leave a sub-title alone at the bottom of a page */
+   while(G.length>1&&G[G.length-1].matches('.st')){put(G.pop());moved++}}
   if(!moved){np.remove();break}pg=np;out.push(np)}return out};
 /* fewest pages: try the normal size, then slightly smaller text and tighter spacing; keep the largest size that gives the fewest pages */
 A(document.querySelectorAll('.doc')).forEach(function(d0){if(d0.querySelector('.flyc')||!over(d0))return;var best=null;
@@ -1346,8 +1348,11 @@ function rxSection(rx,withVa,compact){const mono=isMono(rx);let h=eyeTable(rx,[[
   if(ch.length)h+=`<div class="chips" style="direction:ltr">${ch.map(c=>`<span class="chip">${c}</span>`).join('')}</div>`;return h}
 function patientGrid(p,e,extra=''){return `<div class="grid">${fld(t('patient'),esc(p.name||''))}${fld(t('pid'),esc(p.code||''),1)}${fld(t('age'),patientAge(p)!==''?patientAge(p)+' '+t('years'):'—')}${fld(t('gender'),p.gender?esc(tx(p.gender)):'')}${fld(t('phone'),esc(p.phone||''),1)}${fld(t('examiner'),esc((e&&e.examiner)||''))}${extra}</div>`}
 const signBlock=e=>`<div class="sign"><div class="stamp">${t('stamp')}</div><div class="sg"><div style="font-weight:600">${e&&e.examiner?esc(e.examiner):'&nbsp;'}</div><div class="line">${t('signature')}</div></div></div>`;
-function vaRows(e){const rx=e.rx||{},va=e.va||{},vc=[['ucva',t('unaided')],['oldva',t('withOld')],['ph','Pinhole'],['bcva',t('aided')],['rxva',t('withRx')]],vv=(k,eye)=>k==='rxva'?(rx[eye]||{}).va:k==='oldva'?((e.old||{})[eye]||{}).va:(va[k]||{})[eye],use=vc.filter(([k])=>['od','os'].some(eye=>vv(k,eye)));
+function vaRows(e){const rx=e.rx||{},va=e.va||{},vc=[['ucva',t('unaided')],['oldva',t('withOld')],['ph','Pinhole'],['bcva',t('aided')],['rxva',t('withRx')],['near',t('near')]],vv=(k,eye)=>k==='rxva'?(rx[eye]||{}).va:k==='oldva'?((e.old||{})[eye]||{}).va:(va[k]||{})[eye],use=vc.filter(([k])=>['od','os'].some(eye=>vv(k,eye)));
   if(!use.length)return '';return `<div class="st">${t('vaTable')} <small>VISUAL ACUITY</small></div>`+eyeGrid(use,(eye,k)=>esc(vv(k,eye)||'—'))}
+function arSection(e,sub){const a=e.ar||{};if(!hasEye(a,['sph','cyl']))return '';return `<div class="st${sub?' sub':''}">${t('arShort')} <small>AUTO-REFRACTION</small></div>`+eyeTable(a,[['sph','SPH'],['cyl','CYL'],['axis','AXIS']],rxVal,true)}
+function retSection(e,sub){const r=e.ret||{};if(!hasEye(r,['sph','cyl']))return '';const cy=CYCLO.find(c=>c[0]===r.cyclo),ch=[];if(cy)ch.push(cy[0]==='none'?t('dry'):cy[1]);if(r.wd)ch.push(t('wdShort')+' '+esc(r.wd)+' '+t('cm'));
+  return `<div class="st${sub?' sub':''}">${t('retShort')} <small>RETINOSCOPY</small></div>`+eyeTable(r,[['sph','SPH'],['cyl','CYL'],['axis','AXIS']],rxVal,true)+(ch.length?`<div class="chips">${ch.map(c=>`<span class="chip">${esc(c)}</span>`).join('')}</div>`:'')+(r.notes?`<div class="box"><span class="l">${t('notes')}</span>${esc(r.notes)}</div>`:'')}
 function oldSection(e){const o=e.old||{};if(!hasEye(o,['sph','cyl','add']))return '';return `<div class="st">${t('oldRx')} <small>OLD GLASSES</small></div>`+eyeTable(o,[['sph','SPH'],['cyl','CYL'],['axis','AXIS'],...(hasEye(o,['add'])?[['add','ADD']]:[]),...(hasEye(o,['va'])?[['va','VA']]:[])],rxVal,true)}
 function gBodyHtml(txt){const lines=String(txt||'').split('\n').map(x=>x.trim()).filter(Boolean);let h='',ul=[];const flush=()=>{if(ul.length){h+=`<ul>${ul.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`;ul=[]}};
   lines.forEach(l=>{if(/^[•\-\*]/.test(l)){ul.push(l.replace(/^[•\-\*]\s*/,''));return}flush();if(/[؟?:]$/.test(l)&&l.length<70)h+=`<h4>${esc(l)}</h4>`;else h+=`<p>${esc(l)}</p>`});flush();return h}
@@ -1359,7 +1364,7 @@ const refFld=e=>drName(e.refDoctor)?fld(t('refByP'),'د. '+esc(drName(e.refDocto
 function examReportDoc(e){const p=byId('patients',e.patientId)||{},b=branch(bid(e)),rx=e.rx||{},cl=e.cl||{};
   let body=printHead(b,'exam','',e.date)+patientGrid(p,e,refFld(e));
   if(e.complaint)body+=`<div class="box"><span class="l">${t('complaintL')}</span>${esc(e.complaint)}</div>`;
-  body+=vaRows(e)+oldSection(e);
+  body+=vaRows(e)+oldSection(e)+arSection(e)+retSection(e);
   if(hasEye(rx,['sph','cyl','add']))body+=`<div class="st">${t('rxGlasses')} <small>REFRACTION</small></div>`+rxSection(rx,false)+rxNoteBox(rx);
   if(hasEye(cl,['pwr','bc']))body+=`<div class="st">${t('clShort')} <small>CONTACT LENSES</small></div>`+eyeTable(cl,[['pwr','PWR'],['cyl','CYL'],['axis','AXIS'],['bc','BC'],['dia','DIA']],rxVal);
   const iop=e.iop&&(e.iop.od||e.iop.os);
@@ -1387,7 +1392,7 @@ function saleDoc(s,opt={}){const p=s.patientId?byId('patients',s.patientId):null
   if(pays.length)body+=`<div class="chips">${pays.map(x=>`<span class="chip"><span class="n">${esc(x.date)}</span> · ${boxName(x.method)} · <b>${fmt(x.amount,payCur(x,s))}</b></span>`).join('')}</div>`;
   if(ord)body+=`<div class="box pri"><span class="l">${t('deliveryM')}</span>${s.delivery==='courier'?t('dl_courier')+(s.courier?' · '+esc(s.courier):'')+(s.dAddress?' · '+esc(s.dAddress):''):t('dl_pickup')}${rem>0.009?`<br><span class="l" style="display:inline">${t('remainVia')}: </span>${t('rv_'+(s.remainVia||'shop'))}`:''}</div>`;
   const invEnd=body.length;
-  if(opt.exam&&ex){const iop=ex.iop&&(ex.iop.od||ex.iop.os);body+=`<div class="st">${t('examSec')} · ${esc(ex.date||'')} <small>EYE EXAM</small></div>`+(ex.complaint?`<div class="box"><span class="l">${t('complaintL')}</span>${esc(ex.complaint)}</div>`:'')+vaRows(ex).replace(/<div class="st">[\s\S]*?<\/div>/,'')+oldSection(ex).replace('class="st"','class="st sub"')+((iop||ex.diagnosis)?`<div class="two">${iop?`<div class="box"><span class="l">IOP</span><span class="rx"><span style="color:var(--os)">L ${esc(ex.iop.os||'—')}</span> · <span style="color:var(--od)">R ${esc(ex.iop.od||'—')}</span> mmHg</span></div>`:''}${ex.diagnosis?`<div class="box pri"><span class="l">${t('diagnosis')}</span><b>${esc(ex.diagnosis)}</b></div>`:''}</div>`:'')}
+  if(opt.exam&&ex){const iop=ex.iop&&(ex.iop.od||ex.iop.os);body+=`<div class="st">${t('examSec')} · ${esc(ex.date||'')} <small>EYE EXAM</small></div>`+(ex.complaint?`<div class="box"><span class="l">${t('complaintL')}</span>${esc(ex.complaint)}</div>`:'')+vaRows(ex).replace('class="st"','class="st sub"')+oldSection(ex).replace('class="st"','class="st sub"')+arSection(ex,1)+retSection(ex,1)+((iop||ex.diagnosis)?`<div class="two">${iop?`<div class="box"><span class="l">IOP</span><span class="rx"><span style="color:var(--os)">L ${esc(ex.iop.os||'—')}</span> · <span style="color:var(--od)">R ${esc(ex.iop.od||'—')}</span> mmHg</span></div>`:''}${ex.diagnosis?`<div class="box pri"><span class="l">${t('diagnosis')}</span><b>${esc(ex.diagnosis)}</b></div>`:''}</div>`:'')}
   const src=s.rxSrc==='manual'?` · ${t('src_'+(s.rxFrom||'external'))}`:ex&&ex.date?` · ${esc(ex.date)}`:'';
   if(hasEye(rx,['sph','cyl','add']))body+=`<div class="st">${t('glassesRx')}${rx.type?' · '+esc(tx(rx.type)):''}${src} <small>Rx</small></div>`+rxSection(rx,!!opt.rx,!opt.rx)+rxNoteBox(rx)+(opt.rx&&rx.lensRec?`<div class="box pri"><span class="l">${t('lensRec')}</span><b>${esc(rx.lensRec)}</b></div>`:'');
   if(hasEye(cl,['pwr','bc'])&&((s.lines||[]).some(l=>l.type==='contact')||!hasEye(rx,['sph','cyl','add'])))body+=`<div class="st">${t('clShort')}${cl.brand?' · '+esc(cl.brand):''} <small>CONTACT LENS Rx</small></div>`+eyeTable(cl,[['pwr','PWR'],['cyl','CYL'],['axis','AXIS'],['bc','BC'],['dia','DIA']],rxVal);
