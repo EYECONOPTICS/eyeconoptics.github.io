@@ -1890,7 +1890,7 @@ const brNote=()=>curBranch==='all'?(multi()?t('allBranches'):''):branch(curBranc
 function lensDoc(d){const R=lensRows(d),b=branch(activeB()),G=lensGroups(R);
   let body=printHead(b,'lens','',d)+`<div class="info">${t('lensRepNote')}${brNote()?' · '+esc(brNote()):''} · ${t('lrTotal')}: <b class="n">${R.reduce((a,r)=>a+r.qty,0)}</b></div>`;
   if(!R.length)body+=`<p>${t('lrNone')}</p>`;
-  G.forEach(({sup,rows})=>{body+=`<div class="st">${t('supplier')}: ${esc(sup||t('lrNoSup'))} · ${rows.reduce((a,r)=>a+r.qty,0)}</div><table class="items"><thead><tr><th>${t('lrType')}</th><th>${t('brand')}</th><th>${t('itemName')}</th><th>${t('lrPow')}</th><th class="n">${t('qty')}</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.tyL)}</td><td>${esc(r.brand)}</td><td>${esc(r.name)}</td><td class="n" dir="ltr">${r.pow}</td><td class="n"><b>${r.qty}</b></td></tr>`).join('')}</tbody></table>`});
+  G.forEach(({sup,rows})=>{body+=`<div class="st">${t('supplier')}: ${esc(sup||t('lrNoSup'))} · ${rows.reduce((a,r)=>a+r.qty,0)}</div><table class="items"><thead><tr><th>${t('brand')}</th><th>${t('itemName')}</th><th>${t('lrPow')}</th><th class="n">${t('qty')}</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.brand)}</td><td>${esc(r.name)}</td><td class="n" dir="ltr">${r.pow}</td><td class="n"><b>${r.qty}</b></td></tr>`).join('')}</tbody></table>`});
   return printShell(t('lensRep')+' '+d,body,b,false)}
 const unEsc=x=>String(x).replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'");
 function lensText(d){const R=lensRows(d),G=lensGroups(R);let x=`👓 *${t('lensRep')}* · ${d}${brNote()?' · '+brNote():''}\n${t('lrTotal')}: ${R.reduce((a,r)=>a+r.qty,0)}\n`;
