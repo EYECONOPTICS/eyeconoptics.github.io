@@ -1604,8 +1604,9 @@ function wireLines(f,mode,getCur,getBranch,onTotal,getRx,init){
       if(v)push(v);else pushNew(k,a);
       ['#addS','#addC','#addA'].forEach(x=>{const el=box.querySelector(x);if(el)el.value=''});box.querySelector('#addS').focus()};
     box.querySelector('#addGo').onclick=go;
-    const ar=box.querySelector('#addRx');if(ar)ar.onclick=()=>{const r=getRx(),src=cl?r.cl:r.rx,k=ps.value;if(!hasEye(src||{},cl?['pwr']:['sph','cyl'])){toast(t('needRx'));return}
-      ['od','os'].forEach(e=>{const x=(src||{})[e]||{},a=cl?{s:x.pwr,c:x.cyl,a:x.axis}:{s:x.sph,c:x.cyl,a:''};if((a.s===''||a.s==null)&&!num(a.c))return;const v=its.find(i=>prodKey(i)===k&&samePow(i,a));if(v)push(v);else pushNew(k,a)})};['#addS','#addC','#addA'].forEach(x=>{const el=box.querySelector(x);if(el)el.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go()}})})};
+    const ar=box.querySelector('#addRx');if(ar)ar.onclick=()=>{const r=getRx(),src=cl?r.cl:r.rx,k=ps.value;if(!k){toast(t('noProd'));return}if(!r.ok){toast(t('needRx'));return}
+      /* plano (0.00) or a blank eye is still a lens sold: both eyes always go on the invoice */
+      ['od','os'].forEach(e=>{const x=(src||{})[e]||{},z=v=>v===''||v==null?'0':v,a=cl?{s:z(x.pwr),c:x.cyl??'',a:x.axis??''}:{s:z(x.sph),c:x.cyl??'',a:''};const v=its.find(i=>prodKey(i)===k&&samePow(i,a));if(v)push(v);else pushNew(k,a)})};['#addS','#addC','#addA'].forEach(x=>{const el=box.querySelector(x);if(el)el.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go()}})})};
   tySel.onchange=draw;draw();(init||[]).forEach(l=>body.insertAdjacentHTML('beforeend',lineRow(l,mode)));
   recalc();return()=>{body.innerHTML='';unstage();draw();recalc()}}
 const readLines=f=>[...f.querySelectorAll('#lineBody tr.line')].map(tr=>({itemId:tr.dataset.item,nw:tr.dataset.nw?JSON.parse(tr.dataset.nw):null,type:tr.dataset.type,pow:tr.dataset.pow,name:tr.querySelector('.lname').textContent,qty:num(tr.querySelector('.lq').value),val:num(tr.querySelector('.lp').value)})).filter(l=>l.qty>0);
@@ -1614,7 +1615,7 @@ const nextNo=(col,b)=>String(S[col].filter(s=>bid(s)===b).reduce((m,s)=>Math.max
 function saleForm(s={},pid){if(saleLocked(s))return salePayForm(s);
   const isNew=!s.id;const pats=S.patients.filter(inBranch).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   const pt=pid?byId('patients',pid):null;const b0=s.branchId||(curBranch!=='all'?curBranch:(pt&&pt.branchId)||'main');
-  const rxExams=p=>S.exams.filter(e=>e.patientId===p&&(hasEye(e.rx,['sph','cyl','add'])||hasEye(e.cl,['pwr']))).sort(sortDate);
+  const rxExams=p=>S.exams.filter(e=>e.patientId===p).sort(sortDate);/* an exam with blank powers = plano (0.00) Rx, still sellable */
   const examOpts=p=>[['','—'],...rxExams(p).map(e=>[e.id,t('exam')+' '+e.date+(e.rx&&e.rx.type?' · '+tx(e.rx.type):'')]),['__manual',t('rxManual')]];
   const pickEx=(p,d)=>{const l=rxExams(p);return ((l.find(e=>e.date===d)||l[0])||{}).id||(p?'__manual':'')};
   const p0=s.patientId||pid||'';const pPhone=p0&&(byId('patients',p0)||{}).phone;
@@ -1643,7 +1644,7 @@ function saleForm(s={},pid){if(saleLocked(s))return salePayForm(s);
      const cur=()=>isNew?f.querySelector('#f_currency').value:s.currency;const br=()=>{const el=f.querySelector('#f_branchId');return el?el.value:b0};let sub=isNew?0:num(s.subtotal??s.total);
      const dsc=()=>{const v=num(f.querySelector('#f_discount').value);return f.querySelector('#f_discType').value==='pct'?+(sub*Math.min(100,v)/100).toFixed(cur()==='USD'?2:0):+convCur(v,f.querySelector('#f_discCur').value,cur(),f.querySelector('#f_rate').value||rate()).toFixed(cur()==='USD'?2:0)};
      const netNow=()=>Math.max(0,sub-dsc());const upd=()=>{f.querySelector('#discCurBox').hidden=f.querySelector('#f_discType').value==='pct';const net=netNow();f.querySelector('#tSub').textContent=fmt(sub,cur());f.querySelector('#tNet').textContent=fmt(net,cur());const pd=mny(isNew?(f.querySelector('#f_paid').value===''?net:Math.min(net,convCur(mny(f.querySelector('#f_paid').value,f.querySelector('#f_paidCur').value),f.querySelector('#f_paidCur').value,cur(),f.querySelector('#f_rate').value))):pays.reduce((a,x)=>a+payVal(x),0),cur());f.querySelector('#tPaid').textContent=fmt(pd,cur());f.querySelector('#tRem').textContent=fmt(mny(Math.max(0,net-pd),cur()),cur())};
-     const exSel=()=>f.querySelector('#f_examId'),getRx=()=>{const v=exSel().value;if(v==='__manual'){const o=formObj(f);return{rx:o.rx||{},cl:o.cl||{}}}const e=byId('exams',v)||{};return{rx:e.rx||{},cl:e.cl||{}}};
+     const exSel=()=>f.querySelector('#f_examId'),getRx=()=>{const v=exSel().value;if(v==='__manual'){const o=formObj(f);return{ok:1,rx:o.rx||{},cl:o.cl||{}}}const e=byId('exams',v);return{ok:!!e,rx:(e||{}).rx||{},cl:(e||{}).cl||{}}};
      let rxTouched=!isNew;const pid=()=>f.querySelector('#f_patientId').value;
      const rxUI=()=>{const v=exSel().value,e=byId('exams',v),d=f.querySelector('#f_date').value,h=f.querySelector('#rxHint');f.querySelector('#rxMan').hidden=v!=='__manual';
        h.textContent=v==='__manual'?'':e?(e.date===d?'✓ '+t('rxSameDay')+' ('+e.date+')':t('rxLatestNote')+' '+e.date):pid()&&!rxExams(pid()).length?t('rxNone'):'';
@@ -1665,7 +1666,7 @@ function saleForm(s={},pid){if(saleLocked(s))return salePayForm(s);
      const d=f.querySelector('#delS');if(d)d.onclick=()=>armDelete(d,async()=>{for(const l of s.lines||[])if(byId('items',l.itemId))await adjustStock(l.itemId,num(l.qty));if(await del('sales',s.id)){closeModal();toast(t('delInvDone'))}})},
    onSubmit:async f=>{const o=formObj(f);const man=o.examId==='__manual';
      const rxf=man?{rxSrc:'manual',examId:'',rx:o.rx||{},cl:o.cl||{},rxFrom:o.rxFrom}:{rxSrc:o.examId?'exam':'',examId:o.examId||'',rx:{},cl:{}};
-     const rxOk=man?hasEye(o.rx||{},['sph','cyl','add'])||hasEye(o.cl||{},['pwr']):!!byId('exams',o.examId);
+     const rxOk=man?hasEye(o.rx||{},['sph','cyl','add','va'])||hasEye(o.cl||{},['pwr','bc']):!!byId('exams',o.examId);
      if(isNew){const ls=readLines(f);if(!ls.length){toast(t('needLine'));return false}
        if(!o.patientId){toast(t('needCustFile'));return false}if(!await patFixSave(f,o.patientId))return false;{const m=patMissing(byId('patients',o.patientId));if(m.length){toast(t('patIncomplete')+m.join('، '));return false}}
        if(ls.some(l=>isRx(l.type))&&!rxOk){toast(t('needRx'));return false}
