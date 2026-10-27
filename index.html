@@ -99,7 +99,7 @@ tr.total td{font-weight:600;background:var(--bg)}
 .ov{position:fixed;inset:0;z-index:20;background:rgb(10 20 22 / .45);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:max(16px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
 .md{background:var(--surface);border-radius:14px;width:min(860px,100%);border:1px solid var(--line);margin-block:auto}
 .md header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line);gap:10px}
-.md .body{padding:16px 18px;display:grid;gap:16px}.qrep{gap:8px;flex-wrap:wrap}.sdobox{display:grid;gap:8px;padding:10px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px}.sdobox .seg{gap:6px;flex-wrap:wrap;margin-top:4px}.sdo{cursor:pointer;display:inline-flex;gap:4px;align-items:center}.qrep .btn{flex:1 1 220px;padding:12px 14px;font-weight:600;border-color:var(--pri,#0b6b8a);color:var(--pri,#0b6b8a)}.vofs{border:0;padding:0;margin:0;min-width:0;display:grid;gap:16px}.note.vo{margin:0;padding:8px 10px;border-radius:8px;background:var(--soft,rgba(0,0,0,.05))}
+.md .body{padding:16px 18px;display:grid;gap:16px}.qrep{gap:8px;flex-wrap:wrap}.sdobox{display:grid;gap:8px;padding:10px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px}.sdobox .seg{gap:6px;flex-wrap:wrap;margin-top:4px}.sdo{cursor:pointer;display:inline-flex;gap:4px;align-items:center}.qrep .btn{flex:1 1 220px;padding:12px 14px;font-weight:600;border-color:var(--pri,#0b6b8a);color:var(--pri,#0b6b8a)}:root[data-theme="dark"] .qrep .btn{border-color:var(--sky);color:var(--sky)}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .qrep .btn{border-color:var(--sky);color:var(--sky)}}.vofs{border:0;padding:0;margin:0;min-width:0;display:grid;gap:16px}.note.vo{margin:0;padding:8px 10px;border-radius:8px;background:var(--soft,rgba(0,0,0,.05))}
 .md footer{display:flex;gap:8px;flex-wrap:wrap;padding:12px 18px;border-top:1px solid var(--line)}
 fieldset,details.sec{border:1px solid var(--line);border-radius:10px;padding:12px;margin:0;display:grid;gap:12px;min-width:0}
 details.sec{display:block}
@@ -196,7 +196,7 @@ tr.grp td{background:var(--soft);font-weight:600}
       </div>
       <div class="picks">
         <select id="branchPick" aria-label="Branch"></select>
-        <span class="ntW"><button class="btn sm ntB" id="ntBtn" type="button" aria-label="Notifications">🔔<span class="ntN"></span></button><div id="ntPanel" hidden></div></span>
+        <button class="btn sm" id="thBtn" type="button" aria-label="Theme">🌙</button><span class="ntW"><button class="btn sm ntB" id="ntBtn" type="button" aria-label="Notifications">🔔<span class="ntN"></span></button><div id="ntPanel" hidden></div></span>
         <button class="btn sm" id="langBtn" type="button"></button>
       </div>
     </div>
@@ -433,7 +433,7 @@ prodDesc:['وصف المنتج للزبون','Product description for the custom
  autoref:['قراءة الأوتوريف (Auto-Refraction)','Auto-refraction (autoref)'],arShort:['الأوتوريف','Autoref'],fromAr:['نقل قراءة الأوتوريف إلى الوصفة','Copy autoref into the Rx'],addRow:['الإضافة للقريب (ADDITION)','Near addition (ADD)'],phSame:['نتيجة Pinhole نفس حدة البصر مع التصحيح','Pinhole same as best-corrected VA'],
  address2:['عنوان السكن','Home address'],visitType:['نوع الزبون','Customer type'],vt_new:['أول زيارة','First visit'],vt_regular:['زبون دائم','Regular customer'],prevSec:['النظارات السابقة','Previous eyewear'],prevGlasses:['هل كان يرتدي نظارة سابقاً؟','Wore glasses before?'],yes:['نعم','Yes'],noW:['لا','No'],prevLenses:['أنواع العدسات التي جرّبها سابقاً','Lens types tried before'],prevNotes:['تفاصيل أخرى عن نظارته أو عدساته السابقة','Other details about previous eyewear'],pl_cl:['عدسات لاصقة','Contact lenses'],woreBefore:['كان يرتدي نظارة','Wore glasses'],
  brandSec:['الشعار ومعلومات التواصل','Logo & contact details'],logo:['شعار المحل','Shop logo'],logoUp:['رفع الشعار','Upload logo'],logoDel:['إزالة الشعار','Remove logo'],logoHint:['صورة PNG أو JPG، ويفضّل بخلفية شفافة. يظهر في أعلى التطبيق وفي الفاتورة والوصفة.','PNG or JPG, ideally transparent. Shown in the app header, invoices and prescriptions.'],savedLogo:['حُفظ الشعار','Logo saved'],tagline:['الوصف تحت الاسم','Tagline'],contactPhones:['أرقام التواصل','Contact phones'],waBiz:['رقم واتساب المحل','Shop WhatsApp number'],website:['الموقع الإلكتروني','Website'],socialHint:['اكتب اسم الحساب أو الرابط. كل رابط يظهر كباركود QR أسفل الفاتورة والوصفة.','Enter the handle or link. Each one is printed as a QR code at the bottom of invoices and prescriptions.'],thanks:['شكراً لثقتكم','Thank you for your trust'],
- pdf:['حفظ PDF','Save PDF'],sharePdf:['مشاركة PDF','Share PDF'],pdfWork:['جارٍ تجهيز الملف…','Preparing the file…'],pdfFail:['تعذّر إنشاء PDF. استخدم «طباعة» واختر «حفظ كـ PDF».','Could not create the PDF. Use Print and choose Save as PDF.'],waAttach:['زر واتساب يرسل نص الفاتورة؛ لإرسال ملف PDF احفظه ثم أرفقه في المحادثة، أو استخدم «مشاركة PDF».','The WhatsApp button sends the text; to send the PDF, save it and attach it in the chat, or use Share PDF.'],
+ pdf:['حفظ PDF','Save PDF'],sharePdf:['مشاركة PDF','Share PDF'],pdfWork:['جارٍ تجهيز الملف…','Preparing the file…'],pdfFail:['تعذّر إنشاء PDF. استخدم «طباعة» واختر «حفظ كـ PDF».','Could not create the PDF. Use Print and choose Save as PDF.'],waAttach:['زر «واتساب PDF» يرسل الملف نفسه: اختر واتساب ثم الزبون من قائمة المشاركة.','WhatsApp PDF sends the file itself: pick WhatsApp, then the customer, in the share sheet.'],waPdf:['واتساب PDF','WhatsApp PDF'],waPdfMsg:['مرفق لكم الملف بصيغة PDF.','Your PDF is attached.'],waPdfDesk:['حُفظ ملف PDF؛ أرفقه في محادثة واتساب التي فُتحت.','The PDF was saved; attach it in the WhatsApp chat that opened.'],tapAgain:['الملف جاهز، اضغط الزر مرة أخرى.','The file is ready; tap the button again.'],pair:['زوج','pair'],pairs:['أزواج','pairs'],nightMode:['الوضع الليلي','Night mode'],dayMode:['الوضع النهاري','Day mode'],
  payments:['الدفعات','Payments'],pExam:['تقرير الفحص','Exam report'],pRx:['وصفة النظارة','Glasses Rx'],pCl:['وصفة العدسات','CL Rx'],
  ageY:['العمر (إذا لم يُعرف تاريخ الميلاد)','Age (if date of birth unknown)'],vaTable:['حدة البصر','Visual acuity'],withRx:['مع النظارة الموصوفة','With prescribed glasses'],
  lastSale:['آخر فاتورة','Last invoice'],vaLast:['حدة البصر (آخر فحص)','VA (last exam)'],ucS:['بدون','UC'],bcS:['مع','BC'],
@@ -484,7 +484,9 @@ const DEF_GUIDES=[
 const guides=()=>{const m=new Map(DEF_GUIDES.map(g=>[g.id,{...g,builtIn:true}]));S.guides.forEach(g=>m.set(g.id,{...(m.get(g.id)||{}),...g}));return [...m.values()].filter(g=>!g.deleted)};
 const gT=g=>lang==='en'&&g.titleEn?g.titleEn:g.title,gB=g=>lang==='en'&&g.bodyEn?g.bodyEn:(g.body||'');
 const TYPES=['frame','lens','contact','other'];
-const VA=['','6/4','6/5','6/6','6/7.5','6/9','6/12','6/18','6/24','6/36','6/60','5/60','4/60','3/60','2/60','1/60','CF','HM','PL','NPL'];
+const VA=['','N.L.P','H.M','6/150','6/120','6/95','6/75','6/60','6/48','6/36','6/30','6/24','6/18','6/15','6/12','6/9','6/6','6/5','6/4'],VA_L={'N.L.P':'N.L.P (No light perception)','H.M':'H.M (Hand motion)'};
+/* options for a VA list; a value saved before the list changed stays selectable */
+const vaOpts=(list,v)=>[...list,...(v&&!list.includes(v)?[v]:[])].map(x=>`<option value="${esc(x)}" ${x===v?'selected':''}>${esc(VA_L[x]||x||'—')}</option>`).join('');
 const NVA=['','N5','N6','N8','N10','N12','N14','N18','N24','N36','N48'];
 const CYCLO=[['none','dry'],['cyclopentolate1','Cyclopentolate 1%'],['cyclopentolate05','Cyclopentolate 0.5%'],['atropine1','Atropine 1%'],['atropine05','Atropine 0.5%'],['tropicamide1','Tropicamide 1%']];
 const EXP_CATS=['c_rent','c_salary','c_power','c_maint','c_transport','c_ads','c_supplies','c_tax','c_other'];
@@ -563,6 +565,11 @@ const holder='h'+Math.random().toString(36).slice(2);
 
 /* ================= helpers ================= */
 const $=s=>document.querySelector(s);
+/* touch screens: the keyboard appears only when a writing field is tapped; programmatic focus is skipped unless the user is typing or asked for the keyboard */
+let kbAt=0;const kbAllow=()=>{kbAt=Date.now()};
+(()=>{const txt=el=>el&&el.matches&&el.matches('textarea,input:not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]):not([type=file]):not([type=range]):not([type=color]):not([type=hidden])')&&!el.readOnly;
+  document.addEventListener('input',e=>{if(txt(e.target))kbAt=Date.now()},true);
+  const F=HTMLElement.prototype.focus;HTMLElement.prototype.focus=function(o){try{if(txt(this)&&matchMedia('(pointer:coarse)').matches&&Date.now()-kbAt>600&&!txt(document.activeElement))return}catch(_){}return F.call(this,o)}})();
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const iso=x=>x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');
 const today=()=>iso(new Date());
@@ -656,6 +663,12 @@ function openModal(title,bodyHTML,{onSubmit,submitLabel=t('save'),extraFooter=''
   return form}
 /* Saved records open read-only for staff: only the owner and manager may change or delete them (the server enforces the same through settings/rules) */
 let VO=false;const voOpen=fn=>{VO=!isMgr();try{fn()}finally{VO=false}};
+/* day / night mode: the choice is kept on this device; without one the app follows the device setting */
+const thGet=()=>{try{return localStorage.getItem('eyecon_theme')||''}catch(_){return ''}};
+const thDark=()=>{const v=thGet();return v?v==='dark':matchMedia('(prefers-color-scheme: dark)').matches};
+function thApply(){const v=thGet(),r=document.documentElement;if(v)r.dataset.theme=v;else delete r.dataset.theme;const b=$('#thBtn');if(b){const d=thDark();b.textContent=d?'☀️':'🌙';b.title=d?t('dayMode'):t('nightMode');b.setAttribute('aria-label',b.title)}}
+thApply();
+document.addEventListener('click',e=>{if(e.target.closest('#thBtn')){try{localStorage.setItem('eyecon_theme',thDark()?'light':'dark')}catch(_){}thApply()}});
 function closeModal(){$('#modalRoot').innerHTML='';schedule()}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#ov')&&!$('#ov').dataset.locked)closeModal()});
 /* Back button (phone gesture, browser, mouse): close the open window first, then step back through tabs and screens; leave only after a second press on the main screen */
@@ -739,7 +752,7 @@ function openWheel(el){closeWheel();const k=whKind(el);if(!k)return;
   ov.addEventListener('pointerdown',e=>{if(e.target===ov){e.preventDefault();closeWheel()}});
   ov.querySelector('.whb').addEventListener('click',e=>{const b=e.target.closest('[data-w]');if(!b)return;const w=b.dataset.w;
     if(w==='clr'){el.value='';el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}))}
-    if(w==='kb'){el.dataset.kb='1';el.readOnly=false;el.removeAttribute('inputmode');closeWheel();el.focus();return}
+    if(w==='kb'){el.dataset.kb='1';el.readOnly=false;el.removeAttribute('inputmode');closeWheel();kbAllow();el.focus();return}
     closeWheel()});
   document.addEventListener('keydown',whKey,true);setTimeout(()=>{L.focus({preventScroll:true});mark()},0)}
 document.addEventListener('pointerdown',e=>{const el=e.target.closest&&e.target.closest('input');if(!whKind(el))return;e.preventDefault();el.readOnly=true;el.setAttribute('inputmode','none');openWheel(el)});
@@ -932,7 +945,7 @@ async function repXlsx(share){if(!REP_LAST)return;toast(t('sheetsWork'));try{awa
 const MARK=$('#brandMark').innerHTML;
 function applyLang(){const h=document.documentElement;h.lang=lang;h.dir=lang==='ar'?'rtl':'ltr';h.style.setProperty('--dir',h.dir);$('#langBtn').textContent=t('langBtn');$('#subline').textContent=t('subline');$('#shopH').textContent=S.settings.shopName||'EYECON OPTICS';const bm=$('#brandMark');const lg=S.logoMark||S.logo,want=lg?`<img src="${lg}" alt="" style="height:38px;width:auto;max-width:120px;object-fit:contain">`:(activeB()==='main'?MARK:'');if(bm.dataset.logo!==lg){bm.innerHTML=want;bm.dataset.logo=lg}}
 let rq=0;function schedule(){if(rq)return;rq=requestAnimationFrame(()=>{rq=0;if(!$('#ov'))render();else ntRender()})}
-function render(){render0();if(hOk)hTrack();ntRender()}
+function render(){render0();if(hOk)hTrack();ntRender();thApply()}
 function render0(){
   applyBranch();applyLang();
   const bl=branchList();
@@ -1070,10 +1083,10 @@ function patientForm(p={}){
 
 function rxGrid(prefix,o,cols,st=''){const n=cols.length,tp=n>=3?' tp':'',P=(r,c,nr,nc)=>`style="--r:${r};--c:${c};--nr:${nr};--nc:${nc}"`,cs=e=>e==='os'?1:n+2,ncs=e=>e==='os'?1:3;
   const cell=(eye,[k,,ty],i)=>{const nm=`${prefix}.${eye}.${k}`,v=getP(o,nm)??'',ps=P(3,cs(eye)+i,i+2,ncs(eye));
-    if(ty==='va')return `<select class="${eye}" ${ps} name="${nm}" aria-label="${eye} ${k}">${VA.map(x=>`<option ${x===v?'selected':''}>${x}</option>`).join('')}</select>`;
+    if(ty==='va')return `<select class="${eye}" ${ps} name="${nm}" aria-label="${eye} ${k}">${vaOpts(VA,v)}</select>`;
     const step=ty==='axis'?'1':ty==='mm'?'0.1':'0.25';return `<input class="${eye}" ${ps} name="${nm}" type="number" inputmode="decimal" step="${step}" ${ty==='axis'?'min="0" max="180"':''} value="${esc(v)}" aria-label="${eye} ${k}">`};
   return `<div class="rxwrap"><div class="eg2${tp}" style="--n:${n};${st}">${['od','os'].map(eye=>`<span class="egbg ${eye}" ${P('1/span 3',cs(eye)+'/span '+n,'1/span '+(n+1),ncs(eye))}></span><span class="egh ${eye}" ${P(1,cs(eye)+'/span '+n,1,ncs(eye))}><span class="eb ${eye}">${eye==='od'?'R':'L'}</span>${eye==='od'?t('eyeR'):t('eyeL')}</span>`+cols.map((c,i)=>`<span class="h${eye==='os'?' hl':''}" ${P(2,cs(eye)+i,i+2,2)}>${c[1]}</span>`).join('')+cols.map((c,i)=>cell(eye,c,i)).join('')).join('')}</div></div>`}
-function vaRow(prefix,o,list,label,withOU=true){const ks=['od','os',...(withOU?['ou']:[])];return `<div class="rxwrap"><div class="rxg va va2" style="--cols:${ks.length}"><span class="rl">${label}</span>${ks.map(k=>{const nm=`${prefix}.${k}`,v=getP(o,nm)??'';return `<label class="vsel ${k}"><span class="eb ${k}">${k==='od'?'R':k==='os'?'L':'OU'}</span><select name="${nm}" aria-label="${label} ${k.toUpperCase()}">${list.map(x=>`<option value="${x}" ${x===v?'selected':''}>${x||'—'}</option>`).join('')}</select></label>`}).join('')}</div></div>`}
+function vaRow(prefix,o,list,label,withOU=true){const ks=['od','os',...(withOU?['ou']:[])];return `<div class="rxwrap"><div class="rxg va va2" style="--cols:${ks.length}"><span class="rl">${label}</span>${ks.map(k=>{const nm=`${prefix}.${k}`,v=getP(o,nm)??'';return `<label class="vsel ${k}"><span class="eb ${k}">${k==='od'?'R':k==='os'?'L':'OU'}</span><select name="${nm}" aria-label="${label} ${k.toUpperCase()}">${vaOpts(list,v)}</select></label>`}).join('')}</div></div>`}
 const sec=(title,inner,open,required)=>`<details class="sec" ${open?'open':''}><summary>${title} <span class="chip ${required?'bad':''}">${required?t('required'):(open?t('filled'):t('optional'))}</span></summary><div class="in">${inner}</div></details>`;
 function examForm(e={},pid){
   const pats=S.patients.filter(inBranch).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
@@ -1409,9 +1422,12 @@ function clRxDoc(e){const p=byId('patients',e.patientId)||{},b=branch(bid(e)),cl
   return printShell(docT('cl')+' · '+(p.name||''),body+notesBlock(e.guides)+signBlock(e),b,false,flyerPages(e.guides,b))}
 function saleRx(s){if(s.rxSrc==='manual')return{rx:s.rx||{},cl:s.cl||{},ex:null};const ex=s.examId?byId('exams',s.examId):null;return{rx:(ex&&ex.rx)||{},cl:(ex&&ex.cl)||{},ex}}
 const discLbl=s=>s.discType==='pct'&&num(s.discPct)?` (${num(s.discPct)}%)`:s.discCur&&s.discCur!==s.currency&&num(s.discAmt)?` (${fmt(s.discAmt,s.discCur)})`:'';
+/* customer copy only: spectacle lenses are printed as pairs (both eyes of one lens on one line, no lens count); the app keeps each lens */
+function printLines(s){const out=[],G={};(s.lines||[]).forEach(l=>{const sum=num(l.price)*num(l.qty),ty=l.type||(byId('items',l.itemId)||{}).type||'';if(ty==='lens'){const k=l.name||'';if(!G[k]){G[k]={name:l.name,type:'lens',q:0,sum:0};out.push(G[k])}G[k].q+=num(l.qty);G[k].sum+=sum}else out.push({name:l.name,type:ty,qty:l.qty,unit:num(l.price),sum})});
+  out.forEach(x=>{if(x.type==='lens'){x.pairs=Math.max(1,Math.ceil(x.q/2));x.unit=x.sum/x.pairs}});return out}
 function saleDoc(s,opt={}){const p=s.patientId?byId('patients',s.patientId):null,b=branch(bid(s)),cur=s.currency,pays=payList(s),rem=Math.max(0,num(s.total)-num(s.paid)),{rx,cl,ex}=saleRx(s),ord=s.status&&s.status!=='none';
   let body=printHead(b,'inv',s.no,s.date)+`<div class="grid">${fld(t('customer'),esc(p?p.name:(s.customer||t('walkIn'))))}${fld(t('pid'),p&&p.code?esc(p.code):'',1)}${fld(t('phone'),p&&p.phone?esc(p.phone):'',1)}${ord?fld(t('orderStatus'),t('st_'+s.status)):''}${ord&&s.dueDate?fld(t('readyBy'),esc(s.dueDate),1):''}${fld(t('currency'),cur==='USD'?t('usd'):t('iqd'))}</div>
-  <div class="st">${t('items')} <small>ITEMS</small></div><table class="items"><thead><tr><th>#</th><th>${t('item')}</th><th class="n">${t('qty')}</th><th class="n">${t('unitPrice')}</th><th class="n">${t('lineTotal')}</th></tr></thead><tbody>${(s.lines||[]).map((l,i)=>`<tr><td>${i+1}</td><td>${esc(l.name)}${l.type?`<div style="color:var(--mut);font-size:.8em">${t('t_'+l.type)}</div>`:''}</td><td class="n">${esc(l.qty)}</td><td class="n">${fmt(l.price,cur)}</td><td class="n">${fmt(num(l.price)*num(l.qty),cur)}</td></tr>`).join('')}</tbody></table>
+  <div class="st">${t('items')} <small>ITEMS</small></div><table class="items"><thead><tr><th>#</th><th>${t('item')}</th><th class="n">${t('qty')}</th><th class="n">${t('unitPrice')}</th><th class="n">${t('lineTotal')}</th></tr></thead><tbody>${printLines(s).map((l,i)=>`<tr><td>${i+1}</td><td>${esc(l.name)}${l.type?`<div style="color:var(--mut);font-size:.8em">${t('t_'+l.type)}</div>`:''}</td><td class="n">${l.pairs?(l.pairs===1?t('pair'):l.pairs+' '+t('pairs')):esc(l.qty)}</td><td class="n">${fmt(l.unit,cur)}</td><td class="n">${fmt(l.sum,cur)}</td></tr>`).join('')}</tbody></table>
   <div class="tot">${num(s.discount)?`<div><span>${t('subtotal')}</span><span class="n">${fmt(s.subtotal??s.total,cur)}</span></div><div><span>${t('discount')}${discLbl(s)}</span><span class="n">− ${fmt(s.discount,cur)}</span></div>`:''}<div class="big"><span>${t('total')}</span><span class="n">${fmt(s.total,cur)}</span></div><div><span>${t('paid')}</span><span class="n">${fmt(s.paid,cur)}</span></div><div class="due"><span>${t('remainCust')}</span><span class="n">${fmt(rem,cur)}</span></div></div>`;
   if(pays.length)body+=`<div class="chips">${pays.map(x=>`<span class="chip"><span class="n">${esc(x.date)}</span> · ${boxName(x.method)} · <b>${fmt(x.amount,payCur(x,s))}</b></span>`).join('')}</div>`;
   if(ord)body+=`<div class="box pri"><span class="l">${t('deliveryM')}</span>${s.delivery==='courier'?t('dl_courier')+(s.courier?' · '+esc(s.courier):'')+(s.dAddress?' · '+esc(s.dAddress):''):t('dl_pickup')}${rem>0.009?`<br><span class="l" style="display:inline">${t('remainVia')}: </span>${t('rv_'+(s.remainVia||'shop'))}`:''}</div>`;
@@ -1438,16 +1454,29 @@ async function makePdf(fr){await Promise.all([lib('h2c'),lib('pdf')]);const d=fr
     pdf.addImage(img,'JPEG',0,0,W,ih);for(let y=-H;ih+y>2;y-=H){pdf.addPage([W,H],'portrait');pdf.addImage(img,'JPEG',0,y,W,ih)}}
   return pdf.output('blob')}
 function printLangPref(){try{return localStorage.getItem('eyecon_printLang')||lang}catch(_){return lang}}
+/* Phones and tablets: printing a hidden frame and <a download> often do nothing there (iPhone/iPad home-screen app, Android),
+   so print opens the document in its own window, and PDF/WhatsApp hand the finished file to the share sheet. The PDF is made in the
+   background as soon as the preview opens, because the share sheet must open straight from the tap. */
+const coarse=()=>{try{return matchMedia('(pointer:coarse)').matches}catch(_){return false}};
 function printPreview(title,html,{fname,waPhone,waText,waAny,top='',onTop}={}){const canShare=!!(navigator.canShare&&window.File);let pl=printLangPref();const gen=()=>typeof html==='function'?withLang(pl,html):html;
   openModal(esc(title),`${top}${typeof html==='function'?`<div class="seg" style="margin-bottom:8px;align-items:center;gap:8px"><span class="muted" style="font-size:.85rem">${t('printLang')}</span><button type="button" data-pl="ar" aria-pressed="${pl==='ar'}">عربي</button><button type="button" data-pl="en" aria-pressed="${pl==='en'}">English</button></div>`:''}<iframe id="pv" title="${esc(title)}" srcdoc="${esc(gen())}" style="width:100%;height:min(70vh,900px);border:1px solid var(--line);border-radius:8px;background:#E9EEEC"></iframe><p class="note">${t('printHint')} ${waPhone?t('waAttach'):''}</p>`,
-  {extraFooter:`<button type="button" class="btn primary" id="pvPrint">${t('print')}</button>${downloads?`<button type="button" class="btn" id="pvPdf">${t('pdf')}</button>`:''}${canShare?`<button type="button" class="btn" id="pvShare">${t('sharePdf')}</button>`:''}${waPhone?`<a class="btn wa" href="${esc(waLink(waPhone,waText))}" target="_blank" rel="noopener">${t('sendInvWa')}</a>`:''}${waAny?`<a class="btn wa" id="pvWa" href="${esc(waLink('',waText))}" target="_blank" rel="noopener">${t('waSend')}</a>`:''}`,
-   onMount:f=>{if(onTop)onTop(f);const fr=f.querySelector('#pv');f.querySelectorAll('[data-pl]').forEach(bt=>bt.onclick=()=>{pl=bt.dataset.pl;try{localStorage.setItem('eyecon_printLang',pl)}catch(_){}f.querySelectorAll('[data-pl]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.pl===pl));fr.srcdoc=gen()});f.querySelector('#pvPrint').onclick=()=>{try{fr.contentWindow.focus();fr.contentWindow.print()}catch(_){toast(t('printHint'))}};
-     const name=(fname||'document')+'.pdf';
-     const build=async btn=>{btn.disabled=true;toast(t('pdfWork'));try{return await makePdf(fr)}catch(_){toast(t('pdfFail'));return null}finally{btn.disabled=false}};
-     const pd=f.querySelector('#pvPdf');if(pd)pd.onclick=async()=>{const bl=await build(pd);if(!bl)return;try{await downloads.save({filename:name,data:bl})}catch(e){if(e&&e.code&&!['declined','cancelled','canceled'].includes(e.code))toast(t('dlFail'))}};
-     const sh=f.querySelector('#pvShare');if(sh)sh.onclick=async()=>{const bl=await build(sh);if(!bl)return;const file=new File([bl],name,{type:'application/pdf'});
-       try{if(navigator.canShare({files:[file]})){await navigator.share({files:[file],title:title});return}}catch(e){if(e&&e.name==='AbortError')return}
-       if(downloads)try{await downloads.save({filename:name,data:bl})}catch(_){}else toast(t('pdfFail'))}}})}
+  {extraFooter:`<button type="button" class="btn primary" id="pvPrint">${t('print')}</button>${downloads||canShare?`<button type="button" class="btn" id="pvPdf">${t('pdf')}</button>`:''}${canShare&&!coarse()?`<button type="button" class="btn" id="pvShare">${t('sharePdf')}</button>`:''}${waPhone!==undefined&&!waAny?`<button type="button" class="btn wa" id="pvWaPdf">${t('waPdf')}</button>`:''}${waAny?`<a class="btn wa" id="pvWa" href="${esc(waLink('',waText))}" target="_blank" rel="noopener">${t('waSend')}</a>`:''}`,
+   onMount:f=>{if(onTop)onTop(f);const fr=f.querySelector('#pv'),name=(fname||'document')+'.pdf';let pdfP=null,pdfB=null;
+     const getPdf=()=>{if(!pdfP)pdfP=makePdf(fr).then(b=>(pdfB=b)).catch(e=>{pdfP=null;throw e});return pdfP};
+     const warm=()=>{if(canShare&&coarse())setTimeout(()=>getPdf().catch(()=>{}),400)};
+     f.querySelectorAll('[data-pl]').forEach(bt=>bt.onclick=()=>{pl=bt.dataset.pl;try{localStorage.setItem('eyecon_printLang',pl)}catch(_){}f.querySelectorAll('[data-pl]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.pl===pl));pdfP=pdfB=null;fr.srcdoc=gen();warm()});warm();
+     const pdfNow=async btn=>{if(pdfB)return pdfB;btn.disabled=true;toast(t('pdfWork'));try{return await getPdf()}catch(_){toast(t('pdfFail'));return null}finally{btn.disabled=false}};
+     const share=async(bl,fresh)=>{const file=new File([bl],name,{type:'application/pdf'});if(!(navigator.canShare&&navigator.canShare({files:[file]})))return false;
+       try{await navigator.share({files:[file],title});return true}catch(e){if(e&&e.name==='AbortError')return true;if(fresh){toast(t('tapAgain'));return true}return false}};
+     const save=async bl=>{if(downloads)try{await downloads.save({filename:name,data:bl});return}catch(e){if(e&&e.code&&['declined','cancelled','canceled'].includes(e.code))return}
+       try{const u=URL.createObjectURL(bl);window.open(u,'_blank')||(location.href=u)}catch(_){toast(t('dlFail'))}};
+     f.querySelector('#pvPrint').onclick=()=>{if(coarse()){const w=window.open('','_blank');if(w){w.document.open();w.document.write(gen().replace('</body>','<script>window.addEventListener("load",function(){setTimeout(function(){window.print()},700)})<\/script></body>'));w.document.close();return}}
+       try{fr.contentWindow.focus();fr.contentWindow.print()}catch(_){toast(t('printHint'))}};
+     const pd=f.querySelector('#pvPdf');if(pd)pd.onclick=async()=>{const fresh=!pdfB,bl=await pdfNow(pd);if(!bl)return;if(coarse()&&await share(bl,fresh))return;await save(bl)};
+     const sh=f.querySelector('#pvShare');if(sh)sh.onclick=async()=>{const fresh=!pdfB,bl=await pdfNow(sh);if(!bl)return;if(await share(bl,fresh))return;await save(bl)};
+     const wp=f.querySelector('#pvWaPdf');if(wp)wp.onclick=async()=>{const ok=canShare&&(()=>{try{return navigator.canShare({files:[new File([''],'x.pdf',{type:'application/pdf'})]})}catch(_){return false}})();
+       if(ok){const fresh=!pdfB,bl=await pdfNow(wp);if(bl)await share(bl,fresh);return}
+       const w=window.open('about:blank','_blank'),bl=await pdfNow(wp);if(!bl){if(w)w.close();return}await save(bl);const u=waLink(waPhone||'',t('waPdfMsg'));if(w)w.location.href=u;else window.open(u,'_blank');toast(t('waPdfDesk'))}}})}
 function printSale(s,opt){if(!s)return;opt=opt||printWithPref();const p=s.patientId?byId('patients',s.patientId):null;printPreview(t('invoice')+' #'+(s.no||''),()=>saleDoc(s,opt),{fname:'invoice-'+(s.no||''),waPhone:p&&p.phone,waText:saleText(s)})}
 function printExam(e,kind='exam'){if(!e)return;const p=byId('patients',e.patientId)||{};const fn={exam:examReportDoc,rx:glassesRxDoc,cl:clRxDoc}[kind]||examReportDoc;printPreview(docT(kind)+' · '+(p.name||''),()=>fn(e),{fname:kind+'-'+(p.code||'')+'-'+(e.date||''),waPhone:p.phone,waText:rxText(e)})}
 
