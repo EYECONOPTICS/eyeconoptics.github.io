@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>EYECON OPTICS</title>
+<link rel="icon" href="favicon.ico" sizes="any">
+<script src="config.js"></script>
+<style>
+:root{--pri:#026BB2;--ink:#0E2236;--mut:#56697D;--line:#D3E4F0;--bg:#F2F8FC;--surface:#fff}
+@media (prefers-color-scheme:dark){:root{--ink:#E6EEF5;--mut:#9DB0C2;--line:#24384B;--bg:#0B1722;--surface:#122333}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans Arabic","Noto Sans",system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;line-height:1.5}
+main{max-width:860px;margin:0 auto;padding:16px;display:grid;gap:14px}
+header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+h1{font-size:1.15rem;margin:0}
+.sub{color:var(--mut);font-size:.9rem;margin:2px 0 0}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 16px;border-radius:10px;border:1px solid var(--pri);color:var(--pri);background:var(--surface);font:inherit;font-weight:600;text-decoration:none;cursor:pointer}
+.btn.primary{background:var(--pri);color:#fff}
+.pages{display:grid;gap:12px}
+.pages img{width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--line);background:#fff;box-shadow:0 4px 16px rgba(0,0,0,.08)}
+.msg{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;text-align:center;color:var(--mut)}
+</style>
+</head>
+<body>
+<main>
+  <header><div><h1 id="t">…</h1><p class="sub" id="s"></p></div><div class="btns" id="b" hidden><a class="btn primary" id="dl" download>⬇ تحميل PDF</a><a class="btn" id="op" target="_blank" rel="noopener">فتح الملف</a></div></header>
+  <div class="msg" id="m">جارٍ تحميل الملف…</div>
+  <div class="pages" id="p"></div>
+</main>
+<script>
+(function(){
+  var q=new URLSearchParams(location.search).get('f')||'',$=function(i){return document.getElementById(i)};
+  function fail(){$('t').textContent='EYECON OPTICS';$('m').textContent='الرابط غير صالح أو انتهت صلاحيته. تواصل مع المحل لإرسال الملف مرة أخرى.';$('m').hidden=false}
+  if(!/^[A-Za-z0-9]{24,64}$/.test(q)||!window.EYECON_API)return fail();
+  fetch(window.EYECON_API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:'pubGet',args:[q]})})
+   .then(function(r){return r.json()}).then(function(x){if(!x||!x.ok)return fail();var d=JSON.parse(x.ok);
+     document.title=(d.title||'')+(d.shop?' · '+d.shop:'');$('t').textContent=d.title||d.name||'';$('s').textContent=d.shop||'';
+     var bin=atob(d.pdf),u8=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
+     var url=URL.createObjectURL(new Blob([u8],{type:'application/pdf'}));$('dl').href=url;$('dl').setAttribute('download',d.name||'document.pdf');$('op').href=url;$('b').hidden=false;
+     (d.pages||[]).forEach(function(src,n){var im=new Image();im.alt=(d.title||'')+' '+(n+1);im.src=src;$('p').appendChild(im)});
+     $('m').hidden=true;if(!(d.pages||[]).length){$('m').textContent='اضغط «فتح الملف» لعرضه.';$('m').hidden=false}
+   }).catch(fail);
+})();
+</script>
+</body>
+</html>

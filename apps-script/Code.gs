@@ -32,6 +32,42 @@ function doPost(e) {
   return ContentService.createTextOutput(JSON.stringify(out)).setMimeType(ContentService.MimeType.JSON);
 }
 
+/* ---------- documents sent to a customer by WhatsApp link ----------
+ * The app uploads the PDF (and page images for viewing); it is kept in the _pub sheet of this same Sheet and opened by an id nobody can guess
+ * (https://eyeconoptics.github.io/v.html?f=<id>). Entries older than PUB_DAYS are removed. */
+var PUB_DAYS = 120, PUB_CHUNK = 45000;
+function api_pubPdf(token, json) {
+  var me = session_(token); if (!STAFF[role_(me.role)]) throw new Error('perm');
+  json = String(json || ''); if (json.length > 6000000) throw new Error('too_big');
+  var o = JSON.parse(json); if (!o || !o.pdf) throw new Error('bad');
+  var lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    var sh = sheet_('_pub', false) || ss_().insertSheet('_pub'); if (sh.getLastRow() === 0) sh.appendRow(['id', 'time', 'by', 'name', 'data']);
+    pubClean_(sh);
+    var id = uid_() + uid_().slice(0, 8), name = String(o.name || 'document.pdf').slice(0, 120);
+    var data = JSON.stringify({ name: name, title: String(o.title || '').slice(0, 200), shop: String(o.shop || '').slice(0, 120), at: Date.now(), pdf: String(o.pdf), pages: (Array.isArray(o.pages) ? o.pages : []).slice(0, 12).map(String) });
+    var row = [id, new Date(), me.u, name];
+    for (var i = 0; i < data.length; i += PUB_CHUNK) row.push('~' + data.slice(i, i + PUB_CHUNK));
+    sh.appendRow(row);
+    log_(me.u, 'إرسال ملف للزبون', '_pub', id, name, '');
+    return id;
+  } finally { lock.releaseLock(); }
+}
+function api_pubGet(id) {
+  id = String(id || ''); if (!/^[A-Za-z0-9]{24,64}$/.test(id)) throw new Error('not_found');
+  var sh = sheet_('_pub', false); if (!sh || sh.getLastRow() < 2) throw new Error('not_found');
+  var r = sh.getRange(2, 1, sh.getLastRow() - 1, 1).createTextFinder(id).matchEntireCell(true).findNext(); if (!r) throw new Error('not_found');
+  var v = sh.getRange(r.getRow(), 5, 1, Math.max(1, sh.getLastColumn() - 4)).getValues()[0], out = '';
+  for (var i = 0; i < v.length; i++) { var c = String(v[i] || ''); if (!c) break; out += c.charAt(0) === '~' ? c.slice(1) : c; }
+  return out;
+}
+function pubClean_(sh) {
+  var n = sh.getLastRow(); if (n < 2) return;
+  var t = sh.getRange(2, 2, n - 1, 1).getValues(), lim = Date.now() - PUB_DAYS * 864e5, k = 0;
+  while (k < t.length && t[k][0] instanceof Date && t[k][0].getTime() < lim) k++;
+  if (k) sh.deleteRows(2, k);
+}
+
 /* ---------- helpers ---------- */
 // Optional: if this script was created from script.google.com (not from the Sheet's Extensions menu),
 // paste the Sheet id here (the long part of the Sheet URL between /d/ and /edit).
