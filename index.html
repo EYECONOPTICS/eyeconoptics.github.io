@@ -348,7 +348,7 @@ const D={
  newPatient:['زبون جديد','New customer'],searchPat:['ابحث بالاسم أو الهاتف أو رقم الزبون','Search by name, phone or customer ID'],patients:['زبون','customers'],exams:['فحص','exams'],name:['الاسم','Name'],pid:['رقم الزبون','Customer ID'],age:['العمر','Age'],phone:['الهاتف','Phone'],lastExam:['آخر فحص','Last exam'],lastRx:['آخر وصفة','Last Rx'],
  noPatients:['لا يوجد زبائن بعد. أضف الزبون أولاً ثم سجّل فحصه.','No customers yet. Add the customer first, then record the exam.'],noResults:['لا نتائج لهذا البحث.','No results for this search.'],firstPatient:['أضف أول زبون','Add the first customer'],
  allPatients:['كل الزبائن','All customers'],sellTo:['بيع لهذا الزبون','Sell to this customer'],editData:['تعديل البيانات','Edit details'],years:['سنة','yrs'],debt:['دين','Owes'],history:['التاريخ المرضي','Medical history'],examLog:['سجل الفحوصات','Exam history'],noExams:['لا توجد فحوصات لهذا الزبون.','No exams for this customer.'],firstExam:['سجّل أول فحص','Record the first exam'],patientPurchases:['مشتريات الزبون','Customer purchases'],
- fullName:['الاسم الكامل','Full name'],autoId:['يُنشأ تلقائياً عند الحفظ','Created automatically on save'],dob:['تاريخ الميلاد','Date of birth'],gender:['الجنس','Gender'],male:['ذكر','Male'],female:['أنثى','Female'],job:['المهنة','Occupation'],historyHint:['التاريخ المرضي (سكري، ضغط، عمليات، أدوية…)','Medical history (diabetes, BP, surgery, medication…)'],
+ fullName:['الاسم الثلاثي','Full name (three parts)'],name3:['الاسم الثلاثي (ثلاث كلمات على الأقل)','Full three-part name (at least three words)'],autoId:['يُنشأ تلقائياً عند الحفظ','Created automatically on save'],dob:['تاريخ الميلاد','Date of birth'],gender:['الجنس','Gender'],male:['ذكر','Male'],female:['أنثى','Female'],job:['المهنة','Occupation'],historyHint:['التاريخ المرضي (سكري، ضغط، عمليات، أدوية…)','Medical history (diabetes, BP, surgery, medication…)'],
  msgLang:['لغة رسائل واتساب','WhatsApp message language'],arabic:['العربية','Arabic'],english:['الإنكليزية','English'],
  waCheck:['افحص الرقم على واتساب','Check number on WhatsApp'],waConfirmed:['تأكدت أن الرقم عليه واتساب فعّال','I confirmed this number has active WhatsApp'],waConsent:['يوافق على استلام العروض الترويجية','Agrees to receive promotional offers'],
  waHint:['يفتح محادثة واتساب مع الرقم. إذا ظهرت رسالة أن الرقم غير موجود على واتساب فهو غير فعّال. ضع العلامة بعد التأكد.','Opens a WhatsApp chat with the number. If WhatsApp says the number is not on WhatsApp, it is not active. Tick the box once confirmed.'],
@@ -506,8 +506,9 @@ const PARTNERS=['ZEISS','HOYA','LTL','ITALI-LENTI','ALCON'];
 const fixPartners=l=>[...new Set((l||[]).map(n=>/^ESSIL+OR$/i.test(String(n).trim())?'ALCON':n))];
 const partners=()=>fixPartners(S.settings.partners||PARTNERS);
 const brandLogo=n=>(S.brandLogos||{})[n]||brandsFor('main')[n]||(window.EYECON_BRANDS||{})[n]||'';
-const PAT_REQ=[['name','fullName'],['phone','phone'],['gender','gender'],['age','age'],['address','address2']];
-const patMissK=p=>PAT_REQ.filter(([k])=>k==='age'?!(p.dob||(p.ageY!==''&&p.ageY!=null)):k==='phone'?!(p.phone&&phoneOk(p.phone)):!String(p[k]||'').trim());
+const name3=v=>String(v||'').trim().split(/\s+/).filter(Boolean).length>=3;
+const PAT_REQ=[['name','name3'],['phone','phone'],['gender','gender'],['age','age'],['address','address2']];
+const patMissK=p=>PAT_REQ.filter(([k])=>k==='age'?!(p.dob||(p.ageY!==''&&p.ageY!=null)):k==='phone'?!(p.phone&&phoneOk(p.phone)):k==='name'?!name3(p.name):!String(p[k]||'').trim());
 const patMissing=p=>!p?[t('patient')]:patMissK(p).map(([,l])=>t(l));
 function patFixHtml(pid,all){const p=byId('patients',pid);if(!p)return '';const m=all?PAT_REQ.map(([k])=>k):patMissK(p).map(([k])=>k);
   const lnk=canWrite&&isMgr()?`<button type="button" class="btn ghost sm" data-pfedit="${esc(p.id)}">${t('editPatFile')}</button>`:'';if(!m.length)return `<div class="seg">${lnk}</div>`;
@@ -533,7 +534,7 @@ function wirePatFix(f,sel){const box=f.querySelector('#patFix');if(!box)return;c
   box.addEventListener('click',e=>{const b=e.target.closest('[data-pfedit]');if(!b)return;box.innerHTML=patFixHtml(b.dataset.pfedit,true);box.querySelector('input')?.focus()})}
 async function patFixSave(f,pid){const box=f.querySelector('#patFix');if(!box||!pid)return true;const g=id=>{const el=box.querySelector('#'+id);return el?el.value.trim():null};const u={};
   const n=g('pf_name'),ph=g('pf_phone'),gd=g('pf_gender'),ag=g('pf_age'),ad=g('pf_address');
-  if(n)u.name=n;if(ph){if(!phoneOk(ph)){toast(t('badPhone'));return false}u.phone=ph}if(gd)u.gender=gd;if(ag!==null&&ag!==''){u.ageY=ag;u.ageYAt=new Date().getFullYear()}if(ad)u.address=ad;
+  if(n!==null&&!name3(n)){toast(t('needFull')+t('name3'));box.querySelector('#pf_name')?.focus();return false}if(n)u.name=n;if(ph){if(!phoneOk(ph)){toast(t('badPhone'));return false}u.phone=ph}if(gd)u.gender=gd;if(ag!==null&&ag!==''){u.ageY=ag;u.ageYAt=new Date().getFullYear()}if(ad)u.address=ad;
   if(!Object.keys(u).length)return true;const ok=await put('patients',pid,u);if(!ok)return false;const p=byId('patients',pid);if(p)Object.assign(p,u);return true}
 const STATUSES=['none','preparing','ready','shipped','postponed','delivered'];
 const STAGES=['sg_recv','sg_lensOrd','sg_lensIn','sg_fit','sg_qc','sg_done'];
