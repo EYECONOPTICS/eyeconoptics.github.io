@@ -379,7 +379,7 @@ const D={
  rxCl:['العدسات اللاصقة','Contact lenses'],clBrand:['الماركة / النوع','Brand / type'],modality:['مدة الاستخدام','Replacement'],fitNotes:['ملاحظات التركيب (Fitting)','Fitting notes'],
  extra:['فحوصات إضافية والتشخيص','Other tests & diagnosis'],iopR:['ضغط العين R (mmHg)','IOP R (mmHg)'],iopL:['ضغط العين L (mmHg)','IOP L (mmHg)'],diagnosis:['التشخيص','Diagnosis'],examNotes:['ملاحظات الفحص (Cover test، حركة العين، قاع العين…)','Exam notes (cover test, motility, fundus…)'],
  follow:['المراجعة القادمة','Next visit'],followDate:['تاريخ المراجعة القادمة','Next visit date'],followDone:['تمت المراجعة','Visit done'],savedExam:['حُفظ الفحص','Exam saved'],delExam:['حذف الفحص','Delete exam'],copyRx:['نسخ الوصفة','Copy Rx'],copied:['نُسخت الوصفة','Rx copied'],rxText:['نص الوصفة','Rx text'],
- complaintL:['الشكوى','Complaint'],vaShort:['حدة البصر','Visual acuity'],unaided:['بدون تصحيح','Unaided'],aided:['مع التصحيح','Best corrected'],near:['القريب','Near'],retShort:['الرتنوسكوبي','Retinoscopy'],wdShort:['مسافة العمل','WD'],cm:['سم','cm'],glassesRx:['وصفة النظارة','Spectacle Rx'],clShort:['العدسات اللاصقة','Contact lenses'],visitOn:['مراجعة','Visit'],
+ complaintL:['الشكوى','Complaint'],mhT:['التاريخ المرضي (أمراض مزمنة أو عامة)','Medical history (chronic or general disease)'],mh_dm:['داء السكري','Diabetes'],mh_htn:['ارتفاع ضغط الدم','Hypertension'],mh_cvd:['أمراض القلب والدورة الدموية','Heart & circulatory disease'],mh_none:['لا يعاني من أمراض','No known disease'],mhOther:['أمراض أخرى / تفاصيل','Other / details'],mhNeed:['التاريخ المرضي إجباري لمن عمره أكثر من 40 سنة: اختر المرض أو «لا يعاني من أمراض».','Medical history is required for patients over 40: pick a disease or “No known disease”.'],mhReq40:['إجباري فوق 40 سنة','required over 40'],vaShort:['حدة البصر','Visual acuity'],unaided:['بدون تصحيح','Unaided'],aided:['مع التصحيح','Best corrected'],near:['القريب','Near'],retShort:['الرتنوسكوبي','Retinoscopy'],wdShort:['مسافة العمل','WD'],cm:['سم','cm'],glassesRx:['وصفة النظارة','Spectacle Rx'],clShort:['العدسات اللاصقة','Contact lenses'],visitOn:['مراجعة','Visit'],
  newItem:['صنف جديد','New item'],addPurchase:['إدخال مشتريات','Record purchase'],pieces:['قطعة','pcs'],stockValue:['قيمة المخزون بالكلفة','Stock value at cost'],all:['الكل','All'],searchItem:['ابحث بالاسم أو الماركة أو الكود','Search by name, brand or code'],
  item:['الصنف','Item'],type:['النوع','Type'],details:['التفاصيل','Details'],qty:['الكمية','Qty'],cost:['الكلفة','Cost'],price:['سعر البيع','Price'],low:['ناقص','Low'],nearExp:['قارب الانتهاء','Expiring'],
  noItemsF:['لا أصناف تطابق هذا الاختيار.','No items match.'],noItems:['المخزون فارغ. أضف الإطارات والعدسات والعدسات اللاصقة كأصناف، ثم أدخل الكميات من المشتريات.','Inventory is empty. Add frames, lenses and contact lenses as items, then add quantities through purchases.'],firstItem:['أضف أول صنف','Add the first item'],
@@ -1151,6 +1151,14 @@ function rxGrid(prefix,o,cols,st=''){const n=cols.length,tp=n>=3?' tp':'',P=(r,c
   return `<div class="rxwrap"><div class="eg2${tp}" style="--n:${n};${st}">${['od','os'].map(eye=>`<span class="egbg ${eye}" ${P('1/span 3',cs(eye)+'/span '+n,'1/span '+(n+1),ncs(eye))}></span><span class="egh ${eye}" ${P(1,cs(eye)+'/span '+n,1,ncs(eye))}><span class="eb ${eye}">${eye==='od'?'R':'L'}</span>${eye==='od'?t('eyeR'):t('eyeL')}</span>`+cols.map((c,i)=>`<span class="h${eye==='os'?' hl':''}" ${P(2,cs(eye)+i,i+2,2)}>${c[1]}</span>`).join('')+cols.map((c,i)=>cell(eye,c,i)).join('')).join('')}</div></div>`}
 function vaRow(prefix,o,list,label,withOU=true){const ks=['od','os',...(withOU?['ou']:[])];return `<div class="rxwrap"><div class="rxg va va2" style="--cols:${ks.length}"><span class="rl">${label}</span>${ks.map(k=>{const nm=`${prefix}.${k}`,v=getP(o,nm)??'';return `<label class="vsel ${k}"><span class="eb ${k}">${k==='od'?'R':k==='os'?'L':'OU'}</span><select name="${nm}" aria-label="${label} ${k.toUpperCase()}">${vaOpts(list,v)}</select></label>`}).join('')}</div></div>`}
 const sec=(title,inner,open,required)=>`<details class="sec" ${open?'open':''}><summary>${title} <span class="chip ${required?'bad':''}">${required?t('required'):(open?t('filled'):t('optional'))}</span></summary><div class="in">${inner}</div></details>`;
+/* ---- medical history: required when the patient is over 40; quick picks + free text, prefilled from the last exam ---- */
+const MH=['dm','htn','cvd'];
+const mhNeeded=pid=>{const a=patientAge(byId('patients',pid));return a!==''&&num(a)>40};
+const mhText=e=>{const l=(e.medHx||[]).map(k=>t('mh_'+k));if(e.medHxOther)l.push(e.medHxOther);return l.join('، ')};
+function mhBox(e,pid){const last=!e.id&&pid?S.exams.filter(x=>x.patientId===pid&&(x.medHx||x.medHxOther)).sort(sortDate)[0]:null,src=e.id?e:(last||{}),sel=src.medHx||[];
+  return `<div class="mhbox" style="grid-column:1/-1;display:grid;gap:6px"><span id="mhLbl" class="${mhNeeded(pid)?'req':''}" style="font-size:.85rem">${t('mhT')} <span class="muted" style="font-size:.78rem">· ${t('mhReq40')}</span></span>
+    <div class="seg" style="flex-wrap:wrap;gap:6px">${[...MH,'none'].map(k=>`<label class="chk chip" style="cursor:pointer"><input type="checkbox" class="mhx" value="${k}" ${sel.includes(k)?'checked':''}> ${t('mh_'+k)}</label>`).join('')}</div>
+    <input id="f_mhOther" placeholder="${esc(t('mhOther'))}" value="${esc(src.medHxOther||'')}" autocomplete="off"></div>`}
 /* ---- eye exam fee: a service line, either on the glasses invoice or its own fee invoice ---- */
 const FEE_DEF={std:10000,kid:15000};
 const feeAmt=(b,ty)=>{if(ty!=='std'&&ty!=='kid')return 0;const st=setFor(b)||{},v=ty==='kid'?st.examFeeKid:st.examFee;return v!=null&&v!==''?num(v):FEE_DEF[ty]};
@@ -1185,7 +1193,7 @@ function examForm(e={},pid){
   <fieldset><legend>${t('visit')}</legend><div class="fr">
     ${fs(`<span class="req">${t('patient')}</span>`,'patientId',pidSel,[['',t('choosePatient')],...pats.map(p=>[p.id,(p.code?p.code+' · ':'')+p.name])])}<label class="f"><span>${t('age')}</span><input id="ageShow" readonly value="${esc(pidSel?patientAge(byId('patients',pidSel)):'')}"></label><div style="grid-column:1/-1">${newCustBox()}</div><div id="patFix" style="grid-column:1/-1"></div>
     ${fi(t('examDate'),'date',e.date||today(),'date')}${fi(t('examiner'),'examiner',e.examiner)}${brF(e.branchId||defBranch())}</div>
-    ${refPick(e)}${fi(t('complaint'),'complaint',e.complaint)}${feeBox(e)}
+    ${refPick(e)}${fi(t('complaint'),'complaint',e.complaint)}${mhBox(e,pidSel)}${feeBox(e)}
     ${lastRx?`<div class="rxcard"><span class="muted" style="font-size:.8rem">${t('prevRx')} (${lastRx.date})</span><div class="rx" style="direction:ltr"><span class="os">L ${fmtRx(lastRx.rx.os)}</span> · <span class="od">R ${fmtRx(lastRx.rx.od)}</span></div></div>`:''}
   </fieldset>
   ${sec(t('vaRx'),vaRow('va.ucva',e,VA,t('vaDistUnaided'),false)+vaRow('va.ph',e,VA,t('vaPh')+' · '+t('optional'),false)+`<label class="chk"><input type="checkbox" name="va.phSame" id="f_phSame" ${getP(e,'va.phSame')?'checked':''}> ${t('phSame')}</label>
@@ -1213,9 +1221,13 @@ function examForm(e={},pid){
      let arAuto=rxEmpty();E.forEach(k=>['sph','cyl','axis'].forEach(x=>{q(`rx.${k}.${x}`).addEventListener('input',()=>arAuto=false);q(`ar.${k}.${x}`).addEventListener('change',()=>{if(arAuto)copyAr()})}));
      wireAddNear(f);const pm=q('rx.pdMode'),pdT=()=>{f.querySelector('#pdBino').hidden=pm.value==='mono';f.querySelector('#pdMono').hidden=pm.value!=='mono'};pm.onchange=pdT;
      const d=f.querySelector('#delE');if(d)d.onclick=()=>armDelete(d,async()=>{if(await del('exams',e.id)){closeModal();toast(t('deleted'))}});wireRef(f);
+     {const xs=[...f.querySelectorAll('.mhx')];xs.forEach(x=>x.addEventListener('change',()=>{if(!x.checked)return;if(x.value==='none')xs.forEach(y=>{if(y!==x)y.checked=false});else xs.find(y=>y.value==='none').checked=false}));
+      f.querySelector('#f_patientId').addEventListener('change',ev=>{f.querySelector('#mhLbl').className=mhNeeded(ev.target.value)?'req':'';if(!e.id&&!xs.some(x=>x.checked)&&!f.querySelector('#f_mhOther').value){const w=document.createElement('div');w.innerHTML=mhBox({},ev.target.value);const nb=w.firstElementChild;const ob=f.querySelector('.mhbox');[...nb.querySelectorAll('.mhx')].forEach((x,i)=>xs[i].checked=x.checked);f.querySelector('#f_mhOther').value=nb.querySelector('#f_mhOther').value}})}
      {const ft=q('feeType'),fm=q('feeMode');let tTouched=!!e.id;ft.addEventListener('change',()=>tTouched=true);fm.addEventListener('change',()=>f.querySelector('#feeBoxM').hidden=fm.value!=='now'||fm.disabled);
       E.forEach(k=>['sph','cyl'].forEach(x=>q(`ret.${k}.${x}`).addEventListener('input',()=>{if(!tTouched&&ft.value==='std')ft.value='kid'})))}},
    onSubmit:async f=>{const o=formObj(f);if(!o.patientId){toast(t('choosePatient'));return false}if(!await patFixSave(f,o.patientId))return false;{const m=patMissing(byId('patients',o.patientId));if(m.length){toast(t('patIncomplete')+m.join('، '));return false}}
+     o.medHx=[...f.querySelectorAll('.mhx:checked')].map(x=>x.value);o.medHxOther=f.querySelector('#f_mhOther').value.trim();
+     if(mhNeeded(o.patientId)&&!o.medHx.length&&!o.medHxOther){toast(t('mhNeed'));f.querySelector('.mhbox').scrollIntoView({block:'center'});return false}
      o.va=o.va||{};o.va.bcva={od:((o.rx||{}).od||{}).va||'',os:((o.rx||{}).os||{}).va||''};const v=o.va;const anyVa=['ucva','bcva','ph','near'].some(k=>v[k]&&(v[k].od||v[k].os||v[k].ou));if(!anyVa){toast(t('needVa'));f.querySelector('details.sec').open=true;return false}
      if(!o.branchId)o.branchId=e.branchId||defBranch();o.guides=readGuides(f);if(!await refSave(f,o))return false;
      const fb=o.feeBox;delete o.feeBox;
@@ -1497,6 +1509,7 @@ const refFld=e=>drName(e.refDoctor)?fld(t('refByP'),'د. '+esc(drName(e.refDocto
 function examReportDoc(e){const p=byId('patients',e.patientId)||{},b=branch(bid(e)),rx=e.rx||{},cl=e.cl||{};
   let body=printHead(b,'exam','',e.date)+patientGrid(p,e,refFld(e));
   if(e.complaint)body+=`<div class="box"><span class="l">${t('complaintL')}</span>${esc(e.complaint)}</div>`;
+  if(mhText(e))body+=`<div class="box"><span class="l">${t('mhT')}</span>${esc(mhText(e))}</div>`;
   body+=vaRows(e)+oldSection(e)+arSection(e)+retSection(e);
   if(hasEye(rx,['sph','cyl','add','nsph','ncyl']))body+=`<div class="st">${t('rxGlasses')} <small>REFRACTION</small></div>`+rxSection(rx,false)+rxNoteBox(rx);
   if(hasEye(cl,['pwr','bc']))body+=`<div class="st">${t('clShort')} <small>CONTACT LENSES</small></div>`+eyeTable(cl,[['pwr','PWR'],['cyl','CYL'],['axis','AXIS'],['bc','BC'],['dia','DIA']],rxVal);
