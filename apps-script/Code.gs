@@ -45,7 +45,8 @@ function api_pubPdf(token, json) {
     var sh = sheet_('_pub', false) || ss_().insertSheet('_pub'); if (sh.getLastRow() === 0) sh.appendRow(['id', 'time', 'by', 'name', 'data']);
     pubClean_(sh);
     var id = uid_() + uid_().slice(0, 8), name = String(o.name || 'document.pdf').slice(0, 120);
-    var data = JSON.stringify({ name: name, title: String(o.title || '').slice(0, 200), shop: String(o.shop || '').slice(0, 120), at: Date.now(), pdf: String(o.pdf), pages: (Array.isArray(o.pages) ? o.pages : []).slice(0, 12).map(String) });
+    var mt = o.meta || {}, m = { b: String(mt.b || '').slice(0, 40), p: String(mt.p || '').slice(0, 40), k: String(mt.k || '').slice(0, 20), ref: String(mt.ref || '').slice(0, 40), cust: String(mt.cust || '').slice(0, 120), no: String(mt.no || '').slice(0, 30) };
+    var data = JSON.stringify({ name: name, title: String(o.title || '').slice(0, 200), shop: String(o.shop || '').slice(0, 120), at: Date.now(), m: m, pdf: String(o.pdf), pages: (Array.isArray(o.pages) ? o.pages : []).slice(0, 12).map(String) });
     var row = [id, new Date(), me.u, name];
     for (var i = 0; i < data.length; i += PUB_CHUNK) row.push('~' + data.slice(i, i + PUB_CHUNK));
     sh.appendRow(row);
@@ -53,13 +54,32 @@ function api_pubPdf(token, json) {
     return id;
   } finally { lock.releaseLock(); }
 }
-function api_pubGet(id) {
+function pubRead_(id) {
   id = String(id || ''); if (!/^[A-Za-z0-9]{24,64}$/.test(id)) throw new Error('not_found');
   var sh = sheet_('_pub', false); if (!sh || sh.getLastRow() < 2) throw new Error('not_found');
   var r = sh.getRange(2, 1, sh.getLastRow() - 1, 1).createTextFinder(id).matchEntireCell(true).findNext(); if (!r) throw new Error('not_found');
   var v = sh.getRange(r.getRow(), 5, 1, Math.max(1, sh.getLastColumn() - 4)).getValues()[0], out = '';
   for (var i = 0; i < v.length; i++) { var c = String(v[i] || ''); if (!c) break; out += c.charAt(0) === '~' ? c.slice(1) : c; }
   return out;
+}
+function rated_(id) { var sh = sheet_('ratings', false); return !!(sh && findRow_(sh, id)); }
+function api_pubGet(id) {
+  var out = pubRead_(id);
+  if (!rated_(String(id))) { var d = JSON.parse(out); d.rate = 1; delete d.m; return JSON.stringify(d); }
+  return out.replace(/"m":\{[^{}]*\},/, '');
+}
+/* the customer rates the visit (1-5 stars + an optional comment) from the link page, once per link; kept in the ratings sheet of the branch */
+function api_pubRate(id, stars, text) {
+  var raw = pubRead_(id); id = String(id); stars = Math.round(Number(stars)); if (!(stars >= 1 && stars <= 5)) throw new Error('bad');
+  var lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    if (rated_(id)) return 'rated';
+    var d0 = JSON.parse(raw), m = d0.m || {}, t = now_();
+    var d = { stars: stars, text: String(text || '').slice(0, 1500), branchId: m.b || 'main', patientId: m.p || '', kind: m.k || '', ref: m.ref || '', no: m.no || '', customer: m.cust || '', title: String(d0.title || '').slice(0, 200), date: Utilities.formatDate(new Date(), Session.getScriptTimeZone() || 'Asia/Baghdad', 'yyyy-MM-dd'), at: t, _by: 'customer', _at: t, _byName: m.cust || 'customer' };
+    var sh = sheet_('ratings', true); writeRow_(sh, sh.getLastRow() + 1, rowFor_('ratings', id, d, t)); touch_('ratings', t);
+    log_('customer', 'تقييم زبون ' + stars + '★', 'ratings', id, d.customer, d.text.slice(0, 200));
+    return 'ok';
+  } finally { lock.releaseLock(); }
 }
 function pubClean_(sh) {
   var n = sh.getLastRow(); if (n < 2) return;
@@ -145,7 +165,7 @@ function touch_(c, t) { props_().setProperty('m_' + c, String(t)); props_().setP
 function now_() { return Date.now(); }
 
 /* ---------- activity log (sheet _log) ---------- */
-var AR_COL = { patients: 'الزبائن', exams: 'الفحوصات', sales: 'المبيعات', items: 'المخزون', purchases: 'المشتريات', expenses: 'المصاريف', vouchers: 'سندات الصرف', partners: 'الشركاء', withdrawals: 'سحوبات الشركاء', fixedAssets: 'الأصول', exchanges: 'صرف العملة', campaigns: 'حملات واتساب', doctors: 'أطباء العيون', chat: 'المحادثات', chatRe: 'تفاعلات المحادثات', chatRead: 'قراءة المحادثات', files: 'الملفات', tasks: 'المهام', branches: 'الفروع', guides: 'النماذج التثقيفية', settings: 'الإعدادات', rates: 'أسعار الصرف', counters: 'العدادات' };
+var AR_COL = { ratings: 'تقييمات الزبائن', patients: 'الزبائن', exams: 'الفحوصات', sales: 'المبيعات', items: 'المخزون', purchases: 'المشتريات', expenses: 'المصاريف', vouchers: 'سندات الصرف', partners: 'الشركاء', withdrawals: 'سحوبات الشركاء', fixedAssets: 'الأصول', exchanges: 'صرف العملة', campaigns: 'حملات واتساب', doctors: 'أطباء العيون', chat: 'المحادثات', chatRe: 'تفاعلات المحادثات', chatRead: 'قراءة المحادثات', files: 'الملفات', tasks: 'المهام', branches: 'الفروع', guides: 'النماذج التثقيفية', settings: 'الإعدادات', rates: 'أسعار الصرف', counters: 'العدادات' };
 function cut_(v, n) { v = String(v == null ? '' : v); return v.length > n ? v.slice(0, n) + '…' : v; }
 function safe_(v) { return typeof v === 'string' && /^[=+@]/.test(v) ? "'" + v : v; }
 function log_(user, action, c, id, sum, details) {
@@ -183,7 +203,7 @@ function users_() {
   });
 }
 /* ---------- branches: every branch is isolated; a user with a branches list only receives and changes that branch's records ---------- */
-var SCOPED = { items: 1, patients: 1, exams: 1, sales: 1, purchases: 1, expenses: 1, fixedAssets: 1, vouchers: 1, exchanges: 1, campaigns: 1, doctors: 1 };
+var SCOPED = { ratings: 1, items: 1, patients: 1, exams: 1, sales: 1, purchases: 1, expenses: 1, fixedAssets: 1, vouchers: 1, exchanges: 1, campaigns: 1, doctors: 1 };
 function brList_(v) {
   if (Array.isArray(v)) v = v.join(',');
   var a = String(v == null ? '' : v).split(',').map(function (x) { return x.trim(); }).filter(function (x) { return /^[A-Za-z0-9_\-]{1,60}$/.test(x); });
@@ -234,7 +254,8 @@ var BASE_RULES = {
   chatRe: { scope: 'aud', create: ['staff', 'doctor'], update: ['own'], del: ['own'] },
   chatRead: { scope: 'aud', create: ['staff', 'doctor'], update: ['own'], del: ['own'] },
   files: { scope: 'aud', create: ['staff', 'doctor'], update: [], del: ['own:60', 'owner', 'manager'], lazy: true },
-  tasks: { scope: 'branch', create: ALL3, update: ALL3, del: ['owner', 'manager', 'own'] }
+  tasks: { scope: 'branch', create: ALL3, update: ALL3, del: ['owner', 'manager', 'own'] },
+  ratings: { scope: 'branch', create: [], update: ADM, del: ADM }
 };
 var RULES_CACHE = null;
 function ruleOverrides_() {

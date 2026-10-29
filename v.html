@@ -21,12 +21,30 @@ h1{font-size:1.15rem;margin:0}
 .btn.primary{background:var(--pri);color:#fff}
 .pages{display:grid;gap:12px}
 .pages img{width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--line);background:#fff;box-shadow:0 4px 16px rgba(0,0,0,.08)}
+.rate{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px 18px;display:grid;gap:14px;text-align:center;box-shadow:0 6px 24px rgba(0,0,0,.06)}
+.rate h2{margin:0;font-size:1.2rem}.rate p{margin:0;color:var(--mut)}
+[hidden]{display:none!important}
+.stars{display:flex;justify-content:center;gap:6px}
+.stars button{font-size:2.6rem;line-height:1;border:0;background:none;color:var(--line);cursor:pointer;padding:2px;transition:transform .12s}
+.stars button.on{color:#F2A900}.stars button:active{transform:scale(1.15)}
+.lbl{min-height:1.4em;font-weight:600;color:var(--pri)}
+textarea{width:100%;min-height:96px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;background:var(--bg);color:var(--ink);resize:vertical}
+.btn[disabled]{opacity:.45;cursor:not-allowed}.thx{color:var(--pri);font-weight:600;text-align:center}
 .msg{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;text-align:center;color:var(--mut)}
 </style>
 </head>
 <body>
 <main>
   <header><div><h1 id="t">…</h1><p class="sub" id="s"></p></div><div class="btns" id="b" hidden><a class="btn primary" id="dl" download>⬇ تحميل PDF</a><a class="btn" id="op" target="_blank" rel="noopener">فتح الملف</a></div></header>
+  <section class="rate" id="rt" hidden>
+    <h2>كيف كانت تجربتك معنا؟</h2>
+    <p>قيّم زيارتك قبل عرض الملف، رأيك يساعدنا أن نخدمك بشكل أفضل.</p>
+    <div class="stars" id="st" role="radiogroup" aria-label="التقييم"><button type="button" data-v="1" aria-label="1">★</button><button type="button" data-v="2" aria-label="2">★</button><button type="button" data-v="3" aria-label="3">★</button><button type="button" data-v="4" aria-label="4">★</button><button type="button" data-v="5" aria-label="5">★</button></div>
+    <div class="lbl" id="sl"></div>
+    <textarea id="tx" maxlength="1500" placeholder="اكتب رأيك أو ملاحظتك عن الزيارة (اختياري)"></textarea>
+    <div><button type="button" class="btn primary" id="go" disabled>إرسال التقييم وعرض الملف</button></div>
+  </section>
+  <div class="thx" id="ty" hidden>شكراً لتقييمك 🌟</div>
   <div class="msg" id="m">جارٍ تحميل الملف…</div>
   <div class="pages" id="p"></div>
 </main>
@@ -38,11 +56,18 @@ h1{font-size:1.15rem;margin:0}
   fetch(window.EYECON_API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:'pubGet',args:[q]})})
    .then(function(r){return r.json()}).then(function(x){if(!x||!x.ok)return fail();var d=JSON.parse(x.ok);
      document.title=(d.title||'')+(d.shop?' · '+d.shop:'');$('t').textContent=d.title||d.name||'';$('s').textContent=d.shop||'';
+     if(d.rate){$('m').hidden=true;$('rt').hidden=false;var v=0,L=['','سيئة','مقبولة','جيدة','جيدة جداً','ممتازة'],bs=[].slice.call($('st').querySelectorAll('button'));
+       bs.forEach(function(b){b.onclick=function(){v=+b.dataset.v;bs.forEach(function(x){x.classList.toggle('on',+x.dataset.v<=v);x.setAttribute('aria-checked',+x.dataset.v===v)});$('sl').textContent=L[v];$('go').disabled=false}});
+       $('go').onclick=function(){if(!v)return;$('go').disabled=true;$('go').textContent='جارٍ الإرسال…';
+         fetch(window.EYECON_API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:'pubRate',args:[q,v,$('tx').value]})}).then(function(r){return r.json()}).catch(function(){return null})
+          .then(function(){$('rt').hidden=true;$('ty').hidden=false;show(d)})};return}
+     show(d)}).catch(fail);
+  function show(d){
      var bin=atob(d.pdf),u8=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
      var url=URL.createObjectURL(new Blob([u8],{type:'application/pdf'}));$('dl').href=url;$('dl').setAttribute('download',d.name||'document.pdf');$('op').href=url;$('b').hidden=false;
      (d.pages||[]).forEach(function(src,n){var im=new Image();im.alt=(d.title||'')+' '+(n+1);im.src=src;$('p').appendChild(im)});
      $('m').hidden=true;if(!(d.pages||[]).length){$('m').textContent='اضغط «فتح الملف» لعرضه.';$('m').hidden=false}
-   }).catch(fail);
+  }
 })();
 </script>
 </body>

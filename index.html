@@ -348,7 +348,7 @@ const D={
  newPatient:['زبون جديد','New customer'],searchPat:['ابحث بالاسم أو الهاتف أو رقم الزبون','Search by name, phone or customer ID'],patients:['زبون','customers'],exams:['فحص','exams'],name:['الاسم','Name'],pid:['رقم الزبون','Customer ID'],age:['العمر','Age'],phone:['الهاتف','Phone'],lastExam:['آخر فحص','Last exam'],lastRx:['آخر وصفة','Last Rx'],
  noPatients:['لا يوجد زبائن بعد. أضف الزبون أولاً ثم سجّل فحصه.','No customers yet. Add the customer first, then record the exam.'],noResults:['لا نتائج لهذا البحث.','No results for this search.'],firstPatient:['أضف أول زبون','Add the first customer'],
  allPatients:['كل الزبائن','All customers'],sellTo:['بيع لهذا الزبون','Sell to this customer'],editData:['تعديل البيانات','Edit details'],years:['سنة','yrs'],debt:['دين','Owes'],history:['التاريخ المرضي','Medical history'],examLog:['سجل الفحوصات','Exam history'],noExams:['لا توجد فحوصات لهذا الزبون.','No exams for this customer.'],firstExam:['سجّل أول فحص','Record the first exam'],patientPurchases:['مشتريات الزبون','Customer purchases'],
- fullName:['الاسم الثلاثي','Full name (three parts)'],name3:['الاسم الثلاثي (ثلاث كلمات على الأقل)','Full three-part name (at least three words)'],autoId:['يُنشأ تلقائياً عند الحفظ','Created automatically on save'],dob:['تاريخ الميلاد','Date of birth'],gender:['الجنس','Gender'],male:['ذكر','Male'],female:['أنثى','Female'],job:['المهنة','Occupation'],historyHint:['التاريخ المرضي (سكري، ضغط، عمليات، أدوية…)','Medical history (diabetes, BP, surgery, medication…)'],
+ fullName:['الاسم الثلاثي','Full name (three parts)'],rvT:['تقييمات الزبائن','Customer ratings'],rvNone:['لا توجد تقييمات بعد. تصل التقييمات عندما يفتح الزبون رابط الفاتورة أو الوصفة المرسل بالواتساب.','No ratings yet. They arrive when a customer opens the invoice or Rx link sent by WhatsApp.'],rvAvg:['المعدل','Average'],rvN:['تقييم','ratings'],rvNew:['تقييم جديد من زبون','New customer rating'],rvAll:['الكل','All'],rvLow:['المنخفضة (1-3)','Low (1-3)'],rvText:['مع رأي مكتوب','With a comment'],rvOpen:['فتح ملف الزبون','Open customer file'],name3:['الاسم الثلاثي (ثلاث كلمات على الأقل)','Full three-part name (at least three words)'],autoId:['يُنشأ تلقائياً عند الحفظ','Created automatically on save'],dob:['تاريخ الميلاد','Date of birth'],gender:['الجنس','Gender'],male:['ذكر','Male'],female:['أنثى','Female'],job:['المهنة','Occupation'],historyHint:['التاريخ المرضي (سكري، ضغط، عمليات، أدوية…)','Medical history (diabetes, BP, surgery, medication…)'],
  msgLang:['لغة رسائل واتساب','WhatsApp message language'],arabic:['العربية','Arabic'],english:['الإنكليزية','English'],
  waCheck:['افحص الرقم على واتساب','Check number on WhatsApp'],waConfirmed:['تأكدت أن الرقم عليه واتساب فعّال','I confirmed this number has active WhatsApp'],waConsent:['يوافق على استلام العروض الترويجية','Agrees to receive promotional offers'],
  waHint:['يفتح محادثة واتساب مع الرقم. إذا ظهرت رسالة أن الرقم غير موجود على واتساب فهو غير فعّال. ضع العلامة بعد التأكد.','Opens a WhatsApp chat with the number. If WhatsApp says the number is not on WhatsApp, it is not active. Tick the box once confirmed.'],
@@ -474,8 +474,8 @@ const SALE_EDIT_MS=600000;
 const saleLocked=s=>!!s&&!!s.id&&!isMgr()&&!(s._by&&s._by===myU()&&Date.now()-num(s._at)<=SALE_EDIT_MS);
 const USER_TABS=['dash','patients','inventory','sales','tasks','chat','settings'];
 const tabList=()=>isUserRole()?TABS.filter(k=>USER_TABS.includes(k)):TABS;
-const SCOPED=['items','patients','exams','sales','purchases','expenses','fixedAssets','vouchers','exchanges','campaigns','doctors','tasks'];
-const COLS=['items','patients','exams','sales','purchases','expenses','partners','withdrawals','branches','campaigns','fixedAssets','vouchers','exchanges','guides','doctors','chat','chatRe','tasks'];
+const SCOPED=['ratings','items','patients','exams','sales','purchases','expenses','fixedAssets','vouchers','exchanges','campaigns','doctors','tasks'];
+const COLS=['ratings','items','patients','exams','sales','purchases','expenses','partners','withdrawals','branches','campaigns','fixedAssets','vouchers','exchanges','guides','doctors','chat','chatRe','tasks'];
 const isDoctor=()=>gRole()==='doctor';
 const DEF_GUIDES=[
  {id:'g_bluecut',kind:'note',title:'عدسات Blue Cut',titleEn:'Blue Cut lenses',body:'تحجب جزءاً من الضوء الأزرق الصادر من الشاشات وتقلل الوهج، فتريح العين أثناء استخدام الهاتف والحاسوب. نظّفها بالبخاخ وقطعة المايكروفايبر فقط، وتجنب المناديل الورقية والماء الحار.',bodyEn:'They filter part of the blue light from screens and reduce glare, keeping your eyes comfortable on phones and computers. Clean them only with lens spray and a microfibre cloth; avoid tissues and hot water.'},
@@ -987,13 +987,24 @@ const emptyBox=(msg,btn)=>`<div class="empty"><div>${msg}</div>${btn||''}</div>`
 const branchCol=()=>curBranch==='all'&&multi();
 const bTitle=()=>curBranch!=='all'&&multi()?' · '+esc(branch(curBranch).name):'';
 
+/* ================= CUSTOMER RATINGS (from the WhatsApp link page) ================= */
+const rvAvg=L=>L.length?(L.reduce((a,r)=>a+num(r.stars),0)/L.length).toFixed(1):'—';
+const rvStars=n=>`<span style="color:#F2A900;letter-spacing:0">${'★'.repeat(num(n))}</span><span style="color:var(--line)">${'★'.repeat(5-num(n))}</span>`;
+function ratingsView(){const all=S.ratings.filter(inBranch).sort((a,b)=>num(b.at)-num(a.at));let f='all';
+  const body=()=>{const L=all.filter(r=>f==='low'?num(r.stars)<=3:f==='txt'?!!String(r.text||'').trim():true),bc=branchCol(),D=[5,4,3,2,1].map(k=>[k,all.filter(r=>num(r.stars)===k).length]);
+    return `<div class="sum" style="margin-bottom:10px"><div class="row"><span class="muted">${t('rvAvg')}</span><b style="font-size:1.3rem">${rvAvg(all)} ★</b></div><div class="row"><span class="muted">${t('rvT')}</span><b>${all.length} ${t('rvN')}</b></div>
+      ${D.map(([k,n])=>`<div class="row" style="gap:8px"><span style="min-width:62px">${rvStars(k)}</span><span style="flex:1;height:8px;border-radius:4px;background:var(--line);overflow:hidden"><span style="display:block;height:100%;width:${all.length?Math.round(n*100/all.length):0}%;background:#F2A900"></span></span><span class="n" style="min-width:26px">${n}</span></div>`).join('')}</div>
+     <div class="seg" style="margin-bottom:10px">${[['all',t('rvAll')],['low',t('rvLow')],['txt',t('rvText')]].map(([k,l])=>`<button type="button" data-rf="${k}" aria-pressed="${f===k}">${l}</button>`).join('')}</div>
+     ${L.length?`<div class="list">${L.map(r=>`<div class="row" style="display:grid;gap:4px;align-items:start"><span style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">${rvStars(r.stars)} <b style="font-weight:500">${esc(r.customer||'—')}</b> <span class="muted ltr">${esc(r.date||'')}</span>${r.title?` <span class="chip">${esc(r.title)}</span>`:''}${bc?` <span class="chip">${esc(branch(bid(r)).name)}</span>`:''}</span>${r.text?`<span style="white-space:pre-wrap">${esc(r.text)}</span>`:''}${r.patientId&&byId('patients',r.patientId)?`<span><button type="button" class="btn sm ghost" data-rp="${esc(r.patientId)}">${t('rvOpen')}</button></span>`:''}</div>`).join('')}</div>`:`<p class="note">${t('rvNone')}</p>`}`};
+  openModal('⭐ '+t('rvT')+bTitle(),`<div id="rvBox">${body()}</div>`,{wide:true,onMount:f0=>{const bx=f0.querySelector('#rvBox');bx.addEventListener('click',e=>{const b=e.target.closest('[data-rf]');if(b){f=b.dataset.rf;bx.innerHTML=body();return}
+    const p=e.target.closest('[data-rp]');if(p){closeModal();view='patients';UI.patientId=p.dataset.rp;render();window.scrollTo(0,0)}})}})}
 /* ================= DASHBOARD ================= */
 function vDash(){
   const td=computeAcc(periodRange('today')),m=computeAcc(periodRange('month'));
   const fu=followUps(),low=lowStock(),ex=expiring(),ord=openOrders();const dueN=fu.filter(e=>e.followUp<=today()).length;
   const recent=S.sales.filter(inBranch).sort(sortDate).slice(0,6);
   return `<div class="bar"><h2>${t('overview')}${bTitle()}</h2><div class="seg"><button class="btn primary" data-act="newExam">${t('newExam')}</button><button class="btn" data-act="newSale">${t('newSale')}</button><button class="btn" data-act="newPurchase">${t('addPurchase')}</button><button class="btn" data-act="newExpense">${t('newExpense')}</button><button class="btn" data-act="newVoucher">${t('voucher')}</button></div></div>
-  <div class="seg qrep"><button class="btn" data-act="dayRep" data-id="lens">👓 ${t('lensRep')}</button><button class="btn" data-act="dayRep" data-id="sales">📊 ${t('salesDay')}</button></div>
+  <div class="seg qrep"><button class="btn" data-act="dayRep" data-id="lens">👓 ${t('lensRep')}</button><button class="btn" data-act="dayRep" data-id="sales">📊 ${t('salesDay')}</button>${isMgr()?(()=>{const L=S.ratings.filter(inBranch);return `<button class="btn" data-act="ratings">⭐ ${t('rvT')}${L.length?` <span class="chip">${rvAvg(L)} ★ · ${L.length}</span>`:''}</button>`})():''}</div>
   <div><button class="chip acc" style="cursor:pointer;font:inherit;font-size:.85rem;background:none" data-act="askRate">${t('todayRate')}: <span class="ltr">${fmtN(rate())}</span> ${S.settings.rateDate===today()?'✓':'!'}</button></div>
   <div class="kpis">
     <div class="kpi"><span>${t('salesToday')}</span><b>${fmtIQD(td.revenue)}</b><small>${td.count} ${t('invoices')}</small></div>
@@ -1537,7 +1548,7 @@ function printLangPref(){try{return localStorage.getItem('eyecon_printLang')||la
    so print opens the document in its own window, and PDF/WhatsApp hand the finished file to the share sheet. The PDF is made in the
    background as soon as the preview opens, because the share sheet must open straight from the tap. */
 const coarse=()=>{try{return matchMedia('(pointer:coarse)').matches}catch(_){return false}};
-function printPreview(title,html,{fname,waPhone,waText,waAny,waShop,top='',onTop}={}){const canShare=!!(navigator.canShare&&window.File);let pl=printLangPref();const gen=()=>typeof html==='function'?withLang(pl,html):html;
+function printPreview(title,html,{fname,waPhone,waText,waAny,waShop,top='',onTop,meta}={}){const canShare=!!(navigator.canShare&&window.File);let pl=printLangPref();const gen=()=>typeof html==='function'?withLang(pl,html):html;
   openModal(esc(title),`${top}${typeof html==='function'?`<div class="seg" style="margin-bottom:8px;align-items:center;gap:8px"><span class="muted" style="font-size:.85rem">${t('printLang')}</span><button type="button" data-pl="ar" aria-pressed="${pl==='ar'}">عربي</button><button type="button" data-pl="en" aria-pressed="${pl==='en'}">English</button></div>`:''}<div class="pvz"><iframe id="pv" title="${esc(title)}" srcdoc="${esc(pvHtml(gen()))}" style="width:100%;height:min(72vh,900px);border:1px solid var(--line);border-radius:8px;background:#E9EEEC;display:block"></iframe><div class="pvzb"><button type="button" class="btn sm" data-pz="1" aria-label="zoom in">＋</button><button type="button" class="btn sm" data-pz="-1" aria-label="zoom out">−</button><button type="button" class="btn sm" data-pz="0" aria-label="fit">⤢</button></div></div><p class="note">${t('printHint')} ${waPhone?t('waAttach'):''}</p>`,
   {extraFooter:`<button type="button" class="btn primary" id="pvPrint">${t('print')}</button>${downloads||canShare?`<button type="button" class="btn" id="pvPdf">${t('pdf')}</button>`:''}${canShare&&!coarse()?`<button type="button" class="btn" id="pvShare">${t('sharePdf')}</button>`:''}${waPhone!==undefined&&!waAny?`<button type="button" class="btn wa" id="pvWaPdf">${t('waPdf')}</button>`:''}${waAny?`<a class="btn wa" id="pvWa" href="${esc(waLink('',waText))}" target="_blank" rel="noopener">${t('waSend')}</a>`:''}`,
    onMount:f=>{if(onTop)onTop(f);const fr=f.querySelector('#pv'),name=(fname||'document')+'.pdf';let pdfP=null,pdfB=null;
@@ -1558,15 +1569,15 @@ function printPreview(title,html,{fname,waPhone,waText,waAny,waShop,top='',onTop
      const b64=bl=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]||'');r.onerror=rej;r.readAsDataURL(bl)});
      let pubUrl='';const viaLink=!!(waPhone&&normPhone(waPhone)&&window.__gas&&window.__gas.pub&&window.EYECON_API);
      const wp=f.querySelector('#pvWaPdf');if(wp&&viaLink)wp.onclick=async()=>{if(!pubUrl){const bl=await pdfNow(wp);if(!bl)return;wp.disabled=true;toast(t('waUp'));
-         try{const id=await window.__gas.pub({name,title,shop:waShop||branch(activeB()).name,pdf:await b64(bl),pages:bl._pages||[]});pubUrl=new URL('v.html?f='+encodeURIComponent(String(id)),location.href).href}
+         try{const id=await window.__gas.pub({name,title,shop:waShop||branch(activeB()).name,meta:meta||{},pdf:await b64(bl),pages:bl._pages||[]});pubUrl=new URL('v.html?f='+encodeURIComponent(String(id)),location.href).href}
          catch(e){wp.disabled=false;if(/bad_fn/.test(String(e&&e.message))){toast(t('waNeedGs'));const fresh=!pdfB;await share(bl,fresh)}else toast(errMsg(e));return}finally{wp.disabled=false}}
        const msg=t('waLinkMsg').replace('{doc}',title).replace('{shop}',waShop||branch(activeB()).name)+'\n'+pubUrl,href=waLink(waPhone,msg);
        const a=document.createElement('a');a.className='btn wa';a.href=href;a.target='_blank';a.rel='noopener';a.textContent=t('waOpenChat')+' ←';wp.replaceWith(a);a.click()};
      else if(wp)wp.onclick=async()=>{const ok=canShare&&(()=>{try{return navigator.canShare({files:[new File([''],'x.pdf',{type:'application/pdf'})]})}catch(_){return false}})();
        if(ok){const fresh=!pdfB,bl=await pdfNow(wp);if(bl)await share(bl,fresh);return}
        const w=window.open('about:blank','_blank'),bl=await pdfNow(wp);if(!bl){if(w)w.close();return}await save(bl);const u=waLink(waPhone||'',t('waPdfMsg'));if(w)w.location.href=u;else window.open(u,'_blank');toast(t('waPdfDesk'))}}})}
-function printSale(s,opt){if(!s)return;opt=opt||printWithPref();const p=s.patientId?byId('patients',s.patientId):null;printPreview(t('invoice')+' #'+(s.no||''),()=>saleDoc(s,opt),{fname:'invoice-'+(s.no||''),waPhone:p&&p.phone,waText:saleText(s),waShop:branch(bid(s)).name})}
-function printExam(e,kind='exam'){if(!e)return;const p=byId('patients',e.patientId)||{};const fn={exam:examReportDoc,rx:glassesRxDoc,cl:clRxDoc}[kind]||examReportDoc;printPreview(docT(kind)+' · '+(p.name||''),()=>fn(e),{fname:kind+'-'+(p.code||'')+'-'+(e.date||''),waPhone:p.phone,waText:rxText(e),waShop:branch(bid(e)).name})}
+function printSale(s,opt){if(!s)return;opt=opt||printWithPref();const p=s.patientId?byId('patients',s.patientId):null;printPreview(t('invoice')+' #'+(s.no||''),()=>saleDoc(s,opt),{fname:'invoice-'+(s.no||''),waPhone:p&&p.phone,waText:saleText(s),waShop:branch(bid(s)).name,meta:{b:bid(s),p:s.patientId||'',k:'sale',ref:s.id||'',no:s.no||'',cust:p?p.name:(s.customer||'')}})}
+function printExam(e,kind='exam'){if(!e)return;const p=byId('patients',e.patientId)||{};const fn={exam:examReportDoc,rx:glassesRxDoc,cl:clRxDoc}[kind]||examReportDoc;printPreview(docT(kind)+' · '+(p.name||''),()=>fn(e),{fname:kind+'-'+(p.code||'')+'-'+(e.date||''),waPhone:p.phone,waText:rxText(e),waShop:branch(bid(e)).name,meta:{b:bid(e),p:e.patientId||'',k:kind,ref:e.id||'',cust:p.name||''}})}
 
 /* ================= SALES ================= */
 const saleItemsShort=s=>{const L=s.lines||[];if(!L.length)return '';const f=L[0],more=L.length-1;return `<span class="itm1" title="${esc(L.map(l=>l.name+' ×'+l.qty).join('\n'))}">${esc(f.name)}${num(f.qty)>1?' ×'+f.qty:''}</span>${more?` <span class="chip">+${more} ${t('moreItems')}</span>`:''}`};
@@ -2323,7 +2334,7 @@ document.addEventListener('click',e=>{
     case 'waPatient':waForm(id,a.dataset.type,{exam:a.dataset.exam,sale:a.dataset.sale});break;
     case 'newItem':if(isUserRole()){toast(t('noPerm'));break}if(need())itemForm();break;case 'editItem':voOpen(()=>itemForm(byId('items',id)));break;
     case 'boxLedger':ledgerForm(id||null);break;
-    case 'holdPrint':holdingsPrint();break;case 'applyCredit':if(isMgr()&&canWrite){const bs=[...new Set(S.vouchers.filter(v=>v.type==='supplier'&&v.onAcc&&num(v.credit)>0.009&&supK(v.payee)===supK(id)).map(bid))];(async()=>{let n=0;for(const b of bs)n+=await supApplyCredits(id,b);toast(n?t('creditApplied'):t('noUnpaid'))})()}break;case 'fxEdit':if(isMgr())fxForm(id);break;case 'fxPost':if(need())fxPost();break;case 'fxSeed':if(isMgr())fxSave(FX_SEED.map(([k,c],i)=>({id:'fx'+Date.now().toString(36)+i,name:t(k),category:c,amount:0,currency:'IQD',box:'cash'})));break;case 'dayRep':dayRep(id);break;
+    case 'holdPrint':holdingsPrint();break;case 'applyCredit':if(isMgr()&&canWrite){const bs=[...new Set(S.vouchers.filter(v=>v.type==='supplier'&&v.onAcc&&num(v.credit)>0.009&&supK(v.payee)===supK(id)).map(bid))];(async()=>{let n=0;for(const b of bs)n+=await supApplyCredits(id,b);toast(n?t('creditApplied'):t('noUnpaid'))})()}break;case 'fxEdit':if(isMgr())fxForm(id);break;case 'fxPost':if(need())fxPost();break;case 'fxSeed':if(isMgr())fxSave(FX_SEED.map(([k,c],i)=>({id:'fx'+Date.now().toString(36)+i,name:t(k),category:c,amount:0,currency:'IQD',box:'cash'})));break;case 'dayRep':dayRep(id);break;case 'ratings':ratingsView();break;
     case 'fixWdV':if(canWrite)fixWdVouchers();break;
     case 'fixSalePaid':if(canWrite)fixPaid('sales');break;
     case 'fixPurPaid':if(canWrite)fixPaid('purchases');break;
@@ -2581,9 +2592,10 @@ function ntList(){const me=chMe(),td=today(),out=[],add=o=>out.push(o);
   if(ex)add({id:'ex:'+td+':'+ex,k:'stock',ic:'🧪',title:t('ntExpiring'),body:ex+' '+t('ntItems'),at:ntDay(td),go:{tab:'inventory'}});
   const old=new Date();old.setDate(old.getDate()-30);const O=iso(old),dl=S.sales.filter(s=>inBranch(s)&&s.date&&s.date<=O&&num(s.total)-num(s.paid)>0.009);
   if(dl.length)add({id:'db:'+dl.length+':'+Math.round(dl.reduce((a,s)=>a+saleIQD(s)*(num(s.total)-num(s.paid))/(num(s.total)||1),0)),k:'remind',ic:'💰',title:t('ntDebts'),body:dl.length+' '+t('invoices'),at:ntDay(td),go:{debts:1}});
+  if(isMgr())S.ratings.filter(inBranch).forEach(r=>add({id:'rv:'+r.id,k:'remind',ic:'⭐',title:t('rvNew')+' · '+'★'.repeat(num(r.stars)),body:(r.customer||'')+(r.text?' · '+String(r.text).slice(0,90):''),at:num(r.at)||ntDay(r.date||td),go:{ratings:1}}));
   if(db&&canWrite&&S.settings.rateDate!==td)add({id:'rt:'+td,k:'remind',ic:'💱',title:t('ntRate'),body:t('todayRate'),at:ntDay(td),go:{rate:1}});
   return out.sort((a,b)=>b.at-a.at)}
-function ntGo(g){ntOpen=false;if(g.chat){view='chat';UI.chatRoom=g.chat;render();return}
+function ntGo(g){ntOpen=false;if(g.ratings){ratingsView();ntRender();return}if(g.chat){view='chat';UI.chatRoom=g.chat;render();return}
   if(g.task){view='tasks';render();const k=byId('tasks',g.task);if(k)taskForm(k);return}
   if(g.sale){const s=byId('sales',g.sale);if(s)saleForm(s);ntRender();return}
   if(g.patient){view='patients';UI.patientId=g.patient;render();window.scrollTo(0,0);return}
