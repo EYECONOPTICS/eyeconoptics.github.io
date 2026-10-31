@@ -71,6 +71,8 @@ input[type=number],.ltr{direction:ltr;text-align:left;font-family:var(--f-mono);
 #loOv .vac{background:var(--surface);color:var(--ink);border-radius:16px;box-shadow:0 16px 40px rgba(0,0,0,.3);width:min(480px,100%);max-height:calc(100vh - 24px);overflow:auto;padding:14px;display:grid;gap:10px}
 #loOv .vah{display:flex;justify-content:space-between;align-items:center;gap:8px}#loOv .vah b{font-weight:600}
 #loOv.lcw .vac{width:min(640px,100%)}
+.fr.cur2{grid-template-columns:repeat(2,minmax(0,1fr))}.cur2 .f{min-width:0}.curw{display:grid;grid-template-columns:minmax(0,1fr) 68px;gap:6px}.curin{min-width:0;width:100%!important;font-size:1.05rem}select.cursel{width:68px!important;min-width:0;padding-inline:6px}
+@media (max-width:600px){.fr.cur2{grid-template-columns:minmax(0,1fr)}}
 .lcg{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
 .lcc{font:inherit;text-align:start;display:grid;gap:4px;padding:14px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;min-height:76px}
 .lcc:hover{border-color:var(--pri,#026BB2)}.lcc b{font-weight:600}.lcc small{color:var(--muted);font-size:.78rem;line-height:1.4}.lcc .rx{color:var(--pri,#026BB2);font-weight:600}.lcc:disabled{opacity:.45;cursor:default}
@@ -1186,7 +1188,7 @@ const loKind=it=>!it||it.type!=='lens'?'':it.design==='d_pal'?'pal':it.design===
 const isProg=it=>!!loKind(it);
 const loI=(x,k)=>{const c=k==='cost'?(x.ccur||'IQD'):(x.pcur||'IQD'),v=num(x[k]);return c==='USD'?v*rate():v};
 const loF=(x,k)=>fmt(num(x[k]),k==='cost'?(x.ccur||'IQD'):(x.pcur||'IQD'));
-const curSel=(nm,v)=>`<select name="${nm}"><option value="IQD" ${v!=='USD'?'selected':''}>د.ع IQD</option><option value="USD" ${v==='USD'?'selected':''}>$ USD</option></select>`;
+const curSel=(nm,v)=>`<select name="${nm}" class="cursel" aria-label="${t('currency')}"><option value="IQD" ${v!=='USD'?'selected':''}>د.ع</option><option value="USD" ${v==='USD'?'selected':''}>$</option></select>`;
 /* ---- lens catalog tree (per branch settings.lensCat): type → brand → design (its own price) → the brand's add-on groups ---- */
 const lcKindOf=it=>it&&it.type==='lens'?(it.design==='d_pal'?'pal':it.design==='d_bf'?'bf':it.design==='d_sv'?'sv':''):'';
 const LK=['sv','bf','pal'],LKD={sv:'d_sv',bf:'d_bf',pal:'d_pal'},lkName=k=>t('lk_'+k);
@@ -1268,7 +1270,7 @@ function lcManage(ui={}){const C=LC(activeB()),adm=isMgr()&&canWrite,k=ui.k||'pa
     lcForm(act,{k,b:bb,g:a.dataset.g,id:a.dataset.id},()=>lcManage({k,open}))})})}
 function lcForm(act,{k,b,g,id},back){const C=LC(activeB()),B=C.brands.find(x=>x.id===b)||{},G=(B.groups||[]).find(x=>x.id===g)||{};
   const X=act==='brand'?B:act==='design'?(C.designs.find(x=>x.id===id)||{}):act==='group'?G:((G.opts||[]).find(x=>x.id===id)||{}),isNew=!X.id;
-  const price=x=>`<label class="f"><span>${t('lcCostU')}</span><div style="display:flex;gap:6px"><input name="cost" type="number" step="any" min="0" value="${esc(x.cost??'')}" style="flex:1">${curSel('ccur',x.ccur||'USD')}</div></label><label class="f"><span>${t('lcPriceU')}</span><div style="display:flex;gap:6px"><input name="price" type="number" step="any" min="0" value="${esc(x.price??'')}" style="flex:1">${curSel('pcur',x.pcur||'IQD')}</div></label>`;
+  const price=x=>`</div><div class="fr cur2"><label class="f"><span>${t('lcCostU')}</span><div class="curw"><input name="cost" type="number" step="any" min="0" inputmode="decimal" value="${esc(x.cost??'')}" class="curin">${curSel('ccur',x.ccur||'USD')}</div></label><label class="f"><span>${t('lcPriceU')}</span><div class="curw"><input name="price" type="number" step="any" min="0" inputmode="decimal" value="${esc(x.price??'')}" class="curin">${curSel('pcur',x.pcur||'IQD')}</div></label>`;
   const nm=`<span class="req">${t('loName')}</span>`;
   const body=act==='brand'?`<div class="fr">${fi(nm,'name',X.name||'')}${fi(t('supAgent'),'supplier',X.supplier||'','text','data-ta="sup" autocomplete="off"')}</div>`
     :act==='design'?`<p class="note">${esc(B.name)} › ${lkName(X.kind||k)}</p><div class="fr">${fi(nm,'name',X.name||'')}${price(X)}</div>${ft(t('lcDesc'),'desc',X.desc||'','rows="3"')}`
