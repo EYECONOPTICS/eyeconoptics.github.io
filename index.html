@@ -1851,7 +1851,7 @@ function wireLines(f,mode,getCur,getBranch,onTotal,getRx,init){
     const ar=box.querySelector('#addRx');if(ar)ar.onclick=()=>{const r=getRx(),src=cl?r.cl:r.rx,k=ps.value;if(!k){toast(t('noProd'));return}if(!r.ok){toast(t('needRx'));return}
       /* plano (0.00) or a blank eye is still a lens sold: both eyes always go on the invoice */
       ['od','os'].forEach(e=>{const x=(src||{})[e]||{},z=v=>v===''||v==null?'0':v,a=cl?{s:z(x.pwr),c:x.cyl??'',a:x.axis??''}:{s:z(x.sph),c:x.cyl??'',a:''};const v=its.find(i=>prodKey(i)===k&&samePow(i,a));if(v)push(v);else pushNew(k,a)})};['#addS','#addC','#addA'].forEach(x=>{const el=box.querySelector(x);if(el)el.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go()}})})};
-  tySel.onchange=draw;draw();(init||[]).forEach(l=>body.insertAdjacentHTML('beforeend',lineRow(l,mode)));
+  tySel.onchange=()=>{draw();if(tySel.value==='lens'&&LC(getBranch()).designs.length)box.querySelector('#lcGo')?.click()};draw();(init||[]).forEach(l=>body.insertAdjacentHTML('beforeend',lineRow(l,mode)));
   recalc();return()=>{body.innerHTML='';unstage();draw();recalc()}}
 const readLines=f=>[...f.querySelectorAll('#lineBody tr.line')].map(tr=>({...(tr.dataset.opt?{opt:JSON.parse(tr.dataset.opt),base:num(tr.dataset.base)}:{}),key:tr.dataset.key,itemId:tr.dataset.item,nw:tr.dataset.nw?JSON.parse(tr.dataset.nw):null,type:tr.dataset.type,pow:tr.dataset.pow,name:tr.querySelector('.lname').textContent,qty:num(tr.querySelector('.lq').value),val:num(tr.querySelector('.lp').value)})).filter(l=>l.qty>0).map(l=>({...l,bv:l.opt?l.base:l.val}));
 const feeOf=l=>l.key&&String(l.key).startsWith('fee|')?{fee:String(l.key).slice(4),costIQD:0}:{};
