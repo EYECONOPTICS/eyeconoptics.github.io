@@ -697,15 +697,16 @@ const fs=(label,name,val,opts,extra='')=>{if(val!=null&&val!==''&&!opts.some(o=>
 const keyOpts=keys=>[['','—'],...keys.map(k=>[k,t(k)])];
 const ft=(label,name,val,extra='')=>`<label class="f"><span>${label}</span><textarea id="${fid(name)}" name="${name}" ${extra}>${esc(val??'')}</textarea></label>`;
 function formObj(form){const o={};new FormData(form).forEach((v,k)=>setP(o,k,typeof v==='string'?v.trim():v));form.querySelectorAll('input[type=checkbox]').forEach(c=>{if(c.name)setP(o,c.name,c.checked)});return o}
-function openModal(title,bodyHTML,{onSubmit,submitLabel=t('save'),extraFooter='',wide=false,onMount,locked=false}={}){const vo=VO;VO=false;if(vo){onSubmit=null;bodyHTML=`<p class="note vo">${t('voNote')}</p><fieldset disabled class="vofs">${bodyHTML}</fieldset>`}
+let MDCLOSE=null;/* onClose: runs when the user closes the window without saving (✕, Close, Esc, back) */
+function openModal(title,bodyHTML,{onSubmit,submitLabel=t('save'),extraFooter='',wide=false,onMount,locked=false,onClose=null,keepOpen=false}={}){MDCLOSE=onClose;const vo=VO;VO=false;if(vo){onSubmit=null;bodyHTML=`<p class="note vo">${t('voNote')}</p><fieldset disabled class="vofs">${bodyHTML}</fieldset>`}
   $('#modalRoot').innerHTML=`<div class="ov" id="ov" ${locked?'data-locked="1"':''}><form class="md" id="mdForm" novalidate ${wide?'style="width:min(980px,100%)"':''}>
     <header><h3>${title}</h3>${locked?'':`<button type="button" class="btn ghost" data-close aria-label="${t('close')}">✕</button>`}</header>
     <div class="body">${bodyHTML}</div>
     <footer>${onSubmit?`<button class="btn primary" type="submit" ${canWrite?'':'disabled'}>${submitLabel}</button>`:''}${locked?'':`<button class="btn" type="button" data-close>${t('close')}</button>`}${extraFooter}</footer></form></div>`;
   const form=$('#mdForm');
   form.querySelectorAll('[data-close]').forEach(b=>b.onclick=closeModal);
-  $('#ov').addEventListener('mousedown',e=>{if(e.target.id==='ov'&&!e.target.dataset.locked)closeModal()});
-  form.onsubmit=async e=>{e.preventDefault();if(!onSubmit)return;const b=form.querySelector('[type=submit]');b.disabled=true;const ok=await onSubmit(form);b.disabled=false;if(ok!==false){draftDone(form);if(form.isConnected)closeModal()}};
+  $('#ov').addEventListener('mousedown',e=>{if(e.target.id==='ov'&&!e.target.dataset.locked&&!keepOpen)closeModal()});
+  form.onsubmit=async e=>{e.preventDefault();if(!onSubmit)return;const b=form.querySelector('[type=submit]');b.disabled=true;const ok=await onSubmit(form);b.disabled=false;if(ok!==false){draftDone(form);if(form.isConnected){MDCLOSE=null;closeModal()}}};
   hPush('o');if(onMount)onMount(form);if(onSubmit&&!locked)try{draftWire(form,title)}catch(_){}if(vo)form.querySelectorAll('footer .danger,footer [id^=del],footer #gDel').forEach(b=>b.remove());
   const first=form.querySelector('input:not([readonly]),select,textarea');if(first)first.focus({preventScroll:true});
   return form}
@@ -735,7 +736,7 @@ function draftWire(f,title){draftPrune();const s0=draftSnap(f),j0=JSON.stringify
   let tm=0;const save=()=>{clearTimeout(tm);tm=setTimeout(()=>{if(!f.isConnected)return;const x=draftSnap(f),j=JSON.stringify(x);try{if(j===j0)localStorage.removeItem(k);else localStorage.setItem(k,JSON.stringify({...x,at:Date.now()}))}catch(_){}},350)};
   f.addEventListener('input',save);f.addEventListener('change',save);f.addEventListener('click',e=>{if(e.target.closest('#lineBody .lx,#lineBody button,#addGo,#addRx,.sgi,#lineGo'))setTimeout(save,50)})}
 const draftDone=f=>{try{if(f&&f._dk)localStorage.removeItem(f._dk)}catch(_){}};
-function closeModal(){$('#modalRoot').innerHTML='';schedule()}
+function closeModal(){const f=MDCLOSE;MDCLOSE=null;$('#modalRoot').innerHTML='';schedule();if(f)setTimeout(f,0)}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#ov')&&!$('#ov').dataset.locked)closeModal()});
 /* Back button (phone gesture, browser, mouse): close the open window first, then step back through tabs and screens; leave only after a second press on the main screen */
 const navNow=()=>({v:view,p:UI.patientId||null,c:UI.campId||null,r:UI.chatRoom||null});
@@ -1239,7 +1240,7 @@ function lcWizard({mode,getCur,getBranch,getRx,its,add,tr}){const C=LC(getBranch
     ov.innerHTML=`<div class="vac" role="dialog"><div class="vah"><span>${tr?`<b>${esc(tr.querySelector('.lname').textContent)}</b>`:`<b>🌳 ${t('lcPick')}</b>`}</span><button type="button" class="btn sm" data-x="1">✕</button></div>${crumbs?`<div class="lccr">${crumbs}</div>`:''}${body}</div>`};
   const readRows=()=>ov.querySelectorAll('.lcrow').forEach(r=>{const x=st.rows[+r.dataset.i];if(!x)return;x.s=r.querySelector('.ps').value;x.c=r.querySelector('.pc').value;x.q=r.querySelector('.pq').value});
   ov.addEventListener('input',e=>{if(e.target.id==='lcU'){st.u=e.target.value===''?'':String(st.one?num(e.target.value):num(e.target.value)/2);const tb=ov.querySelector('.lcsum.tot b'),ts=ov.querySelector('.lcsum.tot small');if(tb)tb.textContent=fmt(st.one?eff():+(eff()*2).toFixed(2),cur);if(ts&&!st.one)ts.textContent=t('lcPerLens')+': '+fmt(eff(),cur);return}if(ov.querySelector('.lcrow'))readRows()});
-  ov.addEventListener('click',e=>{const T=e.target;if(T===ov||T.closest('[data-x]')){ov.remove();return}let x;
+  ov.addEventListener('click',e=>{const T=e.target;if(T.closest('[data-x]')){ov.remove();return}let x;
     if(x=T.closest('[data-go]')){st.step=+x.dataset.go;draw();return}
     const toBrand=()=>{const bs=C.brands.filter(b=>C.designs.some(d=>d.brandId===b.id&&inK(d,st.kind,st.src)));if(bs.length===1){st.b=bs[0].id;st.step=2}else st.step=1;draw()};
     if(x=T.closest('[data-k]')){st.kind=x.dataset.k;st.b='';st.d='';st.src='';st.sel={};{const nr=C.designs.filter(d=>inK(d,st.kind,'rx')).length,ns=C.designs.filter(d=>inK(d,st.kind,'stock')).length;if(nr&&ns){st.step=4;draw();return}st.src=ns?'stock':'rx'}toBrand();return}
@@ -1283,11 +1284,11 @@ function lcManage(ui={}){const C=LC(activeB()),adm=isMgr()&&canWrite,k=ui.k||'pa
      ${gs.map(g=>`<div class="lcgbox"><div class="bar"><span><b style="font-weight:500">${esc(g.name)}</b> <small class="muted">· ${g.mode==='many'?t('lcMany'):t('lcOne')}</small></span><span class="seg">${adm?`<button type="button" class="btn sm ghost" data-lc="opt" data-b="${esc(b.id)}" data-g="${esc(g.id)}">＋ ${t('lcOpt')}</button>`:''}${ed('group',`data-b="${esc(b.id)}" data-g="${esc(g.id)}"`)}</span></div>
        ${(g.opts||[]).map(x=>`<div class="row lcr"><span>${esc(x.name)}</span>${pr(x)}${ed('opt',`data-b="${esc(b.id)}" data-g="${esc(g.id)}" data-id="${esc(x.id)}"`)}</div>`).join('')}</div>`).join('')||`<p class="note">${t('lcNoAdd')}</p>`}</div></details>`}
      </div></details>`}).join('')}`})()}</div>`;
-  openModal('🌳 '+t('lcT'),html,{wide:true,onMount:f=>f.addEventListener('click',async e=>{const a=e.target.closest('[data-lc]');if(!a)return;e.preventDefault();e.stopPropagation();const act=a.dataset.lc,bb=a.dataset.b,open=(bb&&bb!=='all')?(ui.open==='all'?'all':bb):ui.open;
+  const fm0=openModal('🌳 '+t('lcT'),html,{wide:true,keepOpen:true,onMount:f=>f.addEventListener('click',async e=>{const a=e.target.closest('[data-lc]');if(!a)return;e.preventDefault();e.stopPropagation();{const o=document.getElementById('ov'),bd=f.querySelector('.body');ui.scroll=Math.max(o?o.scrollTop:0,bd?bd.scrollTop:0)}const act=a.dataset.lc,bb=a.dataset.b,open=(bb&&bb!=='all')?(ui.open==='all'?'all':bb):ui.open;
     if(act==='k')return lcManage({...ui,k:a.dataset.k,src:'rx',open:''});if(act==='src')return lcManage({...ui,src:a.dataset.src,open:''});if(act==='show')return lcManage({...ui,open:bb});if(!adm)return;
     if(act==='seed'){await lcSave(LC_SEED());return lcManage({k:'pal'})}
     if(act==='copy'){const src=LC(bb);await lcSave(JSON.parse(JSON.stringify(src)));toast(t('savedChanges'));return lcManage(ui)}
-    lcForm(act,{k,src,b:bb,g:a.dataset.g,id:a.dataset.id},nb=>lcManage({k,src,open:nb||open,add:['group','opt'].includes(act)?(nb||open):''}))})})}
+    lcForm(act,{k,src,b:bb,g:a.dataset.g,id:a.dataset.id},nb=>lcManage({k,src,open:ui.open==='all'?'all':(nb||open),add:['group','opt'].includes(act)?(bb||nb):'',scroll:ui.scroll}))})});if(ui.scroll){const sc=()=>{const o=document.getElementById('ov'),bd=fm0.querySelector('.body');if(o)o.scrollTop=ui.scroll;if(bd)bd.scrollTop=ui.scroll};sc();requestAnimationFrame(sc)}}
 function lcForm(act,{k,src,b,g,id},back){const C=LC(activeB()),B=C.brands.find(x=>x.id===b)||{},G=(B.groups||[]).find(x=>x.id===g)||{};
   const X=act==='brand'?B:act==='design'?(C.designs.find(x=>x.id===id)||{}):act==='group'?G:((G.opts||[]).find(x=>x.id===id)||{}),isNew=!X.id;
   const price=x=>`</div><div class="seg lcunit" role="radiogroup"><span class="muted" style="align-self:center">${t('lcUnitQ')}</span>${[['pair',t('lcPairM2')],['one',t('lcOneM')]].map(([v,n])=>`<label class="btn sm"><input type="radio" name="unit" value="${v}" ${(x.unit||'pair')===v?'checked':''}> ${n}</label>`).join('')}</div><div class="fr cur2"><label class="f"><span>${t('lcCostU')}</span><div class="curw"><input name="cost" type="number" step="any" min="0" inputmode="decimal" value="${esc(x.cost??'')}" class="curin">${curSel('ccur',x.ccur||'USD')}</div></label><label class="f"><span>${t('lcPriceU')}</span><div class="curw"><input name="price" type="number" step="any" min="0" inputmode="decimal" value="${esc(x.price??'')}" class="curin">${curSel('pcur',x.pcur||'IQD')}</div></label>`;
@@ -1300,7 +1301,7 @@ function lcForm(act,{k,src,b,g,id},back){const C=LC(activeB()),B=C.brands.find(x
   const title={brand:t('lcBrand'),design:t('lcDesign'),group:t('lcGroup'),opt:t('lcOpt')}[act];
   let nb=b;const put2=async(fn,later)=>{const c=JSON.parse(JSON.stringify(LC(activeB())));fn(c);await lcSave(c);if(later)setTimeout(()=>back(nb),60);else back(nb)};
   const P=o=>({unit:o.unit==='one'?'one':'pair',cost:num(o.cost),ccur:o.ccur==='USD'?'USD':'IQD',price:num(o.price),pcur:o.pcur==='USD'?'USD':'IQD'});
-  openModal(title,body,{extraFooter:isNew?'':`<button type="button" class="btn danger" id="lcDel" style="margin-inline-start:auto">${t('del')}</button>`,
+  openModal(title,body,{keepOpen:true,onClose:()=>back(nb),extraFooter:isNew?'':`<button type="button" class="btn danger" id="lcDel" style="margin-inline-start:auto">${t('del')}</button>`,
    onMount:f=>{const d=f.querySelector('#lcDel');if(d)d.onclick=()=>armDelete(d,()=>put2(c=>{const cb=c.brands.find(x=>x.id===b);
      if(act==='brand'){c.brands=c.brands.filter(x=>x.id!==b);c.designs=c.designs.filter(x=>x.brandId!==b)}else if(act==='design')c.designs=c.designs.filter(x=>x.id!==id);else if(act==='group')cb.groups=cb.groups.filter(x=>x.id!==g);else{const cg=cb.groups.find(x=>x.id===g);cg.opts=cg.opts.filter(x=>x.id!==id)}}))},
    onSubmit:async f=>{const o=formObj(f);if(!String(o.name||'').trim()){toast(t('loName'));return false}const name=o.name.trim();
