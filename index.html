@@ -222,6 +222,18 @@ tr.grp td{background:var(--soft);font-weight:600}
 .logoPrev{max-height:70px;max-width:220px;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:8px;padding:6px}
 .req::after{content:" *";color:var(--bad)}
 @media (prefers-reduced-motion:no-preference){.md{animation:pop .16s ease-out}@keyframes pop{from{transform:translateY(8px);opacity:.6}}}
+@media (max-width:600px){.picks{flex-wrap:wrap;justify-content:flex-end}}
+#gsOv{position:fixed;inset:0;z-index:9990;background:rgb(10 20 30 / .4);display:flex;justify-content:center;align-items:flex-start;padding:10vh 12px 12px}
+#gsOv .box{width:min(640px,100%);background:var(--surface);color:var(--ink);border-radius:14px;box-shadow:0 24px 60px rgb(0 0 0 / .3);overflow:hidden;display:grid;max-height:76vh;grid-template-rows:auto 1fr}
+#gsOv input{border:0;border-bottom:1px solid var(--line);border-radius:0;padding:15px 18px;font-size:1.05rem}
+#gsOv input:focus-visible{outline:none}
+#gsOv .res{overflow-y:auto;padding:6px}
+#gsOv .grp{font-size:.74rem;color:var(--muted);font-weight:600;padding:8px 12px 4px}
+#gsOv .it{display:flex;gap:12px;align-items:center;width:100%;text-align:start;font:inherit;color:inherit;background:none;border:0;border-radius:10px;padding:9px 12px;cursor:pointer}
+#gsOv .it.on,#gsOv .it:hover{background:var(--soft)}
+#gsOv .it .t{display:grid;min-width:0;flex:1}#gsOv .it small{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#gsOv .it .e{font-size:1.15rem;width:24px;text-align:center}
+#gsOv .hint{font-size:.8rem;color:var(--muted);padding:14px 16px}
 </style>
 
 <header class="top">
@@ -232,7 +244,7 @@ tr.grp td{background:var(--soft);font-weight:600}
         <div><h1 id="shopH">EYECON OPTICS</h1><small id="subline"></small></div>
       </div>
       <div class="picks">
-        <select id="branchPick" aria-label="Branch"></select>
+        <button class="btn sm" id="gsBtn" type="button" aria-label="Search" title="Ctrl+K">🔍</button><select id="branchPick" aria-label="Branch"></select>
         <button class="btn sm" id="thBtn" type="button" aria-label="Theme">🌙</button><span class="ntW"><button class="btn sm ntB" id="ntBtn" type="button" aria-label="Notifications">🔔<span class="ntN"></span></button><div id="ntPanel" hidden></div></span>
         <button class="btn sm" id="langBtn" type="button"></button>
       </div>
@@ -1018,7 +1030,7 @@ async function repXlsx(share){if(!REP_LAST)return;toast(t('sheetsWork'));try{awa
 const MARK=$('#brandMark').innerHTML;
 function applyLang(){const h=document.documentElement;h.lang=lang;h.dir=lang==='ar'?'rtl':'ltr';h.style.setProperty('--dir',h.dir);$('#langBtn').textContent=t('langBtn');$('#subline').textContent=t('subline');$('#shopH').textContent=S.settings.shopName||'EYECON OPTICS';const bm=$('#brandMark');const lg=S.logoMark||S.logo,want=lg?`<img src="${lg}" alt="" style="height:38px;width:auto;max-width:120px;object-fit:contain">`:(activeB()==='main'?MARK:'');if(bm.dataset.logo!==lg){bm.innerHTML=want;bm.dataset.logo=lg}}
 let rq=0;function schedule(){if(rq)return;rq=requestAnimationFrame(()=>{rq=0;if(!$('#ov'))render();else ntRender()})}
-function render(){render0();if(hOk)hTrack();ntRender();thApply()}
+function render(){render0();{const g=$('#gsBtn');if(g){g.hidden=isDoctor();g.title=gs('sr')+' (Ctrl+K)';g.setAttribute('aria-label',gs('sr'))}}if(hOk)hTrack();ntRender();thApply()}
 function render0(){
   applyBranch();applyLang();
   const bl=branchList();
@@ -2948,6 +2960,29 @@ document.addEventListener('click',e=>{const b=e.target.closest('#ntBtn');if(b){n
     else if(a.dataset.nt==='test'){const x={id:'test:'+Date.now(),ic:'🔔',title:t('ntTestT'),body:t('ntTestB'),go:{}};ntOpen=false;ntRender();ntAlert(x,0);ntSys(x)}return}
   const it=e.target.closest('[data-ni]');if(it){const x=(P._list||[])[+it.dataset.ni];if(x){ntRead(x.id);ntGo(x.go)}}},true);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&ntOpen){ntOpen=false;ntRender()}});
+
+/* ================= global search (🔍 in the header, Ctrl+K or /): customers, invoices, stock, purchases, sections ================= */
+const GST={ar:{sr:'بحث شامل',ph:'ابحث عن زبون، هاتف، رقم فاتورة، منتج، مورد…',hint:'اكتب اسم أو رقم هاتف أو رقم فاتورة أو اسم منتج. استخدم ↑ ↓ ثم Enter.',none:'لا توجد نتائج',gP:'الزبائن',gS:'فواتير البيع',gI:'المخزون',gU:'المشتريات',gT:'الأقسام'},
+ en:{sr:'Search',ph:'Search customers, phones, invoice no., products, suppliers…',hint:'Type a name, phone, invoice number or product. Use ↑ ↓ and Enter.',none:'No results',gP:'Customers',gS:'Sales invoices',gI:'Inventory',gU:'Purchases',gT:'Sections'}};
+const gs=k=>(GST[lang]||GST.ar)[k]||k;
+function gSearch(){if($('#gsOv')||isDoctor())return;const ov=document.createElement('div');ov.id='gsOv';ov.innerHTML=`<div class="box" role="dialog" aria-label="${esc(gs('sr'))}"><input type="search" placeholder="${esc(gs('ph'))}" autocomplete="off"><div class="res" role="listbox"></div></div>`;document.body.appendChild(ov);
+  const inp=ov.querySelector('input'),res=ov.querySelector('.res');let H=[],on=0;const close=()=>{ov.remove();document.removeEventListener('keydown',kd,true)};
+  const pick=i=>{const h=H[i];if(!h)return;close();if($('#ov'))closeModal();h.go()};
+  const draw=()=>{let g='',html='';H.forEach((h,i)=>{if(h.g!==g){g=h.g;html+=`<div class="grp">${esc(gs(g))}</div>`}html+=`<button type="button" class="it${i===on?' on':''}" data-i="${i}" role="option"><span class="e">${h.e}</span><span class="t"><b>${esc(h.t)}</b>${h.s?`<small>${esc(h.s)}</small>`:''}</span></button>`});
+    res.innerHTML=html||`<div class="hint">${esc(inp.value.trim()?gs('none'):gs('hint'))}</div>`;const a=res.querySelector('.it.on');if(a)a.scrollIntoView({block:'nearest'})};
+  const run=()=>{const q=nk(inp.value),qd=q.replace(/\D/g,'');H=[];on=0;if(!q){draw();return}
+    const m=(...xs)=>xs.some(x=>x!=null&&x!==''&&nk(x).includes(q))||(qd.length>=4&&qd.length===q.replace(/\s/g,'').length&&xs.some(x=>x&&String(x).replace(/\D/g,'').includes(qd)));
+    const L=tabList(),go=k=>()=>{view=k;if(k!=='patients')UI.patientId=null;render();scrollTo(0,0)};
+    H.push(...L.filter(k=>m(t('tab_'+k))).map(k=>({g:'gT',e:'📂',t:t('tab_'+k),s:'',go:go(k)})));
+    H.push(...S.patients.filter(p=>inBranch(p)&&m(p.name,p.phone,p.code)).slice(0,6).map(p=>({g:'gP',e:'👤',t:p.name||'—',s:[p.code,p.phone].filter(Boolean).join(' · '),go:()=>{view='patients';UI.patientId=p.id;render();scrollTo(0,0)}})));
+    if(L.includes('sales'))H.push(...S.sales.filter(s=>inBranch(s)&&m(String(s.no||''),custOf(s))).sort(sortDate).slice(0,6).map(s=>({g:'gS',e:'🧾',t:'#'+(s.no||'')+' · '+custOf(s),s:(s.date||'')+' · '+fmt(s.total,s.currency||'IQD'),go:()=>{const x=byId('sales',s.id);if(x)voOpen(()=>saleForm(x))}})));
+    if(L.includes('inventory'))H.push(...S.items.filter(i=>invItem(i)&&m(prodLabel(i),i.sku,i.brand,i.model)).slice(0,6).map(i=>({g:'gI',e:'📦',t:prodLabel(i),s:tx('t_'+i.type)+' · '+t('qty')+' '+fmtN(i.qty),go:()=>{const x=byId('items',i.id);if(x){if(legacyLens(x)){VO=true;try{itemForm(x)}finally{VO=false}}else voOpen(()=>itemForm(x))}}})));
+    if(L.includes('purchases'))H.push(...S.purchases.filter(p=>inBranch(p)&&m(String(p.no||''),p.supplier)).sort(sortDate).slice(0,4).map(p=>({g:'gU',e:'🛒',t:(p.supplier||'—')+(p.no?' · #'+p.no:''),s:(p.date||'')+' · '+fmt(p.total,p.currency||'IQD'),go:()=>{const x=byId('purchases',p.id);if(x)voOpen(()=>purchaseForm(x))}})));
+    draw()};
+  const kd=e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();close()}else if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();if(H.length){on=(on+(e.key==='ArrowDown'?1:H.length-1))%H.length;draw()}}else if(e.key==='Enter'&&e.target===inp){e.preventDefault();pick(on)}};
+  document.addEventListener('keydown',kd,true);inp.addEventListener('input',run);res.addEventListener('click',e=>{const b=e.target.closest('.it');if(b)pick(+b.dataset.i)});ov.addEventListener('mousedown',e=>{if(e.target===ov)close()});draw();inp.focus();setTimeout(()=>{if(ov.isConnected&&document.activeElement!==inp)inp.focus()},60)}
+$('#gsBtn').addEventListener('click',gSearch);
+document.addEventListener('keydown',e=>{const k=(e.key||'').toLowerCase();if((e.ctrlKey||e.metaKey)&&k==='k'){e.preventDefault();gSearch()}else if(k==='/'&&!(e.target.closest&&e.target.closest('input,textarea,select,[contenteditable]'))&&!$('#ov')&&!$('#gsOv')){e.preventDefault();gSearch()}});
 
 /* ================= boot ================= */
 render();
