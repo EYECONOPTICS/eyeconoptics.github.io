@@ -222,126 +222,6 @@ tr.grp td{background:var(--soft);font-weight:600}
 .logoPrev{max-height:70px;max-width:220px;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:8px;padding:6px}
 .req::after{content:" *";color:var(--bad)}
 @media (prefers-reduced-motion:no-preference){.md{animation:pop .16s ease-out}@keyframes pop{from{transform:translateY(8px);opacity:.6}}}
-/* ===== UI2 (preview design): sidebar / bottom bar, FAB, search, cleaner cards ===== */
-body.ui2{--r:14px;--sh:0 1px 2px rgb(14 34 54 / .06),0 4px 14px rgb(14 34 54 / .06);--sbw:236px}
-body.ui2 .wrap{max-width:1240px}
-body.ui2 header.top{background:color-mix(in srgb,var(--surface) 88%,transparent);backdrop-filter:saturate(1.4) blur(10px);-webkit-backdrop-filter:saturate(1.4) blur(10px);box-shadow:0 1px 0 var(--line)}
-body.ui2 .brand{padding-block:10px}
-body.ui2 #ui2Sr{display:inline-flex;align-items:center;gap:8px;min-width:220px;justify-content:flex-start;color:var(--muted);background:var(--bg);border-radius:10px}
-body.ui2 #ui2Sr kbd{margin-inline-start:auto;font:inherit;font-size:.72rem;border:1px solid var(--line);border-radius:6px;padding:0 5px;background:var(--surface)}
-body.ui2 main{padding-block:22px 110px;gap:22px}
-body.ui2 .panel,body.ui2 .kpi,body.ui2 .stats,body.ui2 .tw{border-radius:var(--r);box-shadow:var(--sh);border-color:color-mix(in srgb,var(--line) 70%,transparent)}
-body.ui2 .kpis{grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
-body.ui2 .kpi{padding:16px 18px;gap:6px;position:relative;overflow:hidden}
-body.ui2 .kpi::before{content:"";position:absolute;inset-inline-start:0;top:0;bottom:0;width:4px;background:var(--accent)}
-body.ui2 .kpi b{font-size:1.5rem;font-weight:700;color:var(--ink)}
-body.ui2 .kpi span{font-size:.82rem;font-weight:500}
-body.ui2 h2{font-size:1.45rem;font-weight:700}
-body.ui2 h3{font-weight:600}
-body.ui2 .btn{border-radius:10px;transition:background .15s,border-color .15s,box-shadow .15s}
-body.ui2 .btn:hover{border-color:var(--accent)}
-body.ui2 .btn.primary{box-shadow:0 2px 8px color-mix(in srgb,var(--accent) 30%,transparent)}
-body.ui2 .btn.primary:hover{filter:brightness(1.06)}
-body.ui2 input,body.ui2 select,body.ui2 textarea{border-radius:9px;padding:8px 10px}
-body.ui2 input:focus,body.ui2 select:focus,body.ui2 textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 18%,transparent)}
-body.ui2 th{position:sticky;top:0;z-index:1;font-weight:600;letter-spacing:.01em}
-body.ui2 tbody tr:nth-child(even) td{background:color-mix(in srgb,var(--bg) 55%,var(--surface))}
-body.ui2 tr.click:hover td{background:var(--soft)}
-body.ui2 .chip{border:0;padding:2px 10px;font-weight:500;background:color-mix(in srgb,var(--muted) 12%,transparent)}
-body.ui2 .chip.good{background:color-mix(in srgb,var(--good) 14%,transparent)}
-body.ui2 .chip.bad{background:color-mix(in srgb,var(--bad) 13%,transparent)}
-body.ui2 .chip.warn{background:color-mix(in srgb,var(--warn) 15%,transparent)}
-body.ui2 .chip.acc{background:color-mix(in srgb,var(--accent) 13%,transparent)}
-body.ui2 .chip.wa{background:color-mix(in srgb,var(--wa) 13%,transparent)}
-body.ui2 .seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-body.ui2 .md{border-radius:18px;box-shadow:0 24px 60px rgb(0 0 0 / .25);border:0}
-body.ui2 .md header{position:sticky;top:0;z-index:3;background:var(--surface);border-radius:18px 18px 0 0}
-body.ui2 .md footer{position:sticky;bottom:0;z-index:3;background:var(--surface);border-radius:0 0 18px 18px;box-shadow:0 -6px 16px rgb(0 0 0 / .05);align-items:center}
-body.ui2 fieldset,body.ui2 details.sec{border-radius:12px}
-body.ui2 legend{font-weight:600}
-/* navigation */
-#ui2Bot,#ui2Fab,#ui2FabM{display:none}
-body.ui2 nav.tabs .ui2i,#ui2Bot .ui2i,.ui2more .ui2i{width:20px;height:20px;flex:none;display:inline-block}
-body.ui2 nav.tabs button{display:flex;align-items:center;gap:10px}
-@media (min-width:900px){
-  body.ui2 nav.tabs{position:fixed;top:0;bottom:0;inset-inline-start:0;width:var(--sbw);flex-direction:column;gap:2px;overflow-y:auto;overflow-x:hidden;padding:14px 10px;background:var(--surface);border-inline-end:1px solid var(--line);z-index:6}
-  body.ui2 nav.tabs button{border:0;border-radius:10px;padding:10px 12px;font-size:.93rem;color:var(--muted);width:100%;text-align:start}
-  body.ui2 nav.tabs button:hover{background:var(--bg);color:var(--ink)}
-  body.ui2 nav.tabs button[aria-current="true"]{background:var(--soft);color:var(--accent);font-weight:600}
-  body.ui2 header.top,body.ui2 main,body.ui2 #ui2Pv{margin-inline-start:var(--sbw)}
-  body.ui2 #ui2Fab{bottom:28px}
-}
-@media (max-width:899px){
-  body.ui2 nav.tabs{display:none}
-  body.ui2 #ui2Bot{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;inset-inline:0;bottom:0;z-index:15;background:color-mix(in srgb,var(--surface) 94%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:4px 4px calc(4px + env(safe-area-inset-bottom,0px))}
-  #ui2Bot button{font:inherit;font-size:.68rem;border:0;background:none;color:var(--muted);display:grid;justify-items:center;gap:2px;padding:6px 2px;border-radius:10px;cursor:pointer;position:relative;min-width:0}
-  #ui2Bot button span.l{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-  #ui2Bot button[aria-current="true"]{color:var(--accent);font-weight:600}
-  #ui2Bot button[aria-current="true"] .ui2i{background:var(--soft);border-radius:99px;padding:2px 14px;box-sizing:content-box}
-  #ui2Bot .chip{position:absolute;top:0;inset-inline-end:18%;padding:0 5px;font-size:.62rem;background:var(--bad);color:#fff}
-  body.ui2 #ui2Fab{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
-  body.ui2 .picks{flex-wrap:wrap;justify-content:flex-end;gap:6px}body.ui2 .picks select{max-width:140px}body.ui2 .brand{gap:8px}
-  body.ui2 #ui2Sr{min-width:0}body.ui2 #ui2Sr .l,body.ui2 #ui2Sr kbd{display:none}
-  body.ui2 .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
-}
-body.ui2 #ui2Fab{display:grid;place-items:center;position:fixed;inset-inline-end:22px;z-index:16;width:58px;height:58px;border-radius:18px;border:0;background:var(--accent);color:var(--accent-ink);font-size:2rem;line-height:1;cursor:pointer;box-shadow:0 8px 24px color-mix(in srgb,var(--accent) 45%,transparent);transition:transform .18s}
-body.ui2 #ui2Fab[aria-expanded="true"]{transform:rotate(45deg)}
-body.ui2 #ui2FabM:not([hidden]){display:grid;position:fixed;inset-inline-end:22px;z-index:16;gap:8px;min-width:200px}
-body.ui2 #ui2FabM button{font:inherit;display:flex;align-items:center;gap:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:10px 16px;border-radius:12px;box-shadow:var(--sh);cursor:pointer;font-weight:500}
-body.ui2 #ui2FabM button .ui2i{color:var(--accent)}
-#ui2FabBg{position:fixed;inset:0;z-index:14;background:rgb(10 20 30 / .25)}
-.ui2more{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
-.ui2more button{font:inherit;display:grid;justify-items:center;gap:6px;padding:14px 6px;border:1px solid var(--line);border-radius:14px;background:var(--bg);color:var(--ink);cursor:pointer;font-size:.85rem}
-.ui2more button[aria-current="true"]{border-color:var(--accent);color:var(--accent)}
-/* global search */
-#ui2SrOv{position:fixed;inset:0;z-index:9990;background:rgb(10 20 30 / .4);display:flex;justify-content:center;align-items:flex-start;padding:10vh 12px 12px}
-#ui2SrOv .box{width:min(640px,100%);background:var(--surface);color:var(--ink);border-radius:16px;box-shadow:0 24px 60px rgb(0 0 0 / .3);overflow:hidden;display:grid;max-height:76vh;grid-template-rows:auto 1fr}
-#ui2SrOv input{border:0;border-bottom:1px solid var(--line);border-radius:0;padding:16px 18px;font-size:1.05rem;box-shadow:none!important}
-#ui2SrOv .res{overflow-y:auto;padding:6px}
-#ui2SrOv .grp{font-size:.74rem;color:var(--muted);font-weight:600;padding:8px 12px 4px}
-#ui2SrOv .it{display:flex;gap:12px;align-items:center;width:100%;text-align:start;font:inherit;color:inherit;background:none;border:0;border-radius:10px;padding:9px 12px;cursor:pointer}
-#ui2SrOv .it.on,#ui2SrOv .it:hover{background:var(--soft)}
-#ui2SrOv .it .t{display:grid;min-width:0;flex:1}#ui2SrOv .it small{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#ui2SrOv .it .ui2i{color:var(--accent)}
-#ui2SrOv .hint{font-size:.78rem;color:var(--muted);padding:14px 16px}
-/* dashboard */
-.ui2today{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
-.ui2td{font:inherit;color:inherit;text-align:start;display:flex;gap:12px;align-items:center;padding:14px;border-radius:14px;border:1px solid var(--line);background:var(--surface);box-shadow:var(--sh);cursor:pointer}
-.ui2td b{font-size:1.4rem;font-weight:700;font-variant-numeric:tabular-nums}.ui2td .t{display:grid}.ui2td small{color:var(--muted);font-size:.8rem}
-.ui2td .ic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--soft);color:var(--accent);flex:none}
-.ui2td.bad .ic{background:color-mix(in srgb,var(--bad) 13%,transparent);color:var(--bad)}.ui2td.warn .ic{background:color-mix(in srgb,var(--warn) 15%,transparent);color:var(--warn)}.ui2td.good .ic{background:color-mix(in srgb,var(--good) 14%,transparent);color:var(--good)}
-.ui2td.zero{opacity:.6}
-.ui2spark{display:flex;align-items:flex-end;gap:4px;height:70px;direction:ltr}.ui2spark span{flex:1;background:color-mix(in srgb,var(--accent) 35%,transparent);border-radius:4px 4px 0 0;min-height:2px}.ui2spark span.td{background:var(--accent)}
-/* sale stepper */
-.ui2step{position:sticky;top:57px;z-index:2;display:flex;gap:6px;overflow-x:auto;padding:8px 0;margin:-8px 0 0;background:var(--surface);scrollbar-width:none}
-.ui2step button{font:inherit;font-size:.82rem;display:flex;align-items:center;gap:6px;white-space:nowrap;border:1px solid var(--line);background:var(--bg);color:var(--muted);border-radius:99px;padding:5px 12px 5px 6px;cursor:pointer}
-.ui2step button i{font-style:normal;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--line);color:var(--ink);font-size:.75rem;font-weight:700}
-.ui2step button.on{border-color:var(--accent);color:var(--accent);background:var(--soft)}.ui2step button.on i{background:var(--accent);color:var(--accent-ink)}
-.ui2sum{margin-inline-start:auto;display:flex;gap:14px;align-items:center;font-size:.88rem}.ui2sum b{font-size:1.05rem;font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate}.ui2sum .rem b{color:var(--bad)}
-/* confirm + undo */
-#ui2Cf{position:fixed;inset:0;z-index:10001;background:rgb(10 20 30 / .45);display:grid;place-items:center;padding:16px}
-#ui2Cf .box{background:var(--surface);color:var(--ink);border-radius:18px;padding:22px;width:min(380px,100%);display:grid;gap:12px;text-align:center;box-shadow:0 24px 60px rgb(0 0 0 / .3)}
-#ui2Cf .ic{width:52px;height:52px;margin:0 auto;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--bad) 13%,transparent);color:var(--bad)}
-#ui2Cf .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}#ui2Cf .del{background:var(--bad);border-color:var(--bad);color:#fff;font-weight:600}
-#ui2Undo{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(24px + env(safe-area-inset-bottom,0px));z-index:31;display:flex;gap:14px;align-items:center;background:var(--ink);color:var(--surface);padding:10px 12px 10px 18px;border-radius:14px;box-shadow:0 10px 30px rgb(0 0 0 / .25);font-size:.9rem}
-#ui2Undo button{font:inherit;font-weight:700;border:0;background:none;color:var(--sky);cursor:pointer;padding:4px 8px}
-@media (max-width:899px){#ui2Undo{bottom:calc(84px + env(safe-area-inset-bottom,0px))}}
-/* skeleton */
-.ui2sk{display:grid;gap:10px;padding:6px}.ui2sk i{display:block;height:14px;border-radius:7px;background:linear-gradient(90deg,var(--soft) 25%,color-mix(in srgb,var(--soft) 40%,var(--surface)) 50%,var(--soft) 75%);background-size:300% 100%;animation:ui2sh 1.2s infinite linear}
-.ui2sk i:nth-child(3n){width:70%}.ui2sk i:nth-child(3n+2){width:88%}
-@keyframes ui2sh{from{background-position:100% 0}to{background-position:0 0}}
-/* patient */
-.ui2av{width:56px;height:56px;border-radius:18px;display:grid;place-items:center;font-weight:700;font-size:1.3rem;color:#fff;background:linear-gradient(135deg,var(--accent),var(--sky));flex:none}
-.ui2ph{display:flex;gap:14px;align-items:center}
-.ui2tl{display:grid;gap:0;position:relative;padding-inline-start:6px}
-.ui2tl .ev{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:start;padding:8px 0;position:relative;cursor:pointer;border-radius:10px}
-.ui2tl .ev:hover{background:var(--bg)}
-.ui2tl .ev::before{content:"";position:absolute;inset-inline-start:16px;top:38px;bottom:-8px;width:2px;background:var(--line)}.ui2tl .ev:last-child::before{display:none}
-.ui2tl .dot{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--soft);color:var(--accent);position:relative;z-index:1}
-.ui2tl .ev.sale .dot{background:color-mix(in srgb,var(--good) 14%,var(--surface));color:var(--good)}.ui2tl .ev.pay .dot{background:color-mix(in srgb,var(--warn) 15%,var(--surface));color:var(--warn)}
-.ui2tl .ev small{color:var(--muted)}.ui2tl .ev .d{font-size:.8rem;color:var(--muted);direction:ltr;white-space:nowrap}
-#ui2Pv{background:linear-gradient(90deg,#7A4DD8,#026BB2);color:#fff;font-size:.8rem;text-align:center;padding:4px 12px}
-#ui2Pv a{color:#fff;font-weight:700}
 </style>
 
 <header class="top">
@@ -616,7 +496,6 @@ const t=k=>{const v=D[k];return v?v[lang==='ar'?0:1]:k};
 const tx=v=>D[v]?t(v):v;
 
 /* ================= constants ================= */
-const UI2=!!window.EYECON_UI2;/* the new design, on only in the preview build */
 const TABS=['dash','patients','inventory','sales','purchases','expenses','accounts','reports','campaigns','tasks','chat','settings'];
 const gRole=()=>window.__gas&&window.__gas.me?({admin:'owner',staff:'user',viewer:'user'}[window.__gas.me.role]||window.__gas.me.role):null;
 const isUserRole=()=>gRole()==='user';
@@ -834,7 +713,7 @@ function openModal(title,bodyHTML,{onSubmit,submitLabel=t('save'),extraFooter=''
   form.querySelectorAll('[data-close]').forEach(b=>b.onclick=closeModal);
   $('#ov').addEventListener('mousedown',e=>{if(e.target.id==='ov'&&!e.target.dataset.locked&&!keepOpen)closeModal()});
   form.onsubmit=async e=>{e.preventDefault();if(!onSubmit)return;const b=form.querySelector('[type=submit]');b.disabled=true;const ok=await onSubmit(form);b.disabled=false;if(ok!==false){draftDone(form);if(form.isConnected){MDCLOSE=null;closeModal()}}};
-  hPush('o');if(onMount)onMount(form);if(UI2)try{ui2Deck(form)}catch(_){}if(onSubmit&&!locked)try{draftWire(form,title)}catch(_){}if(vo)form.querySelectorAll('footer .danger,footer [id^=del],footer #gDel').forEach(b=>b.remove());
+  hPush('o');if(onMount)onMount(form);if(onSubmit&&!locked)try{draftWire(form,title)}catch(_){}if(vo)form.querySelectorAll('footer .danger,footer [id^=del],footer #gDel').forEach(b=>b.remove());
   const first=form.querySelector('input:not([readonly]),select,textarea');if(first)first.focus({preventScroll:true});
   return form}
 /* Saved records open read-only for staff: only the owner and manager may change or delete them (the server enforces the same through settings/rules) */
@@ -1139,7 +1018,7 @@ async function repXlsx(share){if(!REP_LAST)return;toast(t('sheetsWork'));try{awa
 const MARK=$('#brandMark').innerHTML;
 function applyLang(){const h=document.documentElement;h.lang=lang;h.dir=lang==='ar'?'rtl':'ltr';h.style.setProperty('--dir',h.dir);$('#langBtn').textContent=t('langBtn');$('#subline').textContent=t('subline');$('#shopH').textContent=S.settings.shopName||'EYECON OPTICS';const bm=$('#brandMark');const lg=S.logoMark||S.logo,want=lg?`<img src="${lg}" alt="" style="height:38px;width:auto;max-width:120px;object-fit:contain">`:(activeB()==='main'?MARK:'');if(bm.dataset.logo!==lg){bm.innerHTML=want;bm.dataset.logo=lg}}
 let rq=0;function schedule(){if(rq)return;rq=requestAnimationFrame(()=>{rq=0;if(!$('#ov'))render();else ntRender()})}
-function render(){render0();if(UI2)ui2Paint();if(hOk)hTrack();ntRender();thApply()}
+function render(){render0();if(hOk)hTrack();ntRender();thApply()}
 function render0(){
   applyBranch();applyLang();
   const bl=branchList();
@@ -1153,7 +1032,7 @@ function render0(){
   const V={chat:vChat,tasks:vTasks,dash:vDash,patients:vPatients,inventory:vInventory,sales:vSales,purchases:vPurchases,expenses:vExpenses,accounts:vAccounts,reports:vReports,campaigns:vCampaigns,settings:vSettings}[view];
   $('#app').innerHTML=(view==='chat'?'':banner)+V();if(view==='settings'&&$('#bkStat'))bkFill();if(view==='chat')chatMount()}
 const loading=c=>dbState==='loading'||(db&&!loaded[c]);
-const emptyBox=(msg,btn)=>UI2&&msg===t('loading')?ui2Sk():`<div class="empty"><div>${msg}</div>${btn||''}</div>`;
+const emptyBox=(msg,btn)=>`<div class="empty"><div>${msg}</div>${btn||''}</div>`;
 const branchCol=()=>curBranch==='all'&&multi();
 const bTitle=()=>curBranch!=='all'&&multi()?' · '+esc(branch(curBranch).name):'';
 
@@ -1181,7 +1060,7 @@ function vDash(){
     <div class="kpi"><span>${t('salesMonth')}</span><b>${fmtIQD(m.revenue)}</b><small>${usdEq(m.revenue)}</small></div>
     <div class="kpi"><span>${t('netMonth')}</span><b style="color:${m.net<0?'var(--bad)':'var(--ink)'}">${fmtIQD(m.net)}</b><small>${t('afterCost')}</small></div>
     <div class="kpi" data-act="openDebts" style="cursor:pointer"><span>${t('receivables')}</span><b>${fmtIQD(receivables())}</b><small>${t('unpaid')} ←</small></div>
-  </div>${UI2?ui2Today():''}
+  </div>
   <div class="grid2">
     <section class="panel" style="display:grid;gap:10px;align-content:start"><div class="bar"><h3>${t('followups')}</h3>${dueN?`<span class="chip bad">${dueN} ${t('due')}</span>`:''}</div>
       ${fu.length?`<div class="list">${fu.slice(0,8).map(e=>{const p=byId('patients',e.patientId);const late=e.followUp<=today();return `<div class="row"><a href="#" data-act="openPatient" data-id="${e.patientId}">${esc(p?p.name:'—')}</a><span class="seg"><span class="chip ${late?'bad':'acc'} ltr">${e.followUp}</span>${p&&p.phone?`<button class="btn sm wa" data-act="waPatient" data-id="${p.id}" data-type="followup" data-exam="${e.id}">WhatsApp</button>`:''}</span></div>`}).join('')}</div>`:`<p class="note">${t('noFollow')}</p>`}
@@ -1216,13 +1095,13 @@ function vPatient(p){
   const owed=sales.reduce((a,s)=>a+Math.max(0,saleIQD(s)-salePaidIQD(s)),0);
   return `<div class="bar"><button class="btn ghost" data-act="backPatients">${t('back')} ${t('allPatients')}</button><div class="seg"><button class="btn primary" data-act="newExam" data-pid="${p.id}">${t('newExam')}</button><button class="btn" data-act="newSale" data-pid="${p.id}">${t('sellTo')}</button>${p.phone?`<button class="btn wa" data-act="waPatient" data-id="${p.id}">${t('waMsg')}</button>`:''}<button class="btn" data-act="editPatient" data-id="${p.id}">${t('editData')}</button></div></div>
   <section class="panel" style="display:grid;gap:8px">
-    ${UI2?`<div class="ui2ph">${ui2Av(p)}<h2>${esc(p.name)}</h2></div>`:`<h2>${esc(p.name)}</h2>`}
+    <h2>${esc(p.name)}</h2>
     <div class="seg">${p.code?`<span class="chip acc ltr">${esc(p.code)}</span>`:''}${patientAge(p)!==''?`<span class="chip">${patientAge(p)} ${t('years')}</span>`:''}${p.gender?`<span class="chip">${esc(tx(p.gender))}</span>`:''}${p.phone?`<span class="chip ltr">${esc(p.phone)}</span><span class="chip ${p.waVerified?'wa':'warn'}">${p.waVerified?t('waOk'):t('waNo')}</span>`:''}${owed>0?`<span class="chip bad">${t('debt')} ${fmtIQD(owed)}</span>`:''}${p.visitType?`<span class="chip ${p.visitType==='regular'?'good':''}">${t('vt_'+p.visitType)}</span>`:''}${p.lastWa&&p.lastWa.type?`<span class="chip">${t('lastContact')}: ${t('mt_'+p.lastWa.type)} · ${esc(p.lastWa.date)}</span>`:''}</div>
     ${p.address?`<p style="margin:0"><span class="muted">${t('address2')}: </span>${esc(p.address)}</p>`:''}
     ${(()=>{const pl=PREV_L.filter(k=>(p.prevLenses||{})[k]);return p.prevGlasses||pl.length||p.prevNotes?`<p style="margin:0"><span class="muted">${t('prevSec')}: </span>${p.prevGlasses?(p.prevGlasses==='yes'?t('woreBefore'):t('prevGlasses')+' '+t('noW')):''}${pl.length?' · '+pl.map(k=>t(k)).join('، '):''}${p.prevNotes?' · '+esc(p.prevNotes):''}</p>`:''})()}
     ${p.history?`<p style="margin:0"><span class="muted">${t('history')}: </span>${esc(p.history)}</p>`:''}${p.notes?`<p style="margin:0"><span class="muted">${t('notes')}: </span>${esc(p.notes)}</p>`:''}
   </section>
-  ${UI2?ui2Timeline(p,exams,sales):''}<section style="display:grid;gap:12px"><h3>${t('examLog')} (${exams.length})</h3>
+  <section style="display:grid;gap:12px"><h3>${t('examLog')} (${exams.length})</h3>
   ${exams.length?exams.map(examCard).join(''):`<div class="panel">${emptyBox(t('noExams'),`<button class="btn primary" data-act="newExam" data-pid="${p.id}">${t('firstExam')}</button>`)}</div>`}</section>
   ${sales.length?`<section style="display:grid;gap:10px"><h3>${t('patientPurchases')}</h3>${salesTable(sales)}</section>`:''}`}
 
@@ -3069,111 +2948,6 @@ document.addEventListener('click',e=>{const b=e.target.closest('#ntBtn');if(b){n
     else if(a.dataset.nt==='test'){const x={id:'test:'+Date.now(),ic:'🔔',title:t('ntTestT'),body:t('ntTestB'),go:{}};ntOpen=false;ntRender();ntAlert(x,0);ntSys(x)}return}
   const it=e.target.closest('[data-ni]');if(it){const x=(P._list||[])[+it.dataset.ni];if(x){ntRead(x.id);ntGo(x.go)}}},true);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&ntOpen){ntOpen=false;ntRender()}});
-
-/* ================= UI2: the new design (preview build only, window.EYECON_UI2) =================
-   sidebar on wide screens / bottom bar on phones, floating ＋ menu, global search (Ctrl+K), «today» cards,
-   sale stepper with a sticky total, polished delete confirm + undo, skeleton loading, patient timeline */
-const U2T={ar:{more:'المزيد',sr:'بحث…',srPh:'ابحث عن زبون، هاتف، رقم فاتورة، منتج، مورد…',srHint:'اكتب اسم أو رقم هاتف أو رقم فاتورة أو اسم منتج. استخدم ↑ ↓ ثم Enter.',srNone:'لا توجد نتائج',gP:'الزبائن',gS:'فواتير البيع',gI:'المخزون',gU:'المشتريات',gT:'الأقسام',
-  today:'مطلوب منك اليوم',fu:'مراجعات مستحقة',ready:'طلبات جاهزة للتسليم',late:'طلبات متأخرة',tasks:'مهامي المفتوحة',low:'نواقص المخزون',rate:'سجّل سعر صرف اليوم',spark:'المبيعات آخر 14 يوم',
-  st1:'الزبون',st2:'الأصناف',st3:'الوصفة',st4:'الطلب',st5:'الدفع',net:'الصافي',rem:'المتبقي',cfT:'تأكيد الحذف',cfB:'هل أنت متأكد؟ لا يمكن التراجع بعد إغلاق الرسالة.',cfY:'نعم، احذف',cfN:'إلغاء',deleted:'تم الحذف',undo:'تراجع',restored:'تمت الاستعادة',
-  tl:'الخط الزمني',tlExam:'فحص نظر',tlSale:'فاتورة بيع',tlPay:'دفعة',pv:'نسخة تجريبية للشكل الجديد · البيانات حقيقية',pvBack:'الرجوع للنسخة الحالية',
-  s_dash:'الرئيسية',s_patients:'الزبائن',s_inventory:'المخزون',s_sales:'المبيعات',s_purchases:'المشتريات',s_expenses:'المصاريف',s_accounts:'الحسابات',s_reports:'التقارير',s_campaigns:'واتساب',s_tasks:'المهام',s_chat:'المحادثة',s_settings:'الإعدادات',s_drExams:'الفحوصات'},
- en:{more:'More',sr:'Search…',srPh:'Search customers, phones, invoice no., products, suppliers…',srHint:'Type a name, phone, invoice number or product. Use ↑ ↓ and Enter.',srNone:'No results',gP:'Customers',gS:'Sales invoices',gI:'Inventory',gU:'Purchases',gT:'Sections',
-  today:'Needs you today',fu:'Follow-ups due',ready:'Orders ready',late:'Late orders',tasks:'My open tasks',low:'Low stock',rate:"Set today's rate",spark:'Sales, last 14 days',
-  st1:'Customer',st2:'Items',st3:'Rx',st4:'Order',st5:'Payment',net:'Net',rem:'Due',cfT:'Delete?',cfB:'Are you sure? You can undo only for a few seconds.',cfY:'Yes, delete',cfN:'Cancel',deleted:'Deleted',undo:'Undo',restored:'Restored',
-  tl:'Timeline',tlExam:'Eye exam',tlSale:'Sale',tlPay:'Payment',pv:'Preview of the new design · live data',pvBack:'Back to the current app',
-  s_dash:'Home',s_patients:'Customers',s_inventory:'Stock',s_sales:'Sales',s_purchases:'Purchases',s_expenses:'Expenses',s_accounts:'Accounts',s_reports:'Reports',s_campaigns:'WhatsApp',s_tasks:'Tasks',s_chat:'Chat',s_settings:'Settings',s_drExams:'Exams'}};
-const u2=k=>(U2T[lang]||U2T.ar)[k]||k,u2s=k=>u2('s_'+k)!=='s_'+k?u2('s_'+k):t('tab_'+k);
-const IC={dash:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
- patients:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5c1.9.7 3.1 2.6 3.5 5.5"/>',
- inventory:'<path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5z"/><path d="M3 7.5 12 12l9-4.5M12 12v9"/>',
- sales:'<path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M9 8h6M9 12h6"/>',
- purchases:'<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h3l2.6 12.2a1 1 0 0 0 1 .8h9.6a1 1 0 0 0 1-.8L21 7H6"/>',
- expenses:'<rect x="3" y="6" width="18" height="14" rx="2"/><path d="M3 10h18M16 15h2M6 6l9-3 1 3"/>',
- accounts:'<path d="M3 10h18L12 4z"/><path d="M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 21h18"/>',
- reports:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
- campaigns:'<path d="M3 10v4h4l7 4V6L7 10z"/><path d="M17 9a4 4 0 0 1 0 6"/>',
- tasks:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="m8 9 2 2 4-4M8 15h8"/>',
- chat:'<path d="M21 12a8 8 0 0 1-11.5 7.2L4 21l1.8-5A8 8 0 1 1 21 12z"/>',
- settings:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/>',
- drExams:'<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
- exam:'<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
- userPlus:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5M19 8v6M16 11h6"/>',
- more:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
- search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
- bell:'<path d="M6 16V11a6 6 0 1 1 12 0v5l2 2H4zM10 21h4"/>',check:'<path d="m5 12 5 5 9-10"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
- alert:'<path d="M12 3 2 20h20zM12 10v4M12 17v.5"/>',money:'<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/>',calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>'};
-const ic=(k,s=20)=>`<svg class="ui2i" viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[k]||IC.more}</svg>`;
-const u2Tabs=()=>isDoctor()?['drExams','chat']:tabList();
-const u2Badge=k=>{const n=k==='chat'?chUnreadAll():k==='tasks'?myOpenTasks():0;return n};
-function ui2Paint(){if(!UI2)return;const B=document.body;B.classList.add('ui2');
-  if(!$('#ui2Pv')){const pv=document.createElement('div');pv.id='ui2Pv';pv.innerHTML=`${esc(u2('pv'))} · <a href="${esc(window.EYECON_UI2_BACK||'../')}">${esc(u2('pvBack'))}</a>`;B.insertBefore(pv,B.firstChild)}
-  const tb=$('#tabs');if(tb.closest('header'))B.insertBefore(tb,$('header.top'));/* outside the blurred header so position:fixed works */
-  $('#tabs').querySelectorAll('button[data-tab]').forEach(b=>{if(!b.querySelector('.ui2i'))b.insertAdjacentHTML('afterbegin',ic(b.dataset.tab))});
-  const pk=$('.picks');if(pk&&!$('#ui2Sr')&&!isDoctor()){pk.insertAdjacentHTML('afterbegin',`<button type="button" class="btn sm" id="ui2Sr" aria-label="${esc(u2('sr'))}">${ic('search',16)}<span class="l">${esc(u2('sr'))}</span><kbd>Ctrl K</kbd></button>`);$('#ui2Sr').onclick=ui2Search}
-  const L=u2Tabs(),pri=isDoctor()?L:['dash','patients','sales','inventory'].filter(k=>L.includes(k)),extra=L.filter(k=>!pri.includes(k)),moreOn=!pri.includes(view);
-  let bot=$('#ui2Bot');if(!bot){bot=document.createElement('nav');bot.id='ui2Bot';bot.setAttribute('aria-label','menu');B.appendChild(bot);bot.addEventListener('click',e=>{if(e.target.closest('#ui2More'))ui2More()})}
-  bot.innerHTML=pri.map(k=>`<button type="button" data-tab="${k}" aria-current="${view===k}">${ic(k)}<span class="l">${esc(u2s(k))}</span>${u2Badge(k)?`<span class="chip">${u2Badge(k)}</span>`:''}</button>`).join('')+
-    (extra.length?`<button type="button" id="ui2More" aria-current="${moreOn}">${ic(moreOn?view:'more')}<span class="l">${esc(moreOn?u2s(view):u2('more'))}</span>${extra.some(u2Badge)?'<span class="chip">•</span>':''}</button>`:'');
-  bot.style.gridTemplateColumns=`repeat(${bot.children.length},1fr)`;
-  let fab=$('#ui2Fab');if(!fab){fab=document.createElement('button');fab.type='button';fab.id='ui2Fab';fab.textContent='+';fab.setAttribute('aria-expanded','false');B.appendChild(fab);
-    const m=document.createElement('div');m.id='ui2FabM';m.hidden=true;B.appendChild(m);fab.onclick=e=>{e.stopPropagation();ui2Fab(m.hidden)}}
-  fab.setAttribute('aria-label',t('newSale'));fab.hidden=isDoctor()||view==='chat'||!canWrite}
-function ui2Fab(open){const fab=$('#ui2Fab'),m=$('#ui2FabM');let bg=$('#ui2FabBg');if(!open){m.hidden=true;fab.setAttribute('aria-expanded','false');if(bg)bg.remove();return}
-  const L=tabList(),A=[['newSale','sales',t('newSale')],['newExam','exam',t('newExam')],['newPatient','userPlus',t('newPatient')],...(L.includes('purchases')?[['newPurchase','purchases',t('addPurchase')]]:[]),...(L.includes('expenses')?[['newExpense','expenses',t('newExpense')]]:[])];
-  m.innerHTML=A.map(([a,i,l])=>`<button type="button" data-act="${a}">${esc(l)} ${ic(i)}</button>`).join('');m.style.bottom=(parseFloat(getComputedStyle(fab).bottom)+70)+'px';
-  bg=document.createElement('div');bg.id='ui2FabBg';bg.onclick=()=>ui2Fab(false);document.body.insertBefore(bg,m);m.hidden=false;fab.setAttribute('aria-expanded','true');m.onclick=()=>setTimeout(()=>ui2Fab(false),0)}
-function ui2More(){const L=u2Tabs();openModal(u2('more'),`<div class="ui2more">${L.map(k=>`<button type="button" data-u2tab="${k}" aria-current="${view===k}">${ic(k,26)}<span>${esc(u2s(k))}</span>${u2Badge(k)?` <span class="chip bad">${u2Badge(k)}</span>`:''}</button>`).join('')}</div>`,
-  {onMount:f=>f.addEventListener('click',e=>{const b=e.target.closest('[data-u2tab]');if(!b)return;closeModal();view=b.dataset.u2tab;if(view!=='patients')UI.patientId=null;render();window.scrollTo(0,0)})})}
-/* global search */
-function ui2Search(){if($('#ui2SrOv')||isDoctor())return;const ov=document.createElement('div');ov.id='ui2SrOv';ov.innerHTML=`<div class="box" role="dialog" aria-label="${esc(u2('sr'))}"><input type="search" placeholder="${esc(u2('srPh'))}" autocomplete="off"><div class="res" role="listbox"></div></div>`;document.body.appendChild(ov);
-  const inp=ov.querySelector('input'),res=ov.querySelector('.res');let H=[],on=0;const close=()=>{ov.remove();document.removeEventListener('keydown',kd,true)};
-  const pick=i=>{const h=H[i];if(!h)return;close();if($('#ov'))closeModal();h.go()};
-  const draw=()=>{let g='',html='';H.forEach((h,i)=>{if(h.g!==g){g=h.g;html+=`<div class="grp">${esc(u2(g))}</div>`}html+=`<button type="button" class="it${i===on?' on':''}" data-i="${i}" role="option">${ic(h.ic,18)}<span class="t"><b>${esc(h.t)}</b>${h.s?`<small>${esc(h.s)}</small>`:''}</span></button>`});
-    res.innerHTML=html||`<div class="hint">${esc(inp.value.trim()?u2('srNone'):u2('srHint'))}</div>`;const a=res.querySelector('.it.on');if(a)a.scrollIntoView({block:'nearest'})};
-  const run=()=>{const q=nk(inp.value),qd=q.replace(/\D/g,'');H=[];on=0;if(!q){draw();return}
-    const m=(...xs)=>xs.some(x=>x!=null&&x!==''&&nk(x).includes(q))||(qd.length>=4&&qd.length===q.replace(/\s/g,'').length&&xs.some(x=>x&&String(x).replace(/\D/g,'').includes(qd)));
-    const L=tabList();H.push(...L.filter(k=>m(u2s(k),t('tab_'+k))).map(k=>({g:'gT',ic:k,t:u2s(k),s:'',go:()=>{view=k;if(k!=='patients')UI.patientId=null;render();scrollTo(0,0)}})));
-    H.push(...S.patients.filter(p=>inBranch(p)&&m(p.name,p.phone,p.code)).slice(0,6).map(p=>({g:'gP',ic:'patients',t:p.name||'—',s:[p.code,p.phone].filter(Boolean).join(' · '),go:()=>{view='patients';UI.patientId=p.id;render();scrollTo(0,0)}})));
-    if(L.includes('sales'))H.push(...S.sales.filter(s=>inBranch(s)&&m(String(s.no||''),custOf(s))).sort(sortDate).slice(0,6).map(s=>({g:'gS',ic:'sales',t:'#'+(s.no||'')+' · '+custOf(s),s:(s.date||'')+' · '+fmt(s.total,s.currency||'IQD'),go:()=>{const x=byId('sales',s.id);if(x)voOpen(()=>saleForm(x))}})));
-    if(L.includes('inventory'))H.push(...S.items.filter(i=>invItem(i)&&m(prodLabel(i),i.sku,i.brand,i.model)).slice(0,6).map(i=>({g:'gI',ic:'inventory',t:prodLabel(i),s:tx('t_'+i.type)+' · '+t('qty')+' '+fmtN(i.qty),go:()=>{const x=byId('items',i.id);if(x)voOpen(()=>itemForm(x))}})));
-    if(L.includes('purchases'))H.push(...S.purchases.filter(p=>inBranch(p)&&m(String(p.no||''),p.supplier)).sort(sortDate).slice(0,4).map(p=>({g:'gU',ic:'purchases',t:(p.supplier||'—')+(p.no?' · #'+p.no:''),s:(p.date||'')+' · '+fmt(p.total,p.currency||'IQD'),go:()=>{const x=byId('purchases',p.id);if(x)voOpen(()=>purchaseForm(x))}})));
-    draw()};
-  const kd=e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();close()}else if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();if(H.length){on=(on+(e.key==='ArrowDown'?1:H.length-1))%H.length;draw()}}else if(e.key==='Enter'&&e.target===inp){e.preventDefault();pick(on)}};
-  document.addEventListener('keydown',kd,true);inp.addEventListener('input',run);res.addEventListener('click',e=>{const b=e.target.closest('.it');if(b)pick(+b.dataset.i)});ov.addEventListener('mousedown',e=>{if(e.target===ov)close()});draw();inp.focus()}
-if(UI2)document.addEventListener('keydown',e=>{const k=(e.key||'').toLowerCase();if((e.ctrlKey||e.metaKey)&&k==='k'){e.preventDefault();ui2Search()}else if(k==='/'&&!e.target.closest('input,textarea,select,[contenteditable]')&&!$('#ov')){e.preventDefault();ui2Search()}});
-/* dashboard: what needs attention today + 14-day sales bars */
-function ui2Today(){const fu=followUps().filter(e=>e.followUp<=today()).length,ord=openOrders(),ready=ord.filter(s=>s.status==='ready').length,late=ord.filter(s=>s.dueDate&&s.dueDate<today()&&s.status!=='ready').length,low=lowStock().length,L=tabList(),tk=L.includes('tasks')?myOpenTasks():0,rateOk=S.settings.rateDate===today();
-  const c=(cls,i,n,lb,attr)=>`<button type="button" class="ui2td ${cls}${n?'':' zero'}" ${attr}><span class="ic">${ic(i,22)}</span><span class="t"><b>${n}</b><small>${esc(lb)}</small></span></button>`;
-  const days=[];for(let i=13;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push(iso(d))}const v=days.map(d=>S.sales.filter(s=>inBranch(s)&&s.date===d).reduce((a,s)=>a+saleIQD(s),0)),mx=Math.max(1,...v);
-  return `<section style="display:grid;gap:10px"><h3>${esc(u2('today'))}</h3><div class="ui2today">${c('bad','calendar',fu,u2('fu'),'data-u2sc="0"')}${c('good','check',ready,u2('ready'),'data-u2sc="1"')}${c('warn','clock',late,u2('late'),'data-u2sc="1"')}${L.includes('tasks')?c('','tasks',tk,u2('tasks'),'data-tab="tasks"'):''}${c('warn','alert',low,u2('low'),'data-u2sc="2"')}${rateOk?'':c('bad','money','!',u2('rate'),'data-act="askRate"')}</div>
-   <div class="panel" style="display:grid;gap:8px"><div class="bar"><h3>${esc(u2('spark'))}</h3><b class="rx">${fmtIQD(v.reduce((a,x)=>a+x,0))}</b></div><div class="ui2spark">${v.map((x,i)=>`<span class="${i===13?'td':''}" style="height:${Math.max(3,Math.round(x/mx*100))}%" title="${days[i]}: ${fmtIQD(x)}"></span>`).join('')}</div></div></section>`}
-if(UI2)document.addEventListener('click',e=>{const b=e.target.closest('[data-u2sc]');if(!b)return;const s=document.querySelectorAll('#app .grid2>section')[+b.dataset.u2sc];if(s){s.scrollIntoView({behavior:'smooth',block:'center'});s.animate&&s.animate([{boxShadow:'0 0 0 3px var(--accent)'},{boxShadow:'0 0 0 0 transparent'}],{duration:1400})}});
-/* sale form: steps on top, the net total and the amount due always visible in the footer */
-function ui2Deck(f){if(!UI2||!f.querySelector('#tNet')||!f.querySelector('#lineBody'))return;const q=s=>f.querySelector(s),sec=[[u2('st1'),(q('#f_patientId')||{}).closest&&q('#f_patientId').closest('.fr')],[u2('st2'),q('#lineBody').closest('fieldset')||q('#lineBody').closest('.tw')||q('#lineBody')],[u2('st3'),q('#f_examId')&&q('#f_examId').closest('fieldset')],[u2('st4'),q('#f_status')&&q('#f_status').closest('fieldset')],[u2('st5'),q('#tNet').closest('fieldset')]].filter(x=>x[1]);
-  const bd=q('.body');bd.insertAdjacentHTML('afterbegin',`<div class="ui2step">${sec.map((x,i)=>`<button type="button" data-st="${i}"${i?'':' class="on"'}><i>${i+1}</i>${esc(x[0])}</button>`).join('')}</div>`);const st=bd.querySelector('.ui2step'),ov=$('#ov');
-  sec.forEach(x=>x[1].style.scrollMarginTop='120px');st.addEventListener('click',e=>{const b=e.target.closest('[data-st]');if(b)sec[+b.dataset.st][1].scrollIntoView({behavior:'smooth',block:'start'})});
-  const hi=()=>{let k=0;sec.forEach((x,i)=>{if(x[1].getBoundingClientRect().top<200)k=i});st.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('on',i===k))};if(ov)ov.addEventListener('scroll',hi,{passive:true});
-  const ft=q('footer');ft.insertAdjacentHTML('beforeend',`<span class="ui2sum"><span>${esc(u2('net'))} <b id="u2Net"></b></span><span class="rem">${esc(u2('rem'))} <b id="u2Rem"></b></span></span>`);
-  const sync=()=>{q('#u2Net').textContent=q('#tNet').textContent;q('#u2Rem').textContent=(q('#tRem')||{}).textContent||''};sync();const mo=new MutationObserver(sync);['#tNet','#tRem'].forEach(s=>{const el=q(s);if(el)mo.observe(el,{childList:true,characterData:true,subtree:true})})}
-/* skeleton while loading */
-const ui2Sk=()=>`<div class="ui2sk" aria-busy="true" aria-label="${esc(t('loading'))}">${'<i></i>'.repeat(6)}</div>`;
-/* patient: avatar + one timeline of exams, invoices and payments */
-const ui2Av=p=>{const w=String(p.name||'?').trim().split(/\s+/);return `<span class="ui2av" aria-hidden="true">${esc((w[0]||'?')[0]+(w[1]?w[1][0]:''))}</span>`};
-function ui2Timeline(p,exams,sales){const E=[];exams.forEach(e=>E.push({d:e.date||'',at:num(e.createdAt||e._at),k:'exam',ic:'exam',t:u2('tlExam')+(e.examiner?' · '+e.examiner:''),s:e.rx&&hasEye(e.rx,['sph','cyl'])?'R '+fmtRx(e.rx.od)+'  |  L '+fmtRx(e.rx.os):(e.complaint||''),a:`data-act="editExam" data-id="${e.id}"`}));
-  sales.forEach(s=>{E.push({d:s.date||'',at:num(s._at||s.createdAt),k:'sale',ic:'sales',t:u2('tlSale')+' #'+(s.no||'')+' · '+fmt(s.total,s.currency||'IQD'),s:(s.lines||[]).map(l=>l.name).filter(Boolean).slice(0,3).join('، '),a:`data-act="editSale" data-id="${s.id}"`,x:statusChip(s)});
-    payList(s).forEach(x=>{if((x.date||s.date)!==s.date||payList(s).length>1)E.push({d:x.date||s.date||'',at:num(x.at||0),k:'pay',ic:'money',t:u2('tlPay')+' · '+fmt(x.amount,payCur(x,s)),s:'#'+(s.no||'')+' · '+boxName(x.method),a:`data-act="editSale" data-id="${s.id}"`})})});
-  E.sort((a,b)=>b.d.localeCompare(a.d)||b.at-a.at);if(!E.length)return '';
-  return `<section class="panel" style="display:grid;gap:8px"><h3>${esc(u2('tl'))}</h3><div class="ui2tl">${E.slice(0,30).map(e=>`<div class="ev ${e.k}" ${e.a} role="button" tabindex="0"><span class="dot">${ic(e.ic,17)}</span><span><b style="font-weight:600">${esc(e.t)}</b>${e.x?' '+e.x:''}${e.s?`<br><small class="${e.k==='exam'?'rx':''}">${esc(e.s)}</small>`:''}</span><span class="d">${esc(e.d)}</span></div>`).join('')}</div></section>`}
-/* delete: a clear confirm dialog, then a few seconds to undo (only where a delete has no side effects) */
-function ui2Confirm(ok){const o=document.createElement('div');o.id='ui2Cf';o.innerHTML=`<div class="box" role="alertdialog" aria-modal="true"><span class="ic">${ic('trash',26)}</span><b style="font-size:1.1rem">${esc(u2('cfT'))}</b><span class="muted">${esc(u2('cfB'))}</span><div class="row"><button type="button" class="btn" data-n>${esc(u2('cfN'))}</button><button type="button" class="btn del" data-y>${esc(u2('cfY'))}</button></div></div>`;
-  const close=()=>{o.remove();document.removeEventListener('keydown',kd,true)},kd=e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();close()}};document.addEventListener('keydown',kd,true);
-  o.addEventListener('click',e=>{if(e.target.closest('[data-y]')){close();ok()}else if(e.target.closest('[data-n]')||e.target===o)close()});document.body.appendChild(o);o.querySelector('[data-n]').focus()}
-const UNDO_COLS=['exams','expenses','vouchers','tasks','doctors','campaigns','guides','exchanges','fixedAssets'];let undoT=0;
-function ui2Undo(col,rec){let u=$('#ui2Undo');if(u)u.remove();u=document.createElement('div');u.id='ui2Undo';u.setAttribute('role','status');u.innerHTML=`<span>${ic('trash',16)} ${esc(u2('deleted'))}</span><button type="button">↶ ${esc(u2('undo'))}</button>`;document.body.appendChild(u);clearTimeout(undoT);undoT=setTimeout(()=>u.remove(),7000);
-  u.querySelector('button').onclick=async()=>{u.remove();const {id,...d}=rec;try{await db.collection(col).doc(id).set(d);toast(u2('restored'))}catch(e){toast(errMsg(e))}}}
-if(UI2){const del0=del;del=async(col,id)=>{const rec=byId(col,id);const ok=await del0(col,id);if(ok&&rec&&UNDO_COLS.includes(col))ui2Undo(col,{...rec});return ok};
-  const arm0=armDelete;armDelete=(btn,fn)=>{if(btn.dataset.armed){fn();return}ui2Confirm(()=>{btn.dataset.armed='1';btn.click();setTimeout(()=>{delete btn.dataset.armed},0)})};void arm0}
 
 /* ================= boot ================= */
 render();
