@@ -101,6 +101,11 @@ details.lcb.kc{border-inline-start:5px solid var(--kc)}details.lcb.kc>summary{di
 .lcb.kc .lcr{border-inline-start:3px solid color-mix(in srgb,var(--kc) 55%,transparent);padding-inline-start:8px}
 .lcgbox.gc{border:1px solid color-mix(in srgb,var(--gc) 35%,var(--line));border-inline-start:4px solid var(--gc);background:color-mix(in srgb,var(--gc) 4%,var(--surface))}
 .lcgbox.gc .lcr{border-inline-start:0;padding-inline-start:0}
+/* once something is picked, the other choices fade to grey so the picked one stands out (hover brings them back a little) */
+.lchs:has(.lch.on) .lch:not(.on),.lcks:has(>.btn.on,>.btn.primary)>.btn:not(.on):not(.primary),.lcone:has(.btn.primary) .btn:not(.primary){opacity:.42;filter:grayscale(1);transition:opacity .15s,filter .15s}
+.lchs:has(.lch.on) .lch:not(.on):hover,.lcks:has(>.btn.on,>.btn.primary)>.btn:not(.on):not(.primary):hover,.lcone:has(.btn.primary) .btn:not(.primary):hover{opacity:.8;filter:grayscale(.3)}
+.lcgr .lch.on{font-weight:600;box-shadow:0 0 0 3px color-mix(in srgb,var(--gc) 28%,transparent)}
+.lcks>.btn.on,.lcks>.btn.primary,.lcone .btn.primary{box-shadow:0 0 0 3px color-mix(in srgb,var(--kc,var(--accent)) 25%,transparent);font-weight:600}
 .lchelp{border:1px dashed var(--line);border-radius:10px;padding:6px 10px;font-size:.85rem}.lchelp>summary{cursor:pointer;color:var(--muted);font-weight:500}.lchelp[open]>summary{margin-bottom:6px}.lchelp .in{display:grid;gap:6px}
 .lcleg{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:.78rem;color:var(--muted)}.lcleg span{display:inline-flex;align-items:center;gap:5px}.lcleg i{width:12px;height:12px;border-radius:4px;background:var(--kc);display:inline-block}
 .lcc{font:inherit;text-align:start;display:grid;gap:4px;padding:14px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;min-height:76px}
