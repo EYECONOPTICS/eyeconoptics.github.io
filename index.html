@@ -595,7 +595,7 @@ function vaPick(sel){const cur=sel.value,lab=(sel.getAttribute('aria-label')||''
   document.addEventListener('keydown',kd,true);document.body.appendChild(ov);(ov.querySelector('.on')||ov.querySelector('.vag button')).scrollIntoView({block:'nearest'})}
 document.addEventListener('mousedown',e=>{const s=e.target.closest&&e.target.closest('select');if(vaPickable(s)&&e.button===0){e.preventDefault();vaPick(s)}},true);
 document.addEventListener('touchend',e=>{const s=e.target.closest&&e.target.closest('select');if(vaPickable(s)&&e.changedTouches.length===1){e.preventDefault();vaPick(s)}},{capture:true,passive:false});
-const NVA=['','N5','N6','N8','N10','N12','N14','N18','N24','N36','N48'];
+const NVA=['','N3','N4','N5','N6','N8','N10','N12','N14','N18','N24','N36','N48'];
 const CYCLO=[['none','dry'],['cyclopentolate1','Cyclopentolate 1%'],['cyclopentolate05','Cyclopentolate 0.5%'],['atropine1','Atropine 1%'],['atropine05','Atropine 0.5%'],['tropicamide1','Tropicamide 1%']];
 const EXP_CATS=['c_rent','c_salary','c_power','c_maint','c_transport','c_ads','c_supplies','c_tax','c_other'];
 const LENS_DESIGN=['d_sv','d_bf','d_pal','d_office'],LENS_MAT=['m_cr39','m_poly','m_trivex','m_glass','m_photo','m_blue'],LENS_INDEX=['1.50','1.56','1.59','1.60','1.67','1.74'];
