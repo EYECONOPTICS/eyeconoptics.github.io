@@ -1589,13 +1589,14 @@ function examForm(e={},pid){
     ${refPick(e)}${fi(t('complaint'),'complaint',e.complaint)}${mhBox(e,pidSel)}${feeBox(e)}
     ${lastRx?`<div class="rxcard"><span class="muted" style="font-size:.8rem">${t('prevRx')} (${lastRx.date})</span><div class="rx" style="direction:ltr"><span class="os">L ${fmtRx(lastRx.rx.os)}</span> · <span class="od">R ${fmtRx(lastRx.rx.od)}</span></div></div>`:''}
   </fieldset>
-  ${sec(t('vaRx'),vaRow('va.ucva',e,VA,t('vaDistUnaided'),false)+`<div class="st2">${t('curGlT')}</div>`+rxGrid('old',e,[['va','VA','va'],['sph','SPH','d'],['cyl','CYL','d'],['axis','AXIS','axis'],['add','ADD','d']])+vaRow('va.ph',e,VA,t('vaPh')+' · '+t('optional'),false)+`<label class="chk"><input type="checkbox" name="va.phSame" id="f_phSame" ${getP(e,'va.phSame')?'checked':''}> ${t('phSame')}</label>${vaRow('va.near',e,NVA,t('vaNearU')+' · '+t('optional'),false)}${vaRow('va.nearc',e,NVA,t('vaNearC')+' · '+t('optional'),false)}
+  ${sec(t('vaRx'),vaRow('va.ucva',e,VA,t('vaDistUnaided'),false)+vaRow('va.ph',e,VA,t('vaPh')+' · '+t('optional'),false)+`<label class="chk"><input type="checkbox" name="va.phSame" id="f_phSame" ${getP(e,'va.phSame')?'checked':''}> ${t('phSame')}</label>${vaRow('va.near',e,NVA,t('vaNearU')+' · '+t('optional'),false)}${vaRow('va.nearc',e,NVA,t('vaNearC')+' · '+t('optional'),false)}
     <div class="st2">${t('rxGlasses')} <span class="muted" style="font-size:.78rem">· ${t('vaInRx')}</span></div><div><button type="button" class="btn sm" id="fromAr">${t('fromAr')}</button></div>${rxGrid('rx',e,[['sph','SPH','d'],['cyl','CYL','d'],['axis','AXIS','axis'],['prism','PRISM','mm'],['va','VA','va']])}
     ${addNearUI(e)}
     <div class="fr">${fs(t('ipdMode'),'rx.pdMode',rx.pdMode||'bino',[['bino',t('ipdBino')],['mono',t('ipdMono')]])}</div>
     <div id="pdBino" class="fr" ${rx.pdMode==='mono'?'hidden':''}>${fi('IPD '+t('pdDist'),'rx.pdDist',rx.pdDist,'number','step="0.5"')}${fi('IPD '+t('pdNear'),'rx.pdNear',rx.pdNear,'number','step="0.5"')}</div>
     <div id="pdMono" ${rx.pdMode==='mono'?'':'hidden'}>${rxGrid('rx',e,[['pd','MONO PD DIST','mm'],['npd','MONO PD NEAR','mm']],'min-width:0;max-width:360px;margin-right:auto')}</div>
     <div class="fr">${fs(t('glassesType'),'rx.type',rx.type,keyOpts(spec('design')))}${fi(t('lensRec'),'rx.lensRec',rx.lensRec)}</div>${ft(t('rxNotes'),'rx.notes',rx.notes,'rows="2" placeholder="'+esc(t('rxNotesPh'))+'"')}`,true,true)}
+  ${sec(t('oldRxPr'),rxGrid('old',e,[['sph','SPH','d'],['cyl','CYL','d'],['axis','AXIS','axis'],['add','ADD','d'],['va','VA','va']]),hasEye(e.old,['sph','cyl','add','va']))}
   ${sec('📎 '+t('attT'),attBox(),true)}
   ${sec(t('autoref'),rxGrid('ar',e,[['sph','SPH','d'],['cyl','CYL','d'],['axis','AXIS','axis']]),hasEye(e.ar,['sph','cyl']))}
   ${sec(t('ret'),`<div class="fr">${fs(t('cyclo'),'ret.cyclo',ret.cyclo||'none',CYCLO.map(([k,l])=>[k,k==='none'?t('dry'):l]))}${fi(t('wd'),'ret.wd',ret.wd||'67','number','step="1"')}</div>
