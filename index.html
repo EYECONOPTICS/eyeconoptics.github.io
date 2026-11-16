@@ -1577,6 +1577,9 @@ async function attView(a){if(!a)return;let f=a;if(!a.data){toast(t('loading'));t
   document.body.appendChild(ov);hPush('o')}
 document.addEventListener('click',e=>{const v=e.target.closest&&e.target.closest('[data-attv]');if(!v)return;const [id,i]=v.dataset.attv.split(':'),ex=byId('exams',id);if(ex)attView((ex.att||[])[+i])});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#attOv')){e.preventDefault();e.stopPropagation();$('#attOv').remove()}},true);
+/* near VA (unaided / with correction) is used only at the Zayouna branch (Zaid, 2026-11-16); a branch setting nearVA true/false overrides; saved values always stay visible */
+const nearOn=b=>{const st=setFor(b)||{};if(st.nearVA!=null)return !!st.nearVA;const br=branch(b)||{};return /زيون|zay+o?u?na/i.test([br.name,br.address,st.shopName,st.shopAddress,st.address].filter(Boolean).join(' '))};
+const hasNearVA=e=>['near','nearc'].some(k=>{const v=((e.va||{})[k])||{};return !!(v.od||v.os||v.ou)});
 function examForm(e={},pid){
   const pats=S.patients.filter(inBranch).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   const pidSel=e.patientId||pid||'';const lastRx=pidSel&&!e.id?S.exams.filter(x=>x.patientId===pidSel&&hasEye(x.rx,['sph','cyl'])).sort(sortDate)[0]:null;
@@ -1589,7 +1592,7 @@ function examForm(e={},pid){
     ${refPick(e)}${fi(t('complaint'),'complaint',e.complaint)}${mhBox(e,pidSel)}${feeBox(e)}
     ${lastRx?`<div class="rxcard"><span class="muted" style="font-size:.8rem">${t('prevRx')} (${lastRx.date})</span><div class="rx" style="direction:ltr"><span class="os">L ${fmtRx(lastRx.rx.os)}</span> · <span class="od">R ${fmtRx(lastRx.rx.od)}</span></div></div>`:''}
   </fieldset>
-  ${sec(t('vaRx'),vaRow('va.ucva',e,VA,t('vaDistUnaided'),false)+vaRow('va.ph',e,VA,t('vaPh')+' · '+t('optional'),false)+`<label class="chk"><input type="checkbox" name="va.phSame" id="f_phSame" ${getP(e,'va.phSame')?'checked':''}> ${t('phSame')}</label>${vaRow('va.near',e,NVA,t('vaNearU')+' · '+t('optional'),false)}${vaRow('va.nearc',e,NVA,t('vaNearC')+' · '+t('optional'),false)}
+  ${sec(t('vaRx'),vaRow('va.ucva',e,VA,t('vaDistUnaided'),false)+vaRow('va.ph',e,VA,t('vaPh')+' · '+t('optional'),false)+`<label class="chk"><input type="checkbox" name="va.phSame" id="f_phSame" ${getP(e,'va.phSame')?'checked':''}> ${t('phSame')}</label><div class="nearVA" ${nearOn(e.branchId||defBranch())||hasNearVA(e)?'':'hidden'}>${vaRow('va.near',e,NVA,t('vaNearU')+' · '+t('optional'),false)}${vaRow('va.nearc',e,NVA,t('vaNearC')+' · '+t('optional'),false)}</div>
     <div class="st2">${t('rxGlasses')} <span class="muted" style="font-size:.78rem">· ${t('vaInRx')}</span></div><div><button type="button" class="btn sm" id="fromAr">${t('fromAr')}</button></div>${rxGrid('rx',e,[['sph','SPH','d'],['cyl','CYL','d'],['axis','AXIS','axis'],['prism','PRISM','mm'],['va','VA','va']])}
     ${addNearUI(e)}
     <div class="fr">${fs(t('ipdMode'),'rx.pdMode',rx.pdMode||'bino',[['bino',t('ipdBino')],['mono',t('ipdMono')]])}</div>
@@ -1613,7 +1616,7 @@ function examForm(e={},pid){
      const rxEmpty=()=>E.every(k=>['sph','cyl','axis'].every(x=>q(`rx.${k}.${x}`).value===''));
      const copyAr=()=>E.forEach(k=>['sph','cyl','axis'].forEach(x=>q(`rx.${k}.${x}`).value=q(`ar.${k}.${x}`).value));f.querySelector('#fromAr').onclick=copyAr;
      let arAuto=rxEmpty();E.forEach(k=>['sph','cyl','axis'].forEach(x=>{q(`rx.${k}.${x}`).addEventListener('input',()=>arAuto=false);q(`ar.${k}.${x}`).addEventListener('change',()=>{if(arAuto)copyAr()})}));
-     wireAddNear(f);const pm=q('rx.pdMode'),pdT=()=>{f.querySelector('#pdBino').hidden=pm.value==='mono';f.querySelector('#pdMono').hidden=pm.value!=='mono'};pm.onchange=pdT;
+     {const nb=f.querySelector('.nearVA'),br=f.querySelector('#f_branchId');if(nb&&br&&br.tagName==='SELECT')br.addEventListener('change',()=>{nb.hidden=!(nearOn(br.value)||hasNearVA(formObj(f)))})}wireAddNear(f);const pm=q('rx.pdMode'),pdT=()=>{f.querySelector('#pdBino').hidden=pm.value==='mono';f.querySelector('#pdMono').hidden=pm.value!=='mono'};pm.onchange=pdT;
      const d=f.querySelector('#delE');if(d)d.onclick=()=>armDelete(d,async()=>{if(await del('exams',e.id)){closeModal();toast(t('deleted'))}});wireRef(f);
      {const xs=[...f.querySelectorAll('.mhx')];xs.forEach(x=>x.addEventListener('change',()=>{if(!x.checked)return;if(x.value==='none')xs.forEach(y=>{if(y!==x)y.checked=false});else xs.find(y=>y.value==='none').checked=false}));
       f.querySelector('#f_patientId').addEventListener('change',ev=>{f.querySelector('#mhLbl').className=mhNeeded(ev.target.value)?'req':'';if(!e.id&&!xs.some(x=>x.checked)&&!f.querySelector('#f_mhOther').value){const w=document.createElement('div');w.innerHTML=mhBox({},ev.target.value);const nb=w.firstElementChild;const ob=f.querySelector('.mhbox');[...nb.querySelectorAll('.mhx')].forEach((x,i)=>xs[i].checked=x.checked);f.querySelector('#f_mhOther').value=nb.querySelector('#f_mhOther').value}})}
