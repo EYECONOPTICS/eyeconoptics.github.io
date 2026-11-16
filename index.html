@@ -159,6 +159,7 @@ tr.total td{font-weight:600;background:var(--bg)}
 .chip.bad{color:var(--bad);border-color:currentColor}
 .chip.good{color:var(--good);border-color:currentColor}
 .chip.acc{color:var(--accent);border-color:currentColor}
+.svcU{display:block;font-size:.76rem;color:var(--accent);font-weight:600;white-space:normal;line-height:1.3;margin-top:2px}.svcCs{display:flex;flex-wrap:wrap;gap:6px;margin:-2px 0 4px}.svcC{cursor:pointer;font:inherit;font-size:.85rem;padding:5px 12px;background:none}.svcC.acc{background:color-mix(in srgb,var(--accent) 12%,transparent);font-weight:600}.svcPrev{display:grid;justify-items:center;padding:10px;border:1px dashed var(--line);border-radius:10px;font-size:1.3rem}.svcPrev .svcU{font-size:.9rem}
 .chip.wa{color:var(--wa);border-color:currentColor}
 .seg{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .seg button{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--surface);color:var(--muted);padding:5px 12px;border-radius:99px;cursor:pointer}
@@ -1214,7 +1215,7 @@ function vDash(){
   const td=computeAcc(periodRange('today')),m=computeAcc(periodRange('month'));
   const fu=followUps(),low=lowStock(),ex=expiring(),ord=openOrders();const dueN=fu.filter(e=>e.followUp<=today()).length;
   const recent=S.sales.filter(inBranch).sort(sortDate).slice(0,6);
-  return `<div class="bar"><h2>${t('overview')}${bTitle()}</h2><div class="seg"><button class="btn primary" data-act="newExam">${t('newExam')}</button><button class="btn" data-act="newSale">${t('newSale')}</button><button class="btn" data-act="newPurchase">${t('addPurchase')}</button><button class="btn" data-act="newExpense">${t('newExpense')}</button><button class="btn" data-act="newVoucher">${t('voucher')}</button></div></div>
+  return `<div class="bar"><h2>${t('overview')}${bTitle()}</h2><div class="seg"><button class="btn primary" data-act="newExam">${t('newExam')}</button><button class="btn" data-act="newSale">${t('newSale')}</button><button class="btn svcBtn" data-act="quickSvc">🛠 ${t('svcBtn')}</button><button class="btn" data-act="newPurchase">${t('addPurchase')}</button><button class="btn" data-act="newExpense">${t('newExpense')}</button><button class="btn" data-act="newVoucher">${t('voucher')}</button></div></div>
   <div class="seg qrep"><button class="btn" data-act="dayRep" data-id="lens">👓 ${t('lensRep')}</button><button class="btn" data-act="dayRep" data-id="sales">📊 ${t('salesDay')}</button>${isMgr()?(()=>{const L=S.ratings.filter(inBranch);return `<button class="btn" data-act="ratings">⭐ ${t('rvT')}${L.length?` <span class="chip">${rvAvg(L)} ★ · ${L.length}</span>`:''}</button>`})():''}</div>
   <div><button class="chip acc" style="cursor:pointer;font:inherit;font-size:.85rem;background:none" data-act="askRate">${t('todayRate')}: <span class="ltr">${fmtN(rate())}</span> ${S.settings.rateDate===today()?'✓':'!'}</button></div>
   <div class="kpis">
@@ -1278,7 +1279,7 @@ function saleMini(s){const ls=s.lines||[],fr=ls.filter(l=>l.type==='frame').map(
 function vPatient(p){
   const exams=S.exams.filter(e=>e.patientId===p.id).sort(sortDate),sales=S.sales.filter(s=>s.patientId===p.id).sort(sortDate);
   const owed=sales.reduce((a,s)=>a+Math.max(0,saleIQD(s)-salePaidIQD(s)),0);
-  return `<div class="bar"><button class="btn ghost" data-act="backPatients">${t('back')} ${t('allPatients')}</button><div class="seg"><button class="btn primary" data-act="newExam" data-pid="${p.id}">${t('newExam')}</button><button class="btn" data-act="newSale" data-pid="${p.id}">${t('sellTo')}</button>${p.phone?`<button class="btn wa" data-act="waPatient" data-id="${p.id}">${t('waMsg')}</button>`:''}<button class="btn" data-act="editPatient" data-id="${p.id}">${t('editData')}</button></div></div>
+  return `<div class="bar"><button class="btn ghost" data-act="backPatients">${t('back')} ${t('allPatients')}</button><div class="seg"><button class="btn primary" data-act="newExam" data-pid="${p.id}">${t('newExam')}</button><button class="btn" data-act="newSale" data-pid="${p.id}">${t('sellTo')}</button><button class="btn svcBtn" data-act="quickSvc" data-pid="${p.id}">🛠 ${t('svcBtn')}</button>${p.phone?`<button class="btn wa" data-act="waPatient" data-id="${p.id}">${t('waMsg')}</button>`:''}<button class="btn" data-act="editPatient" data-id="${p.id}">${t('editData')}</button></div></div>
   <section class="panel" style="display:grid;gap:8px">
     <h2>${esc(p.name)}</h2>
     <div class="seg">${p.code?`<span class="chip acc ltr">${esc(p.code)}</span>`:''}${patientAge(p)!==''?`<span class="chip">${patientAge(p)} ${t('years')}</span>`:''}${p.gender?`<span class="chip">${esc(tx(p.gender))}</span>`:''}${p.phone?`<span class="chip ltr">${esc(p.phone)}</span><span class="chip ${p.waVerified?'wa':'warn'}">${p.waVerified?t('waOk'):t('waNo')}</span>`:''}${owed>0?`<span class="chip bad">${t('debt')} ${fmtIQD(owed)}</span>`:''}${p.visitType?`<span class="chip ${p.visitType==='regular'?'good':''}">${t('vt_'+p.visitType)}</span>`:''}${p.lastWa&&p.lastWa.type?`<span class="chip">${t('lastContact')}: ${t('mt_'+p.lastWa.type)} · ${esc(p.lastWa.date)}</span>`:''}</div>
@@ -2069,19 +2070,59 @@ function printSale(s,opt){if(!s)return;opt=opt||printWithPref();const p=s.patien
 function printExam(e,kind='exam'){if(!e)return;const p=byId('patients',e.patientId)||{};const fn={exam:examReportDoc,rx:glassesRxDoc,cl:clRxDoc}[kind]||examReportDoc;printPreview(docT(kind)+' · '+(p.name||''),()=>fn(e),{fname:kind+'-'+(p.code||'')+'-'+(e.date||''),waPhone:p.phone,waText:rxText(e),waShop:branch(bid(e)).name,meta:{b:bid(e),p:e.patientId||'',k:kind,ref:e.id||'',cust:p.name||''}})}
 
 /* ================= SALES ================= */
+/* ---- quick service sale: one tap from home / sales / customer page; the service type is a single service line, shown under the amount in lists ---- */
+Object.assign(D,{svcBtn:['بيع خدمة','Sell a service'],svcT:['بيع خدمة سريع','Quick service sale'],svcType:['نوع الخدمة','Service type'],svcTypePh:['اختر من الأسفل أو اكتب خدمة جديدة','Pick below or type a new service'],svcAmt:['مبلغ الخدمة','Service amount'],svcPaid:['المدفوع الآن','Paid now'],svcNeedType:['اختر نوع الخدمة','Choose the service type'],svcSaved:['تم تسجيل الخدمة · فاتورة #','Service recorded · invoice #'],svcSave:['تسجيل الخدمة','Record service'],svcRemNote:['الباقي يبقى ديناً على الزبون','The rest stays as the customer\'s balance due'],
+  svc_fix:['تصليح نظارة','Glasses repair'],svc_adj:['ضبط وتعديل الإطار','Frame adjustment'],svc_fit:['تركيب عدسات بإطار الزبون','Lens fitting in customer frame'],svc_cl:['قياس وتجربة عدسات لاصقة','Contact lens fitting'],svc_clean:['تنظيف النظارة بالموجات','Ultrasonic glasses cleaning'],svc_screw:['تبديل براغي ومساند أنف','Screws and nose pads replacement']});
+const SVC_DEF=['svc_fix','svc_adj','svc_fit','svc_cl','svc_clean','svc_screw'];
+const svcOnly=s=>{const L=(s&&s.lines)||[];return L.length>0&&L.every(l=>l.type==='service')};
+/* the service names of a service-only invoice, printed small under its amount */
+const svcUnder=s=>svcOnly(s)?`<small class="svcU">🛠 ${esc(s.lines.map(l=>l.name).join('، '))}</small>`:'';
+/* services offered in a branch: exam fees, the defaults, then every service name already sold there (newest first), each with its last price */
+function svcList(b){const m=new Map(),add=(n,p)=>{n=String(n||'').trim();if(n&&!m.has(n))m.set(n,p)};
+  add(feeLineName('std'),feeAmt(b,'std'));add(feeLineName('kid'),feeAmt(b,'kid'));
+  const used=S.sales.filter(s=>bid(s)===b).sort(sortDate),last=new Map();used.forEach(s=>(s.lines||[]).forEach(l=>{if(l.type==='service'&&l.name&&!last.has(l.name)&&(s.currency||'IQD')==='IQD')last.set(l.name,num(l.price))}));
+  SVC_DEF.forEach(k=>add(t(k),null));last.forEach((p,n)=>add(n,p));
+  return [...m].map(([n,p])=>[n,last.has(n)?last.get(n):p])}
+let svcBox='cash';try{svcBox=localStorage.getItem('eyecon_svcBox')||'cash'}catch(_){}
+function svcForm(pid){if(!canWrite)return;const pt=pid?byId('patients',pid):null,b0=curBranch!=='all'?curBranch:(pt&&pt.branchId)||defBranch();
+  const pats=S.patients.filter(inBranch).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const chips=b=>svcList(b).map(([n,p])=>`<button type="button" class="chip svcC" data-n="${esc(n)}" data-p="${p==null?'':esc(p)}">${esc(n)}${p?` <span class="muted n">${fmtN(p)}</span>`:''}</button>`).join('');
+  openModal('🛠 '+t('svcT'),`<div class="fr">${brF(b0)}${fi(t('date'),'date',today(),'date')}</div>
+   <label class="f"><span class="req">${t('svcType')}</span><input id="f_svc" name="svc" autocomplete="off" placeholder="${esc(t('svcTypePh'))}" required></label>
+   <div class="svcCs" id="svcCs">${chips(b0)}</div>
+   <div class="fr">${fi(`<span class="req">${t('svcAmt')}</span>`,'amount','','text','inputmode="decimal" dir="ltr" required')}${fs(t('currency'),'currency','IQD',[['IQD',t('iqd')],['USD',t('usd')]])}${fi(t('svcPaid'),'paid','','text','inputmode="decimal" dir="ltr"')}${fs(t('box'),'box',BOXES.includes(svcBox)?svcBox:'cash',boxOpts())}</div>
+   <div class="svcPrev" id="svcPrev" hidden></div><p class="note" id="svcRem" hidden>${t('svcRemNote')}</p>
+   <div class="fr">${fs(t('patient'),'patientId',pid||'',[['',t('noFile')],...pats.map(p=>[p.id,(p.code?p.code+' · ':'')+p.name])])}${fi(t('custName'),'customer','')}</div>
+   ${fi(t('notes'),'notes','')}`,
+  {submitLabel:t('svcSave'),onMount:f=>{const q=n=>f.querySelector('#f_'+n);patSearch(q('patientId'));let paidTouched=false;
+     const prev=()=>{const a=num(q('amount').value),n=q('svc').value.trim(),c=q('currency').value,pd=q('paid').value===''?a:num(q('paid').value),pv=f.querySelector('#svcPrev');
+       pv.hidden=!a&&!n;pv.innerHTML=`<b class="n">${fmt(a,c)}</b>${n?`<small class="svcU">🛠 ${esc(n)}</small>`:''}`;f.querySelector('#svcRem').hidden=!(a&&pd<a)};
+     const pick=c=>{q('svc').value=c.dataset.n;f.querySelectorAll('.svcC').forEach(x=>x.classList.toggle('acc',x===c));if(c.dataset.p&&q('currency').value==='IQD'){q('amount').value=c.dataset.p;if(!paidTouched)q('paid').value=''}prev();if(!c.dataset.p)q('amount').focus()};
+     const wire=()=>f.querySelectorAll('.svcC').forEach(c=>c.onclick=()=>pick(c));wire();
+     q('paid').addEventListener('input',()=>{paidTouched=true;prev()});q('paid').placeholder=t('paidFull');
+     ['amount','svc'].forEach(n=>q(n).addEventListener('input',()=>{if(n==='svc')f.querySelectorAll('.svcC').forEach(x=>x.classList.toggle('acc',x.dataset.n===q('svc').value.trim()));prev()}));q('currency').onchange=prev;
+     const bs=f.querySelector('select#f_branchId');if(bs)bs.onchange=()=>{f.querySelector('#svcCs').innerHTML=chips(bs.value);wire()};setTimeout(()=>q('svc').focus(),50)},
+   onSubmit:async f=>{const o=formObj(f),b=o.branchId||b0,c=o.currency==='USD'?'USD':'IQD',dg=c==='USD'?2:0,name=(o.svc||'').trim(),amt=+num(o.amount).toFixed(dg);
+     if(!name){toast(t('svcNeedType'));return false}if(!(amt>0)){toast(t('needAmt'));return false}
+     const paid=Math.min(amt,Math.max(0,+(o.paid===''||o.paid==null?amt:num(o.paid)).toFixed(dg))),r=rate(),m=BOXES.includes(o.box)?o.box:'cash',d=o.date||today();
+     try{localStorage.setItem('eyecon_svcBox',m)}catch(_){}svcBox=m;
+     const rec={branchId:b,date:d,no:nextNo('sales',b),currency:c,rate:r,patientId:o.patientId||'',customer:o.customer||'',guides:[],rxSrc:'',examId:'',rx:{},cl:{},
+       lines:[{itemId:'',name,pow:'',type:'service',qty:1,price:amt,costIQD:0}],subtotal:amt,discount:0,discType:'amt',discPct:'',discAmt:0,discCur:c,total:amt,paid,
+       payments:paid>0?[{date:d,amount:paid,cur:c,rate:r,val:paid,method:m,...payStamp()}]:[],method:m,status:'none',notes:o.notes||'',svc:1};
+     if(!await put('sales',null,rec))return false;toast(t('svcSaved')+rec.no)}})}
 const saleItemsShort=s=>{const L=s.lines||[];if(!L.length)return '';const f=L[0],more=L.length-1;return `<span class="itm1" title="${esc(L.map(l=>l.name+' ×'+l.qty).join('\n'))}">${esc(f.name)}${num(f.qty)>1?' ×'+f.qty:''}</span>${more?` <span class="chip">+${more} ${t('moreItems')}</span>`:''}`};
 function recentList(list){const bc=branchCol();return `<div class="panel rsl">${list.map(s=>{const p=s.patientId?byId('patients',s.patientId):null,rem=num(s.total)-num(s.paid);
-  return `<div class="rs" data-act="editSale" data-id="${s.id}" role="button" tabindex="0"><div class="rs1"><b>${esc(p?p.name:(s.customer||t('walkIn')))}</b><small class="muted"><span class="n">${s.date||''}</span> · #${esc(s.no||'')}${bc?' · '+esc(branch(bid(s)).name):''}</small></div><div class="rs2">${saleItemsShort(s)}</div><div class="rs3"><b class="n">${fmt(s.total,s.currency)}</b><span>${rem>0.009?`<span class="chip bad">${t('remaining')} ${fmt(rem,s.currency)}</span>`:`<span class="chip good">${t('settled')}</span>`} ${statusChip(s)}</span></div></div>`}).join('')}</div>`}
+  return `<div class="rs" data-act="editSale" data-id="${s.id}" role="button" tabindex="0"><div class="rs1"><b>${esc(p?p.name:(s.customer||t('walkIn')))}</b><small class="muted"><span class="n">${s.date||''}</span> · #${esc(s.no||'')}${bc?' · '+esc(branch(bid(s)).name):''}</small></div><div class="rs2">${saleItemsShort(s)}</div><div class="rs3"><b class="n">${fmt(s.total,s.currency)}</b>${svcUnder(s)}<span>${rem>0.009?`<span class="chip bad">${t('remaining')} ${fmt(rem,s.currency)}</span>`:`<span class="chip good">${t('settled')}</span>`} ${statusChip(s)}</span></div></div>`}).join('')}</div>`}
 /* time an invoice was entered (from its save stamp); used in tables, exports and the busy-hours report */
 const saleTs=s=>num(s&&(s._at||s.createdAt))||0,saleHM=s=>{const v=saleTs(s);if(!v)return '';const d=new Date(v);return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};
 function salesTable(list,compact){const bc=branchCol();return `<div class="tw"><table><thead><tr><th>${t('date')}</th><th>${t('no')}</th>${bc?`<th>${t('branch')}</th>`:''}<th>${t('customer')}</th><th>${t('items')}</th><th>${t('total')}</th><th>${t('paid')}</th><th>${t('status')}</th><th>${t('profit')}</th></tr></thead><tbody>
   ${list.map(s=>{const p=s.patientId?byId('patients',s.patientId):null;const rem=num(s.total)-num(s.paid);const st=s.status||'none';
   return `<tr class="click" data-act="editSale" data-id="${s.id}"><td class="n">${s.date||''}${saleHM(s)?`<br><small class="muted">${saleHM(s)}</small>`:''}</td><td class="n">${esc(s.no||'')}</td>${bc?`<td>${esc(branch(bid(s)).name)}</td>`:''}<td>${esc(p?p.name:(s.customer||t('walkIn')))}</td><td>${compact?saleItemsShort(s):(s.lines||[]).map(l=>esc(l.name)+' ×'+l.qty).join('<br>')}</td>
-  <td class="n">${fmt(s.total,s.currency)}</td><td class="n">${rem>0.009?`<span class="chip bad">${t('remaining')} ${fmt(rem,s.currency)}</span>`:`<span class="chip good">${t('settled')}</span>`}</td><td>${statusChip(s)}${s.dueDate&&!['none','delivered'].includes(st)?`<br><span class="muted ltr" style="font-size:.78rem">${s.dueDate}</span>`:''}</td><td class="n">${fmtIQD(saleIQD(s)-saleCOGS(s))}</td></tr>`}).join('')}</tbody></table></div>`}
+  <td class="n">${fmt(s.total,s.currency)}${svcUnder(s)}</td><td class="n">${rem>0.009?`<span class="chip bad">${t('remaining')} ${fmt(rem,s.currency)}</span>`:`<span class="chip good">${t('settled')}</span>`}</td><td>${statusChip(s)}${s.dueDate&&!['none','delivered'].includes(st)?`<br><span class="muted ltr" style="font-size:.78rem">${s.dueDate}</span>`:''}</td><td class="n">${fmtIQD(saleIQD(s)-saleCOGS(s))}</td></tr>`}).join('')}</tbody></table></div>`}
 function vSales(){
   const r=periodRange(UI.salesPeriod,UI.from,UI.to),a=computeAcc(r),q=UI.salesQ.toLowerCase();
   const list=a.sales.filter(s=>{if(UI.salesUnpaid&&!(num(s.total)-num(s.paid)>0.009))return false;if(!q)return true;const p=s.patientId?byId('patients',s.patientId):null;return [p&&p.name,p&&p.code,s.customer,s.no,...(s.lines||[]).map(l=>l.name)].some(x=>(x||'').toLowerCase().includes(q))}).sort(sortDate);
-  return `<div class="bar"><h2>${t('tab_sales')}${bTitle()}</h2><button class="btn primary" data-act="newSale">${t('newSale')}</button></div>
+  return `<div class="bar"><h2>${t('tab_sales')}${bTitle()}</h2><div class="seg"><button class="btn svcBtn" data-act="quickSvc">🛠 ${t('svcBtn')}</button><button class="btn primary" data-act="newSale">${t('newSale')}</button></div></div>
   ${periodSeg(UI.salesPeriod,'salesPeriod')}${UI.salesPeriod==='custom'?customRange():''}
   <div class="kpis"><div class="kpi"><span>${t('revenue')}</span><b>${fmtIQD(a.revenue)}</b><small>${a.count} ${t('invoices')}</small></div><div class="kpi"><span>${t('cogs')}</span><b>${fmtIQD(a.cogs)}</b><small>${usdEq(a.cogs)}</small></div><div class="kpi"><span>${t('gross')}</span><b>${fmtIQD(a.gross)}</b><small>${a.revenue?fmtN(a.gross/a.revenue*100,1)+'% '+t('margin'):''}</small></div><div class="kpi"><span>${t('collected')}</span><b>${fmtIQD(a.collected)}</b><small>${t('ofPeriod')}</small></div></div>
   ${isUserRole()?'':`<div class="seg" style="gap:6px"><button class="btn sm ghost" data-act="goRep" data-id="sales">${t('repMoreRep')} · ${t('rt_sales')}</button><button class="btn sm ghost" data-act="goRep" data-id="debts">${t('repMoreRep')} · ${t('rt_debts')}</button></div>`}
@@ -3023,7 +3064,7 @@ document.addEventListener('click',e=>{
     case 'fixSalePaid':if(canWrite)fixPaid('sales');break;
     case 'fixPurPaid':if(canWrite)fixPaid('purchases');break;
     case 'prodInfo':if(isUserRole()){toast(t('noPerm'));break}prodInfoForm(id);break;
-    case 'newSale':if(need())saleForm({},a.dataset.pid||'');break;case 'editSale':saleForm(byId('sales',id));break;
+    case 'newSale':if(need())saleForm({},a.dataset.pid||'');break;case 'quickSvc':if(need())svcForm(a.dataset.pid||'');break;case 'editSale':saleForm(byId('sales',id));break;
     case 'newPurchase':if(need())purchaseForm();break;case 'editPurchase':voOpen(()=>purchaseForm(byId('purchases',id)));break;
     case 'newExpense':if(need())expenseForm();break;case 'editExpense':voOpen(()=>expenseForm(byId('expenses',id)));break;case 'editCat':catForm(id);break;
     case 'newPartner':if(need())partnerForm({},a.dataset.scope);break;case 'editPartner':voOpen(()=>partnerForm(byId('partners',id)));break;
