@@ -177,7 +177,10 @@ tr.total td{font-weight:600;background:var(--bg)}
 .rxline{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;direction:ltr}
 .ov{position:fixed;inset:0;z-index:20;background:rgb(10 20 22 / .45);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:max(16px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
 .md{background:var(--surface);border-radius:14px;width:min(860px,100%);border:1px solid var(--line);margin-block:auto}
-.md header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line);gap:10px}
+.md header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line);gap:10px;position:sticky;top:calc(-1 * max(16px,env(safe-area-inset-top,0px)));z-index:6;background:var(--surface);border-radius:14px 14px 0 0;flex-wrap:wrap}
+.mdPat{flex:1 1 200px;min-width:0;max-width:100%;font-size:.95rem;background:var(--soft);border:1px solid var(--accent,var(--pri));border-radius:99px;padding:5px 14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mdPat b{font-weight:700}@media (max-width:640px){.mdPat{order:3;flex-basis:100%}}
+.attbox{display:grid;gap:10px}.attg{display:flex;flex-wrap:wrap;gap:10px}.attt{position:relative;display:inline-block}.attimg{width:88px;height:88px;border:1px solid var(--line);border-radius:10px;overflow:hidden;padding:0;background:var(--soft);cursor:pointer;display:grid;place-items:center;color:var(--ink);font:inherit}.attimg img{width:100%;height:100%;object-fit:cover;display:block}.attimg small{display:block;font-size:.65rem;padding:0 4px;word-break:break-all}.attx{position:absolute;top:-7px;inset-inline-end:-7px;width:26px;height:26px;border-radius:50%;border:2px solid var(--surface);background:#C0392B;color:#fff;cursor:pointer;font-size:.75rem;line-height:1}
+#attOv{position:fixed;inset:0;z-index:10002;background:rgb(0 0 0 / .9);display:flex;flex-direction:column}#attOv .attH{display:flex;gap:8px;justify-content:space-between;align-items:center;padding:max(10px,env(safe-area-inset-top,0px)) 12px 10px;color:#fff}#attOv .attB{flex:1;overflow:auto;display:grid;place-items:center;padding:8px}#attOv .attB img{max-width:100%;height:auto}
 .md .body{padding:16px 18px;display:grid;gap:16px}.qrep{gap:8px;flex-wrap:wrap}.draftbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;border-radius:10px;background:var(--soft);border:1px dashed var(--accent,var(--pri))}.taw{position:relative}.ta{position:absolute;inset-inline:0;top:100%;z-index:40;margin-top:2px;background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:0 8px 22px rgba(0,0,0,.14);max-height:260px;overflow:auto;display:grid}.tai{text-align:start;padding:10px 12px;border:0;border-bottom:1px solid var(--line);background:none;font:inherit;color:var(--ink);cursor:pointer}.tai:last-child{border-bottom:0}.tai:hover,.tai:focus{background:var(--soft)}.fxl{display:grid;gap:6px}.fxr{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:10px}.fxr.done{opacity:.75}.fxc{flex:1 1 200px;display:flex;align-items:center;gap:8px;cursor:pointer}.fxc input{width:20px;height:20px}.fxa{display:flex;align-items:center;gap:4px}.fxa input{width:130px}.sdobox{display:grid;gap:8px;padding:10px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px}.sdobox .seg{gap:6px;flex-wrap:wrap;margin-top:4px}.sdo{cursor:pointer;display:inline-flex;gap:4px;align-items:center}.qrep .btn{flex:1 1 220px;padding:12px 14px;font-weight:600;border-color:var(--pri,#0b6b8a);color:var(--pri,#0b6b8a)}:root[data-theme="dark"] .qrep .btn{border-color:var(--sky);color:var(--sky)}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .qrep .btn{border-color:var(--sky);color:var(--sky)}}.vofs{border:0;padding:0;margin:0;min-width:0;display:grid;gap:16px}.note.vo{margin:0;padding:8px 10px;border-radius:8px;background:var(--soft,rgba(0,0,0,.05))}
 .md footer{display:flex;gap:8px;flex-wrap:wrap;padding:12px 18px;border-top:1px solid var(--line)}
 fieldset,details.sec{border:1px solid var(--line);border-radius:10px;padding:12px;margin:0;display:grid;gap:12px;min-width:0}
@@ -215,9 +218,9 @@ label.chk input{width:auto}
 .whh{text-align:center;font-weight:600;color:var(--muted);font-size:.85rem;direction:ltr}
 .whr{display:flex;gap:8px;align-items:stretch}.whw{position:relative;height:200px;flex:1}.whs{width:16px;border-radius:99px;background:var(--soft);border:1px solid var(--line);position:relative;cursor:pointer;touch-action:none}.wht{position:absolute;left:1px;right:1px;top:0;height:34px;border-radius:99px;background:var(--accent);opacity:.85}
 .whband{position:absolute;inset-inline:0;top:80px;height:40px;border-radius:10px;background:var(--soft);border:1.5px solid var(--accent);pointer-events:none}
-.whl{position:relative;height:200px;overflow-y:auto;cursor:grab;scroll-snap-type:y mandatory;overscroll-behavior:contain;scrollbar-width:none;outline:none;-webkit-mask-image:linear-gradient(transparent,#000 30%,#000 70%,transparent);mask-image:linear-gradient(transparent,#000 30%,#000 70%,transparent)}
-.whl::-webkit-scrollbar{display:none}.whl:before,.whl:after{content:"";display:block;height:80px}
-.whi{height:40px;line-height:40px;text-align:center;scroll-snap-align:center;font-size:1.15rem;font-variant-numeric:tabular-nums;direction:ltr;cursor:pointer;color:var(--ink);user-select:none}
+.whl{position:relative;height:200px;overflow:hidden;cursor:grab;touch-action:none;overscroll-behavior:contain;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;scrollbar-width:none;outline:none;-webkit-mask-image:linear-gradient(transparent,#000 30%,#000 70%,transparent);mask-image:linear-gradient(transparent,#000 30%,#000 70%,transparent)}
+.whl::-webkit-scrollbar{display:none}.whtr{will-change:transform}.whi.cur{text-decoration:underline;text-underline-offset:5px;text-decoration-thickness:2px}.whc{color:var(--ink);font-weight:700;margin-inline-start:6px}
+.whi{height:40px;line-height:40px;text-align:center;font-size:1.15rem;font-variant-numeric:tabular-nums;direction:ltr;cursor:pointer;color:var(--ink);user-select:none}
 .whi.neg{color:var(--od)}.whi.pos{color:var(--good)}.chat{display:grid;grid-template-columns:270px 1fr;height:calc(100dvh - 190px);min-height:440px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--surface)}
 .chat.single{grid-template-columns:1fr;grid-template-rows:1fr}.chat.single .chRooms{display:none!important}.chRooms{border-inline-end:1px solid var(--line);overflow-y:auto;display:grid;align-content:start}
 .chr{display:flex;gap:10px;align-items:center;text-align:start;background:none;border:0;border-bottom:1px solid var(--line);padding:10px 12px;font:inherit;color:inherit;cursor:pointer;min-width:0}
@@ -249,9 +252,9 @@ label.chk input{width:auto}
 .tcard.pri-high{border-inline-start-color:var(--warn)}.tcard.pri-urgent{border-inline-start-color:var(--bad)}.tcard.pri-low{border-inline-start-color:var(--good)}
 .tdesc{font-size:.82rem;white-space:pre-wrap}.tav{display:flex;gap:3px}.tav span{width:24px;height:24px;border-radius:50%;background:var(--accent);color:var(--accent-ink,#fff);display:grid;place-items:center;font-size:.75rem;font-weight:700}
 .tmv{justify-content:flex-end}.tcm{border-inline-start:3px solid var(--line);padding-inline-start:8px}
-.whi.on{font-weight:700;font-size:1.35rem}.whi:hover{background:color-mix(in srgb,var(--accent,#01558E) 8%,transparent);border-radius:8px}.whi.hit{background:color-mix(in srgb,var(--accent,#01558E) 18%,transparent);border-radius:8px}
+.whi.on{font-weight:700;font-size:1.35rem}@media (hover:hover){.whi:hover{background:color-mix(in srgb,var(--accent,#01558E) 8%,transparent);border-radius:8px}}.whi.hit{background:color-mix(in srgb,var(--accent,#01558E) 18%,transparent);border-radius:8px}
 .whb{display:flex;gap:8px;justify-content:space-between}.whb .primary{flex:1}
-.sheet .whw,.sheet .whl{height:240px}.sheet .whs{width:26px}.sheet .whband{top:100px}.sheet .whl:before,.sheet .whl:after{height:100px}
+.sheet .whw,.sheet .whl{height:280px}.sheet .whs{width:34px}.sheet .whband{top:120px}.sheet .whi{font-size:1.25rem}
 .banner{border:1px solid var(--warn);color:var(--warn);background:var(--surface);border-radius:10px;padding:10px 14px;font-size:.9rem}
 .sum{display:grid;gap:4px}
 .sum .row{display:flex;gap:16px;justify-content:space-between;max-width:340px}
@@ -512,7 +515,7 @@ const D={
  g_men:['رجالي','Men'],g_women:['نسائي','Women'],g_kids:['أطفال','Kids'],g_uni:['للجنسين','Unisex'],
  back:['→','←'],langBtn:['English','عربي'],
  printInv:['طباعة الفاتورة','Print invoice'],printRx:['طباعة الوصفة','Print Rx'],print:['طباعة','Print'],dlPrint:['تحميل الملف للطباعة','Download file to print'],printHint:['إذا لم تظهر نافذة الطباعة، حمّل الملف وافتحه في المتصفح ثم اطبعه.','If the print dialog does not appear, download the file, open it in your browser and print it.'],
- printAfter:['فتح الفاتورة للطباعة بعد الحفظ','Open the invoice for printing after saving'],sendInvWa:['واتساب (نص)','WhatsApp (text)'],invoice:['فاتورة','Invoice'],whClear:['مسح','Clear'],whFast:['اسحب على الشريط للانتقال السريع','Drag along the bar to jump fast'],whDone:['تم','Done'],whType:['الكتابة بلوحة المفاتيح','Type with the keyboard'],claimNote:['ملاحظة مدة المطالبة (تظهر في كل فاتورة)','Claim period note (shown on every invoice)'],invFooter:['ملاحظة أسفل الفاتورة (سياسة الاستبدال، الضمان…)','Invoice footer note (returns policy, warranty…)'],paper:['حجم ورق الطباعة','Print paper size'],thermal:['ورق حراري 80mm','80mm thermal'],
+ printAfter:['فتح الفاتورة للطباعة بعد الحفظ','Open the invoice for printing after saving'],sendInvWa:['واتساب (نص)','WhatsApp (text)'],invoice:['فاتورة','Invoice'],whClear:['مسح','Clear'],curGlT:['بالنظارة الحالية: حدة البصر ومعها درجة النظارة · اختياري','With current glasses: VA together with the glasses Rx · optional'],attT:['مرفقات الفحص (أوتوريف، أوراق، وصفات)','Exam attachments (autorefractor, papers, prescriptions)'],attCam:['تصوير بالكاميرا','Take photo'],attPick:['إرفاق صورة أو PDF','Attach image or PDF'],attHint:['تُحفظ المرفقات في ملف المريض مع هذا الفحص عند الضغط على حفظ.','Attachments are saved in the patient file with this exam when you press Save.'],attErr:['تعذّر رفع المرفق:','Could not upload the attachment:'],waNoApp:['لم يُفتح تطبيق واتساب على هذا الجهاز؟','WhatsApp app did not open on this device?'],waWeb:['افتح واتساب ويب','Open WhatsApp Web'],whFast:['اسحب على الشريط للانتقال السريع','Drag along the bar to jump fast'],whDone:['تم','Done'],whType:['الكتابة بلوحة المفاتيح','Type with the keyboard'],claimNote:['ملاحظة مدة المطالبة (تظهر في كل فاتورة)','Claim period note (shown on every invoice)'],invFooter:['ملاحظة أسفل الفاتورة (سياسة الاستبدال، الضمان…)','Invoice footer note (returns policy, warranty…)'],paper:['حجم ورق الطباعة','Print paper size'],thermal:['ورق حراري 80mm','80mm thermal'],
  rxTitle:['وصفة نظارة طبية','Spectacle prescription'],signature:['توقيع الفاحص','Examiner signature'],printSec:['الطباعة','Printing'],
  ntTitle:['الإشعارات','Notifications'],ntReadAll:['تعليم الكل كمقروء','Mark all read'],ntDevice:['تفعيل إشعارات الجهاز','Turn on device notifications'],ntDeviceOn:['إشعارات الجهاز مفعّلة','Device notifications are on'],ntDeviceNo:['إشعارات الجهاز غير متاحة هنا. التنبيهات تظهر داخل البرنامج.','Device notifications are not available here. Alerts show inside the app.'],ntSoundOn:['🔊 الصوت مفعّل','🔊 Sound on'],ntSoundOff:['🔇 الصوت مطفأ','🔇 Sound off'],ntTest:['تجربة','Test'],ntTestT:['إشعار تجريبي','Test notification'],ntTestB:['الصوت والنافذة المنبثقة يعملان','Sound and pop-up are working'],ntIos:['على الآيفون والآيباد: افتح الموقع في Safari ← زر المشاركة ← «إضافة إلى الشاشة الرئيسية»، ثم افتح التطبيق من أيقونته وفعّل الإشعارات.','On iPhone/iPad: open the site in Safari → Share → “Add to Home Screen”, then open the app from its icon and turn notifications on.'],ntDenied:['الإشعارات محظورة لهذا الموقع. فعّلها من إعدادات المتصفح أو الجهاز (الإشعارات ← EYECON).','Notifications are blocked for this site. Allow them in the browser or device settings.'],ntEmpty:['لا توجد إشعارات.','No notifications.'],ntNow:['الآن','now'],ntMin:['د','min'],ntHr:['س','h'],ntChat:['رسالة جديدة','New message'],ntMention:['ذُكر اسمك','You were mentioned'],ntVoice:['رسالة صوتية','Voice note'],ntImage:['صورة','Image'],ntTaskNew:['مهمة أُسندت إليك','Task assigned to you'],ntTaskLate:['مهمة متأخرة','Overdue task'],ntTaskToday:['مهمة مستحقة اليوم','Task due today'],ntTaskReview:['مهمة بانتظار مراجعتك','Task waiting for your review'],ntTaskCmt:['تعليق جديد','New comment'],ntReady:['نظارة جاهزة: أبلغ الزبون للاستلام','Glasses ready: tell the customer'],ntLate:['طلب تجاوز موعد التسليم','Order past its ready-by date'],ntFollow:['موعد مراجعة مريض','Patient follow-up due'],ntLow:['مواد قليلة أو نفدت','Low or out-of-stock items'],ntExpiring:['عدسات لاصقة قريبة الانتهاء','Contact lenses expiring soon'],ntItems:['صنف','items'],ntDebts:['ديون أقدم من 30 يوماً','Debts older than 30 days'],ntRate:['سعر الصرف لم يُحدَّث اليوم','Exchange rate not updated today'],rxNotes:['ملاحظات الوصفة','Rx notes'],rxNotesPh:['تظهر أسفل الوصفة عند الطباعة وفي ملف PDF','Shown under the Rx when printed or saved as PDF'],lgTitle:['كشف حركة الصناديق','Box ledger'],lgSale:['قبض فاتورة بيع','Sale receipt'],lgPurch:['دفع لمورد','Supplier payment'],lgExp:['مصروف','Expense'],lgWd:['سحب شريك','Partner withdrawal'],lgDist:['توزيع أرباح','Profit distribution'],lgDoc:['المستند / البيان','Document'],lgParty:['الجهة','Party'],lgBy:['المستخدم','User'],lgIn:['داخل','In'],lgOut:['خارج','Out'],lgBal:['الرصيد','Balance'],lgOpen:['الرصيد الافتتاحي','Opening balance'],lgClose:['الرصيد الختامي','Closing balance'],lgTotals:['المجموع','Totals'],lgMoves:['حركة','moves'],lgNone:['لا توجد حركات في هذه الفترة.','No movements in this period.'],lgHint:['كل سطر مأخوذ من مستنده الأصلي (فاتورة، شراء، مصروف، سند، صرف عملة). اضغط على السطر لفتح مستنده. رصيد الصناديق هو مجموع هذه الحركات نفسها، لذلك يتطابقان دائماً.','Every line comes from its source document (invoice, purchase, expense, voucher, exchange). Tap a line to open it. Box balances are the sum of these same lines, so they always agree.'],lgWarn:['سحب بدون سند دفع أو بدون فرع','Withdrawal without a voucher or a branch'],lgNoBranch:['سحوبات قديمة بدون فرع','Older withdrawals with no branch'],holdAll:['مجموع كل الصناديق في كل الفروع','All boxes, all branches'],holdT:['تقرير موجودات الصناديق','Box holdings report'],holdNote:['الموجود الآن في كل صندوق حسب الفرع والعملة','What each box holds now, by branch and currency'],vouchersMade:['سند دفع','payment vouchers'],vParts:['تفاصيل الصرف','Paid from'],vt_dist:['توزيع أرباح','Profit distribution'],bx_mixed:['عدة صناديق','Several boxes'],wdInDist:['هذا السحب جزء من توزيع أرباح. يُعرض سنده، ولحذفه احذف التوزيع أو السند.','This withdrawal is part of a profit distribution. Its voucher is shown; to remove it, delete the distribution or the voucher.'],
 fhTitle:['فحص سلامة الحسابات','Accounts health check'],fhOk:['كل الحركات المالية مرتبطة بمستنداتها وبصناديقها، والمبالغ المدفوعة مطابقة.','Every money movement is linked to its document and box, and paid amounts match.'],fhFix:['إصلاح','Fix'],fhDone:['تم الإصلاح:','Fixed:'],fhNote:['يُفحص تلقائياً عند كل فتح للحسابات.','Checked automatically each time Accounts opens.'],
@@ -594,7 +597,11 @@ function vaPick(sel){const cur=sel.value,lab=(sel.getAttribute('aria-label')||''
   ov.addEventListener('click',e=>{if(e.target===ov||e.target.closest('[data-vx]')){close();return}const b=e.target.closest('[data-vv]');if(!b)return;sel.value=b.dataset.vv;sel.dispatchEvent(new Event('input',{bubbles:true}));sel.dispatchEvent(new Event('change',{bubbles:true}));close()});
   document.addEventListener('keydown',kd,true);document.body.appendChild(ov);(ov.querySelector('.on')||ov.querySelector('.vag button')).scrollIntoView({block:'nearest'})}
 document.addEventListener('mousedown',e=>{const s=e.target.closest&&e.target.closest('select');if(vaPickable(s)&&e.button===0){e.preventDefault();vaPick(s)}},true);
-document.addEventListener('touchend',e=>{const s=e.target.closest&&e.target.closest('select');if(vaPickable(s)&&e.changedTouches.length===1){e.preventDefault();vaPick(s)}},{capture:true,passive:false});
+/* touch: only a real tap opens it; a finger scrolling the page over the list does not */
+let vaT=null;document.addEventListener('touchstart',e=>{const s=e.target.closest&&e.target.closest('select');vaT=vaPickable(s)&&e.touches.length===1?{s,x:e.touches[0].clientX,y:e.touches[0].clientY,t:Date.now()}:null},{capture:true,passive:true});
+document.addEventListener('touchmove',e=>{if(vaT&&e.touches[0]&&Math.hypot(e.touches[0].clientX-vaT.x,e.touches[0].clientY-vaT.y)>10)vaT=null},{capture:true,passive:true});
+document.addEventListener('scroll',()=>{vaT=null},{capture:true,passive:true});
+document.addEventListener('touchend',e=>{const s=e.target.closest&&e.target.closest('select');if(!vaPickable(s)||e.changedTouches.length!==1)return;if(e.cancelable)e.preventDefault();const ok=vaT&&vaT.s===s&&Date.now()-vaT.t<900;vaT=null;if(ok)vaPick(s)},{capture:true,passive:false});
 const NVA=['','N3','N4','N5','N6','N8','N10','N12','N14','N18','N24','N36','N48'];
 const CYCLO=[['none','dry'],['cyclopentolate1','Cyclopentolate 1%'],['cyclopentolate05','Cyclopentolate 0.5%'],['atropine1','Atropine 1%'],['atropine05','Atropine 0.5%'],['tropicamide1','Tropicamide 1%']];
 const EXP_CATS=['c_rent','c_salary','c_power','c_maint','c_transport','c_ads','c_supplies','c_tax','c_other'];
@@ -718,6 +725,20 @@ const brF=(val,extra='')=>{if(!multi())return '';if(curBranch==='all')return fs(
 function normPhone(raw){let d=String(raw||'').replace(/\D/g,'');if(!d)return '';if(d.startsWith('00'))d=d.slice(2);if(d.startsWith('0')&&d.length===11)d='964'+d.slice(1);else if(d.length===10&&d.startsWith('7'))d='964'+d;return d}
 function phoneOk(raw){const r=String(raw||'').replace(/\D/g,'');if(r.startsWith('0')&&!r.startsWith('00')&&r.length!==11)return false;const d=normPhone(raw);if(!d)return true;if(d.startsWith('964'))return /^9647\d{9}$/.test(d);return d.length>=8&&d.length<=15}
 function waLink(phone,text){return 'https://wa.me/'+normPhone(phone)+(text?'?text='+encodeURIComponent(text):'')}
+/* v118: open the WhatsApp app installed on this device straight in the customer's chat (whatsapp://send works for WhatsApp and WhatsApp Business on Android, iPhone, Windows and Mac).
+   If no app answers, a small bar offers the web version (never opened automatically, so the app page is not left). */
+function waAppUrl(href){try{const u=new URL(href);let ph='',tx=u.searchParams.get('text')||'';
+    if(/(^|\.)wa\.me$/.test(u.hostname))ph=u.pathname.replace(/\D/g,'');else if(/whatsapp\.com$/.test(u.hostname))ph=(u.searchParams.get('phone')||'').replace(/\D/g,'');else return null;
+    return 'whatsapp://send?'+(ph?'phone='+ph+(tx?'&':''):'')+(tx?'text='+encodeURIComponent(tx):'')}catch(_){return null}}
+function waGo(href){const app=waAppUrl(href);if(!app){window.open(href,'_blank','noopener');return}
+  let left=false;const mark=()=>{left=true};const onVis=()=>{if(document.hidden)left=true};window.addEventListener('blur',mark,{once:true});document.addEventListener('visibilitychange',onVis);
+  const mob=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||coarse();
+  try{location.href=app}catch(_){}
+  setTimeout(()=>{window.removeEventListener('blur',mark);document.removeEventListener('visibilitychange',onVis);if(left)return;
+    let b=document.getElementById('waFb');if(b)b.remove();b=document.createElement('div');b.id='waFb';b.className='toast';b.style.cssText='display:flex;gap:10px;align-items:center;z-index:10001';
+    b.innerHTML=`<span>${esc(t('waNoApp'))}</span><a href="#" style="color:inherit;font-weight:700;text-decoration:underline">${esc(t('waWeb'))}</a><button type="button" style="all:unset;cursor:pointer;padding:0 4px">✕</button>`;
+    b.querySelector('a').onclick=e=>{e.preventDefault();b.remove();window.open(mob?href:'https://web.whatsapp.com/send?'+app.split('?')[1],'_blank','noopener')};b.querySelector('button').onclick=()=>b.remove();document.body.appendChild(b);setTimeout(()=>b.isConnected&&b.remove(),12000)},mob?2500:1800)}
+document.addEventListener('click',e=>{const a=e.target.closest&&e.target.closest('a[href]');if(!a||e.defaultPrevented||e.button>0||e.ctrlKey||e.metaKey||e.shiftKey)return;if(!/^https:\/\/(wa\.me|api\.whatsapp\.com|(www\.)?whatsapp\.com\/send)/.test(a.href))return;e.preventDefault();waGo(a.href)});
 function tpl(type,l){const s=S.settings.tpl||{};return (s[type]&&s[type][l])||TPL_DEFAULT[type][l==='ar'?0:1]}
 const fillTpl=(str,v)=>str.replace(/\{(\w+)\}/g,(m,k)=>v[k]!=null&&v[k]!==''?v[k]:m);
 /* customer messages name the shop by the branch the record belongs to, so one branch never speaks with another's name */
@@ -787,9 +808,14 @@ function openModal(title,bodyHTML,{onSubmit,submitLabel=t('save'),extraFooter=''
   form.querySelectorAll('[data-close]').forEach(b=>b.onclick=closeModal);
   $('#ov').addEventListener('mousedown',e=>{if(e.target.id==='ov'&&!e.target.dataset.locked&&!keepOpen)closeModal()});
   form.onsubmit=async e=>{e.preventDefault();if(!onSubmit)return;const b=form.querySelector('[type=submit]');b.disabled=true;const ok=await onSubmit(form);b.disabled=false;if(ok!==false){draftDone(form);if(form.isConnected){MDCLOSE=null;closeModal()}}};
-  hPush('o');if(onMount)onMount(form);if(onSubmit&&!locked)try{draftWire(form,title)}catch(_){}if(vo)form.querySelectorAll('footer .danger,footer [id^=del],footer #gDel').forEach(b=>b.remove());
+  hPush('o');if(onMount)onMount(form);patBadge(form);if(onSubmit&&!locked)try{draftWire(form,title)}catch(_){}if(vo)form.querySelectorAll('footer .danger,footer [id^=del],footer #gDel').forEach(b=>b.remove());
   const first=form.querySelector('input:not([readonly]),select,textarea');if(first)first.focus({preventScroll:true});
   return form}
+/* v118: the chosen customer's name stays in the window header (sticky) through the whole exam / sale form */
+function patBadge(form){const sel=form.querySelector('#f_patientId');if(!sel)return;const h=form.querySelector('header h3');if(!h)return;const b=document.createElement('span');b.className='mdPat';b.hidden=true;h.after(b);const cu=form.querySelector('#f_customer');
+  const up=()=>{const p=sel.value&&byId('patients',sel.value),nm=p?p.name:(cu&&cu.value.trim());b.hidden=!nm;if(!nm){b.innerHTML='';return}const a=p?patientAge(p):'';
+    const html=`👤 <b>${esc(nm)}</b>${p&&p.code?` <span class="ltr muted">${esc(p.code)}</span>`:''}${a!==''&&a!=null?` <span class="muted">· ${esc(a)} ${t('years')}</span>`:''}`;if(b.innerHTML!==html)b.innerHTML=html};
+  form.addEventListener('change',up);form.addEventListener('input',up);form.addEventListener('click',()=>setTimeout(up,60));up()}
 /* Saved records open read-only for staff: only the owner and manager may change or delete them (the server enforces the same through settings/rules) */
 let VO=false;const voOpen=fn=>{VO=!isMgr();try{fn()}finally{VO=false}};
 /* day / night mode: the choice is kept on this device; without one the app follows the device setting */
@@ -826,6 +852,7 @@ function hTrack(){const n=JSON.stringify(navNow());if(n===hNav)return;const firs
 function hApply(n){view=n.v;UI.patientId=n.p;UI.campId=n.c;if(n.r)UI.chatRoom=n.r;hNav=JSON.stringify(navNow());render();window.scrollTo(0,0)}
 if(hOk)addEventListener('popstate',e=>{const s=e.state||{};
   if($('#whOv')){closeWheel();return}
+  if($('#attOv')){$('#attOv').remove();return}
   if(ntOpen){ntOpen=false;ntRender();return}
   const o=$('#ov');if(o){if(o.dataset.locked)hPush('o');else closeModal();return}
   if(s.nav){if(JSON.stringify(s.nav)!==JSON.stringify(navNow()))hApply(s.nav);else history.back();return}
@@ -852,57 +879,79 @@ function whKind(el){if(!el||el.tagName!=='INPUT'||el.type!=='number'||el.disable
 function whVals(k){const a=[];if(k==='axis')for(let i=1;i<=180;i++)a.push(i);else if(k==='add')for(let i=1;i<=16;i++)a.push(i*.25);else for(let i=-120;i<=120;i++)a.push(i*.25);return a}
 const whFmt=(k,v)=>k==='axis'?String(v)+'°':(v>0?'+':v<0?'-':'')+Math.abs(v).toFixed(2);
 function whLabel(el){const f=el.closest('label');if(f){const sp=f.querySelector('span');if(sp)return sp.textContent.trim()}const n=el.name||'';const m=n.match(/\.(od|os)\.(\w+)$/);return m?(m[1]==='od'?'R':'L')+' · '+m[2].toUpperCase():n}
+/* v118 wheel: the list moves only under the finger/mouse (no native scrolling, no snapping), so it never changes the value by itself.
+   The value is written only when the user taps a value, presses ✓ / Enter; tapping outside, Esc or Back leaves it unchanged. */
 let whCur=null;
-function closeWheel(){const o=$('#whOv');if(o){o.remove();document.removeEventListener('keydown',whKey,true)}if(whCur){cancelAnimationFrame(whCur.raf);whCur=null}}
-function whKey(e){if(!whCur)return;if(e.key==='Escape'||e.key==='Enter'){e.preventDefault();e.stopPropagation();closeWheel();return}if(e.key==='ArrowUp'||e.key==='ArrowDown'||e.key==='PageUp'||e.key==='PageDown'){e.preventDefault();e.stopPropagation();whCur.step((e.key.endsWith('Up')?-1:1)*(e.key.startsWith('Page')?10:1))}}
+function closeWheel(){const o=$('#whOv');if(o){o.remove();document.removeEventListener('keydown',whKey,true)}if(whCur){cancelAnimationFrame(whCur.raf);removeEventListener('resize',whCur.rs);whCur=null}}
+function whKey(e){if(!whCur)return;if(e.key==='Escape'){e.preventDefault();e.stopPropagation();closeWheel();return}if(e.key==='Enter'){e.preventDefault();e.stopPropagation();whCur.done();return}
+  if(e.key==='ArrowUp'||e.key==='ArrowDown'||e.key==='PageUp'||e.key==='PageDown'){e.preventDefault();e.stopPropagation();whCur.step((e.key.endsWith('Up')?-1:1)*(e.key.startsWith('Page')?10:1))}}
 function openWheel(el){closeWheel();const k=whKind(el);if(!k)return;
   const V=whVals(k),N=V.length,loop=k==='axis',R=loop?5:1,MID=loop?2*N:0,cur=el.value===''?null:num(el.value);
   const near=x=>V.reduce((b,v,i)=>Math.abs(v-x)<Math.abs(V[b]-x)?i:b,0);
-  const v0=cur==null?near(k==='axis'?90:k==='add'?1:0):near(loop&&cur===0?180:cur);
-  const items=[];for(let r=0;r<R;r++)V.forEach((v,i)=>items.push(`<div class="whi${v<0?' neg':v>0&&k!=='axis'?' pos':''}" data-p="${r*N+i}">${whFmt(k,v)}</div>`));
-  const ov=document.createElement('div');ov.id='whOv';ov.innerHTML=`<div class="whp" role="dialog" aria-label="${esc(whLabel(el))}"><div class="whh">${esc(whLabel(el))}</div>
-   <div class="whr"><div class="whw"><div class="whband"></div><div class="whl" tabindex="0">${items.join('')}</div></div><div class="whs" title="${t('whFast')}"><div class="wht"></div></div></div>
+  const v0=cur==null?near(k==='axis'?90:k==='add'?1:0):near(loop&&cur===0?180:cur),sel=cur==null?-1:v0;
+  const items=[];for(let r=0;r<R;r++)V.forEach((v,i)=>items.push(`<div class="whi${v<0?' neg':v>0&&k!=='axis'?' pos':''}${i===sel?' cur':''}">${whFmt(k,v)}</div>`));
+  const ov=document.createElement('div');ov.id='whOv';ov.innerHTML=`<div class="whp" role="dialog" aria-label="${esc(whLabel(el))}"><div class="whh">${esc(whLabel(el))}${cur!=null?` <span class="whc">${whFmt(k,V[v0])}</span>`:''}</div>
+   <div class="whr"><div class="whw"><div class="whband"></div><div class="whl" tabindex="0"><div class="whtr">${items.join('')}</div></div></div><div class="whs" title="${t('whFast')}"><div class="wht"></div></div></div>
    <div class="whb"><button type="button" class="btn sm ghost" data-w="clr">${t('whClear')}</button><button type="button" class="btn sm ghost" data-w="kb" title="${t('whType')}">⌨</button><button type="button" class="btn sm primary" data-w="ok">✓ ${t('whDone')}</button></div></div>`;
-  document.body.appendChild(ov);hPush('o');const pnl=ov.querySelector('.whp'),L=ov.querySelector('.whl'),S2=ov.querySelector('.whs'),TH=ov.querySelector('.wht');
+  document.body.appendChild(ov);hPush('o');const pnl=ov.querySelector('.whp'),L=ov.querySelector('.whl'),TR=ov.querySelector('.whtr'),S2=ov.querySelector('.whs'),TH=ov.querySelector('.wht'),IT=TR.children;
   const r=el.getBoundingClientRect();if(innerWidth>=700){const w=260,h=pnl.offsetHeight;let x=Math.min(Math.max(8,r.left+r.width/2-w/2),innerWidth-w-8),y=r.bottom+6;if(y+h>innerHeight-8)y=Math.max(8,r.top-h-6);Object.assign(pnl.style,{left:x+'px',top:y+'px',width:w+'px'})}else pnl.classList.add('sheet');
-  const st={p:MID+v0,touched:false,prog:0,raf:0,drag:null,onEl:null};whCur=st;
-  const vi=()=>((st.p%N)+N)%N;
-  const mark=()=>{const e=L.querySelector(`[data-p="${st.p}"]`);if(st.onEl&&st.onEl!==e)st.onEl.classList.remove('on');if(e)e.classList.add('on');st.onEl=e;const tr=S2.clientHeight-TH.offsetHeight;TH.style.transform=`translateY(${N>1?vi()/(N-1)*tr:0}px)`};
-  const commit=()=>{if(!st.touched)return;const v=V[vi()],nv=k==='axis'?String(v):v.toFixed(2);if(el.value!==nv){el.value=nv;el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}))}};
-  const recenter=()=>{if(!loop)return;if(st.p<N||st.p>=4*N){const d=(MID+vi())-st.p;st.p+=d;L.style.scrollSnapType='none';L.scrollTop+=d*WH_H;if(!st.drag&&!st.raf)requestAnimationFrame(()=>{L.style.scrollSnapType=''})}};
-  const go=(p,smooth)=>{st.p=Math.max(0,Math.min(R*N-1,p));recenter();st.prog=performance.now()+(smooth?450:120);L.scrollTo({top:st.p*WH_H,behavior:smooth?'smooth':'auto'});mark()};
-  st.step=d=>{st.touched=true;go(st.p+d,false);commit()};
-  go(st.p,false);
-  let tm=0;L.addEventListener('scroll',()=>{clearTimeout(tm);if(st.drag||st.raf)return;tm=setTimeout(()=>{if(performance.now()<st.prog)return;const p=Math.round(L.scrollTop/WH_H);if(p!==st.p){st.touched=true;st.p=p;recenter();mark();commit()}},70)},{passive:true});
-  /* mouse wheel / trackpad: faster turning moves more steps */
-  let lastW=0,acc=0;L.addEventListener('wheel',e=>{e.preventDefault();const now=performance.now(),dt=now-lastW;lastW=now;let n;
+  const H=IT[0].offsetHeight||WH_H,now=()=>performance.now();
+  const st={p:MID+v0,touched:false,raf:0,drag:null,onEl:null,t0:now(),downIn:false,bd:false,closing:false};whCur=st;
+  const vi=()=>((Math.round(st.p)%N)+N)%N;
+  const wrap=()=>{if(!loop)return 0;let s=0;while(st.p<N){st.p+=N;s+=N}while(st.p>=4*N){st.p-=N;s-=N}return s};
+  const clamp=()=>{if(!loop)st.p=Math.max(0,Math.min(N-1,st.p))};
+  const draw=()=>{TR.style.transform=`translate3d(0,${(L.clientHeight-H)/2-st.p*H}px,0)`;const e=IT[Math.round(st.p)];if(st.onEl!==e){if(st.onEl)st.onEl.classList.remove('on');if(e)e.classList.add('on');st.onEl=e}
+    const tr=S2.clientHeight-TH.offsetHeight;TH.style.transform=`translateY(${N>1?vi()/(N-1)*tr:0}px)`};
+  const stop=()=>{if(st.raf)cancelAnimationFrame(st.raf);st.raf=0};
+  const animTo=(to,ms=170)=>{stop();const from=st.p,a=now();const f=n=>{const x=Math.min(1,(n-a)/ms);st.p=from+(to-from)*(1-Math.pow(1-x,3));if(x<1){draw();st.raf=requestAnimationFrame(f)}else{st.raf=0;st.p=to;wrap();draw()}};st.raf=requestAnimationFrame(f)};
+  const settle=()=>{clamp();animTo(Math.round(st.p))};
+  /* release speed carries on (faster flick = further), then eases to the nearest value */
+  const fling=v=>{stop();let last=now();const f=n=>{const dt=Math.min(40,n-last);last=n;st.p+=v*dt;v*=Math.pow(0.997,dt);
+      if(!loop&&(st.p<=0||st.p>=N-1)){clamp();draw();st.raf=0;settle();return}wrap();draw();
+      if(Math.abs(v)<0.004){st.raf=0;settle();return}st.raf=requestAnimationFrame(f)};st.raf=requestAnimationFrame(f)};
+  const commit=()=>{const v=V[vi()],nv=k==='axis'?String(v):v.toFixed(2);if(el.value!==nv){el.value=nv;el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}))}};
+  const finish=()=>{if(st.closing)return;st.closing=true;setTimeout(()=>{if(whCur===st)closeWheel()},230)};
+  const pick=i=>{if(st.closing)return;st.touched=true;stop();st.p=i;wrap();draw();commit();if(st.onEl)st.onEl.classList.add('hit');finish()};
+  st.done=()=>{if(st.closing)return;if(st.touched){stop();st.p=Math.round(st.p);clamp();wrap();draw();commit()}closeWheel()};
+  st.step=d=>{if(st.closing)return;stop();st.touched=true;st.p=Math.round(st.p)+d;clamp();wrap();draw()};
+  st.rs=()=>{if(whCur===st)draw()};addEventListener('resize',st.rs);
+  draw();
+  /* finger, pen or mouse: the list follows the pointer exactly */
+  L.addEventListener('pointerdown',e=>{if(e.button>0||st.closing)return;e.preventDefault();const moving=!!st.raf;stop();st.drag={id:e.pointerId,y:e.clientY,p0:st.p,moved:false,stopTap:moving,pts:[[now(),e.clientY]]};try{L.setPointerCapture(e.pointerId)}catch(_){}});
+  L.addEventListener('pointermove',e=>{const d=st.drag;if(!d||e.pointerId!==d.id)return;e.preventDefault();const dy=e.clientY-d.y;if(!d.moved&&Math.abs(dy)<6)return;d.moved=true;st.touched=true;
+    st.p=d.p0-dy/H;clamp();d.p0+=wrap();draw();const tn=now();d.pts.push([tn,e.clientY]);while(d.pts.length>2&&tn-d.pts[0][0]>100)d.pts.shift()});
+  const up=e=>{const d=st.drag;if(!d||e.pointerId!==d.id)return;st.drag=null;
+    if(!d.moved){if(d.stopTap||e.type!=='pointerup'){settle();return}const rc=L.getBoundingClientRect(),i=Math.round(st.p+(e.clientY-rc.top-L.clientHeight/2)/H);if(!loop&&(i<0||i>N-1)){settle();return}pick(i);return}
+    if(e.type!=='pointerup'){settle();return}
+    const tn=now(),a=d.pts[0],b=d.pts[d.pts.length-1];let v=0;if(tn-b[0]<80&&b[0]-a[0]>8)v=-(b[1]-a[1])/(b[0]-a[0]);/* px per ms */
+    if(Math.abs(v)<0.3){settle();return}v=Math.sign(v)*Math.min(Math.abs(v),5);fling(v*(1.2+Math.min(1,Math.abs(v)/2.5))/H)};
+  L.addEventListener('pointerup',up);L.addEventListener('pointercancel',up);L.addEventListener('lostpointercapture',e=>{if(st.drag&&e.pointerId===st.drag.id)up({type:'pointercancel',pointerId:e.pointerId})});
+  /* mouse wheel / trackpad anywhere while open: faster turning moves more steps */
+  let lastW=0,acc=0;ov.addEventListener('wheel',e=>{e.preventDefault();const tn=now(),dt=tn-lastW;lastW=tn;let n;
     if(Math.abs(e.deltaY)<40&&e.deltaMode===0){acc+=e.deltaY;n=Math.trunc(acc/18);acc-=n*18;if(!n)return}else{n=Math.sign(e.deltaY)*(dt<30?6:dt<55?3:dt<90?2:1)}
     st.step(n)},{passive:false});
-  /* mouse drag with momentum (touch already scrolls natively with momentum) */
-  L.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse'||e.button!==0)return;cancelAnimationFrame(st.raf);st.raf=0;st.drag={y:e.clientY,s:L.scrollTop,moved:false,pts:[[performance.now(),e.clientY]]};L.setPointerCapture(e.pointerId);L.style.scrollSnapType='none'});
-  L.addEventListener('pointermove',e=>{const d=st.drag;if(!d)return;const dy=e.clientY-d.y;if(Math.abs(dy)>4)d.moved=true;L.scrollTop=d.s-dy;d.pts.push([performance.now(),e.clientY]);if(d.pts.length>6)d.pts.shift();
-    const p=Math.round(L.scrollTop/WH_H);if(p!==st.p){st.p=p;st.touched=true;if(loop&&(p<N||p>=4*N)){const sh=((MID+vi())-p)*WH_H;L.scrollTop+=sh;d.s+=sh;st.p=MID+vi()}mark()}});
-  const endDrag=e=>{const d=st.drag;if(!d)return;st.drag=null;if(!d.moved){L.style.scrollSnapType='';const it=e.type==='pointerup'&&document.elementFromPoint(e.clientX,e.clientY);pick(it&&it.closest&&it.closest('.whi'));return}
-    const a=d.pts[0],b=d.pts[d.pts.length-1];let v=(b[0]-a[0])>0?(a[1]-b[1])/(b[0]-a[0]):0;v=Math.max(-6,Math.min(6,v));
-    const fin=()=>{st.raf=0;L.style.scrollSnapType='';go(Math.round(L.scrollTop/WH_H),true);commit()};
-    const tick=()=>{L.scrollTop+=v*16;v*=0.94;const p=Math.round(L.scrollTop/WH_H);if(p!==st.p){st.p=p;if(loop&&(p<N||p>=4*N)){L.scrollTop+=((MID+vi())-p)*WH_H;st.p=MID+vi()}mark()}
-      if(Math.abs(v)<0.05||L.scrollTop<=0||L.scrollTop>=L.scrollHeight-L.clientHeight){fin();return}st.raf=requestAnimationFrame(tick)};
-    st.touched=true;if(Math.abs(v)<0.05)fin();else st.raf=requestAnimationFrame(tick)};
-  L.addEventListener('pointerup',endDrag);L.addEventListener('pointercancel',endDrag);
-  /* click or tap a value to choose it directly */
-  const pick=d=>{if(!d||st.raf||performance.now()-(st.picked||0)<300)return;st.picked=performance.now();st.touched=true;go(+d.dataset.p,true);commit();d.classList.add('hit');setTimeout(()=>{if(whCur===st)closeWheel()},320)};
-  L.addEventListener('click',e=>pick(e.target.closest('.whi')));
   /* side bar: drag along it to jump fast through the whole range */
-  const fromBar=e=>{const rc=S2.getBoundingClientRect(),f=Math.max(0,Math.min(1,(e.clientY-rc.top-TH.offsetHeight/2)/(rc.height-TH.offsetHeight)));st.touched=true;go(MID+Math.round(f*(N-1)),false);commit()};
-  let bar=false;S2.addEventListener('pointerdown',e=>{e.preventDefault();bar=true;S2.setPointerCapture(e.pointerId);fromBar(e)});S2.addEventListener('pointermove',e=>{if(bar)fromBar(e)});
+  const fromBar=e=>{const rc=S2.getBoundingClientRect(),f=Math.max(0,Math.min(1,(e.clientY-rc.top-TH.offsetHeight/2)/(rc.height-TH.offsetHeight)));stop();st.touched=true;st.p=MID+Math.round(f*(N-1));draw()};
+  let bar=false;S2.addEventListener('pointerdown',e=>{e.preventDefault();if(st.closing)return;bar=true;try{S2.setPointerCapture(e.pointerId)}catch(_){}fromBar(e)});S2.addEventListener('pointermove',e=>{if(bar)fromBar(e)});
   S2.addEventListener('pointerup',()=>{bar=false});S2.addEventListener('pointercancel',()=>{bar=false});
-  ov.addEventListener('pointerdown',e=>{if(e.target===ov){e.preventDefault();closeWheel()}});
-  ov.querySelector('.whb').addEventListener('click',e=>{const b=e.target.closest('[data-w]');if(!b)return;const w=b.dataset.w;
-    if(w==='clr'){el.value='';el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}))}
+  /* taps that started before the wheel opened (the tap that opened it) are ignored everywhere in it */
+  ov.addEventListener('pointerdown',e=>{st.downIn=true;st.bd=e.target===ov;if(st.bd)e.preventDefault()},true);
+  ov.addEventListener('pointerup',e=>{if(e.target===ov&&st.bd&&now()-st.t0>300)closeWheel();st.bd=false});
+  ov.addEventListener('click',e=>{if(!st.downIn&&e.detail!==0){e.preventDefault();e.stopPropagation();return}const b=e.target.closest('[data-w]');if(!b||st.closing)return;const w=b.dataset.w;
+    if(w==='clr'){el.value='';el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));closeWheel();return}
     if(w==='kb'){el.dataset.kb='1';el.readOnly=false;el.removeAttribute('inputmode');closeWheel();kbAllow();el.focus();return}
-    closeWheel()});
-  document.addEventListener('keydown',whKey,true);setTimeout(()=>{L.focus({preventScroll:true});mark()},0)}
-document.addEventListener('pointerdown',e=>{const el=e.target.closest&&e.target.closest('input');if(!whKind(el))return;e.preventDefault();el.readOnly=true;el.setAttribute('inputmode','none');openWheel(el)});
+    st.done()},true);
+  ov.addEventListener('contextmenu',e=>e.preventDefault());
+  document.addEventListener('keydown',whKey,true);setTimeout(()=>{if(whCur===st){L.focus({preventScroll:true});draw()}},0)}
+/* opening: mouse = press; touch/pen = a real tap only (a finger that scrolls the page over the field never opens it) */
+(()=>{let T=null;
+  document.addEventListener('pointerdown',e=>{T=null;const el=e.target.closest&&e.target.closest('input');if(!whKind(el))return;el.readOnly=true;el.setAttribute('inputmode','none');
+    if(e.pointerType==='mouse'){if(e.button!==0)return;e.preventDefault();openWheel(el);return}T={el,id:e.pointerId,x:e.clientX,y:e.clientY,t:performance.now()}},true);
+  document.addEventListener('pointermove',e=>{if(T&&e.pointerId===T.id&&Math.hypot(e.clientX-T.x,e.clientY-T.y)>10)T=null},true);
+  document.addEventListener('pointercancel',e=>{if(T&&e.pointerId===T.id)T=null},true);
+  document.addEventListener('scroll',()=>{T=null},{capture:true,passive:true});
+  document.addEventListener('pointerup',e=>{if(!T||e.pointerId!==T.id)return;const s=T;T=null;if(performance.now()-s.t>900||!s.el.isConnected)return;const el=e.target.closest&&e.target.closest('input');if(el!==s.el||!whKind(el))return;e.preventDefault();openWheel(el)},true);
+  document.addEventListener('keydown',e=>{const el=e.target;if((e.key==='Enter'||e.key===' '||e.key==='ArrowDown')&&!e.altKey&&!e.ctrlKey&&!e.metaKey&&whKind(el)&&!$('#whOv')){e.preventDefault();el.readOnly=true;el.setAttribute('inputmode','none');openWheel(el)}})})();
 document.addEventListener('focusin',e=>{const el=e.target;if(whKind(el)&&!el.readOnly)el.setAttribute('inputmode','none')});
 function armDelete(btn,fn){if(btn.dataset.armed){fn();return}btn.dataset.armed='1';const o=btn.textContent;btn.textContent=t('confirmDel');setTimeout(()=>{if(btn.isConnected){btn.textContent=o;delete btn.dataset.armed}},3500)}
 const delBtn=(id,label)=>isUserRole()?'':`<button type="button" class="btn danger" id="${id}" style="margin-inline-start:auto">${label}</button>`;
@@ -1218,6 +1267,7 @@ function examCard(e){const rd=drName(e.refDoctor);
     </div>
     ${e.iop&&(e.iop.od||e.iop.os)?`<div><span class="muted">IOP </span><span class="rx"><span class="os">L ${esc(e.iop.os||'—')}</span> · <span class="od">R ${esc(e.iop.od||'—')}</span> mmHg</span></div>`:''}
     ${e.diagnosis?`<div><span class="muted">${t('diagnosis')}: </span>${esc(e.diagnosis)}</div>`:''}${e.notes?`<div><span class="muted">${t('notes')}: </span>${esc(e.notes)}</div>`:''}
+    ${(e.att||[]).length?`<div><span class="muted">📎 ${t('attT')} (${e.att.length})</span><div class="attg" style="margin-top:6px">${e.att.map((a,i)=>`<span class="attt"><button type="button" class="attimg" data-attv="${esc(e.id)}:${i}" title="${esc(a.name||'')}">${attFace(a)}</button></span>`).join('')}</div></div>`:''}
   </article>`}
 
 /* deleting a customer (owner/manager) removes their exams and invoices too: sold items go back to stock, and the invoices' payments leave the boxes with them */
@@ -1500,6 +1550,33 @@ async function feeUpdate(id,o){const amt=feeAmt(o.branchId,o.feeType),nm=feeLine
     W.push(['put',s,{lines,subtotal,discount,total}])}
   for(const [k,s,d] of W){if(k==='del'){if(!await del('sales',s.id))return false}else if(!await put('sales',s.id,{...s,...d}))return false}
   if(o.feeMode==='now'&&amt&&!fs.some(s=>!gone.has(s.id)))await feeInvoice(id,o);return true}
+/* v118: photos / documents in the patient's exam (autorefractor printout, referral letter, old prescription…).
+   The full file goes to the 'files' collection (loaded only when opened); the exam keeps a small thumbnail. Works in every branch. */
+const attFace=a=>a.thumb?`<img src="${a.thumb}" alt="">`:`<span>📄<small>${esc(String(a.name||'').slice(0,16))}</small></span>`;
+function attBox(){return `<div class="attbox"><div class="seg"><label class="btn sm">📷 ${t('attCam')}<input type="file" accept="image/*" capture="environment" hidden class="attIn"></label><label class="btn sm">🖼 ${t('attPick')}<input type="file" accept="image/*,application/pdf" multiple hidden class="attIn"></label></div><div class="attg"></div><p class="note" style="margin:0">${t('attHint')}</p></div>`}
+function wireAtt(f,e){const A={keep:[...(e.att||[])],pend:[],gone:[]},g=f.querySelector('.attg');if(!g)return A;
+  const draw=()=>{g.innerHTML=[...A.keep.map((a,i)=>['k',a,i]),...A.pend.map((a,i)=>['p',a,i])].map(([w,a,i])=>`<span class="attt"><button type="button" class="attimg" data-av="${w}:${i}" title="${esc(a.name||'')}">${attFace(a)}</button><button type="button" class="attx" data-ax="${w}:${i}" aria-label="${esc(t('del'))}">✕</button></span>`).join('')};
+  f.querySelectorAll('.attIn').forEach(inp=>inp.addEventListener('change',async()=>{const fl=[...inp.files];inp.value='';
+    for(const x of fl){try{if(/^image\//.test(x.type)&&!/svg/.test(x.type)){const data=await imgToData(x,1800,0.82),thumb=await imgToData(x,240,0.6);A.pend.push({kind:'img',name:x.name||'photo.webp',mime:data.slice(5,data.indexOf(';')),size:Math.round(data.length*.75),data,thumb})}
+      else{if(x.size>CH_MAX){toast(t('chTooBig'));continue}A.pend.push({kind:'file',name:x.name||'file',mime:x.type||'application/octet-stream',size:x.size,data:await readAsData(x)})}}catch(_){toast(t('chFileErr'))}}
+    draw();f.dispatchEvent(new Event('change'))}));
+  g.addEventListener('click',ev=>{const x=ev.target.closest('[data-ax]');if(x){const [w,i]=x.dataset.ax.split(':');if(w==='k')A.gone.push(...A.keep.splice(+i,1));else A.pend.splice(+i,1);draw();return}
+    const v=ev.target.closest('[data-av]');if(v){const [w,i]=v.dataset.av.split(':');attView(w==='k'?A.keep[+i]:A.pend[+i])}});
+  draw();return A}
+async function attSave(A,o){if(!A)return true;const b=o.branchId||defBranch();
+  try{while(A.pend.length){const p=A.pend[0],fid=await putFile({aud:'br:'+b,room:'',pid:o.patientId||'',name:p.name,mime:p.mime,size:p.size,kind:p.kind,data:p.data});
+      A.keep.push({fid,kind:p.kind,name:p.name,mime:p.mime,size:p.size,...(p.thumb?{thumb:p.thumb}:{}),at:Date.now(),by:myName()});FILE_CACHE[fid]={...p};A.pend.shift()}}
+  catch(e){toast(t('attErr')+' '+errMsg(e));return false}
+  o.att=A.keep.map(({data,...a})=>a);return true}
+function attGone(A){if(!A||!isMgr())return;A.gone.forEach(a=>{if(a.fid)db.doc('files/'+a.fid).delete().catch(()=>{})});A.gone=[]}
+async function attView(a){if(!a)return;let f=a;if(!a.data){toast(t('loading'));try{f=await getFile(a.fid)}catch(_){toast(t('chFileErr'));return}}
+  const img=f.kind==='img'||/^image\//.test(f.mime||'');if(!img){chDownload(f);return}
+  let ov=$('#attOv');if(ov)ov.remove();ov=document.createElement('div');ov.id='attOv';
+  ov.innerHTML=`<div class="attH"><span>${esc(a.name||'')}</span><span class="seg"><button type="button" class="btn sm" data-ad="1">${t('chSave')}</button><button type="button" class="btn sm" data-ac="1">✕</button></span></div><div class="attB"><img src="${f.data}" alt=""></div>`;
+  ov.addEventListener('click',e=>{if(e.target.closest('[data-ad]')){chDownload(f);return}if(e.target.closest('[data-ac]')||e.target.classList.contains('attB'))ov.remove()});
+  document.body.appendChild(ov);hPush('o')}
+document.addEventListener('click',e=>{const v=e.target.closest&&e.target.closest('[data-attv]');if(!v)return;const [id,i]=v.dataset.attv.split(':'),ex=byId('exams',id);if(ex)attView((ex.att||[])[+i])});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#attOv')){e.preventDefault();e.stopPropagation();$('#attOv').remove()}},true);
 function examForm(e={},pid){
   const pats=S.patients.filter(inBranch).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   const pidSel=e.patientId||pid||'';const lastRx=pidSel&&!e.id?S.exams.filter(x=>x.patientId===pidSel&&hasEye(x.rx,['sph','cyl'])).sort(sortDate)[0]:null;
@@ -1512,14 +1589,14 @@ function examForm(e={},pid){
     ${refPick(e)}${fi(t('complaint'),'complaint',e.complaint)}${mhBox(e,pidSel)}${feeBox(e)}
     ${lastRx?`<div class="rxcard"><span class="muted" style="font-size:.8rem">${t('prevRx')} (${lastRx.date})</span><div class="rx" style="direction:ltr"><span class="os">L ${fmtRx(lastRx.rx.os)}</span> · <span class="od">R ${fmtRx(lastRx.rx.od)}</span></div></div>`:''}
   </fieldset>
-  ${sec(t('vaRx'),vaRow('va.ucva',e,VA,t('vaDistUnaided'),false)+vaRow('va.ph',e,VA,t('vaPh')+' · '+t('optional'),false)+`<label class="chk"><input type="checkbox" name="va.phSame" id="f_phSame" ${getP(e,'va.phSame')?'checked':''}> ${t('phSame')}</label>${vaRow('va.near',e,NVA,t('vaNearU')+' · '+t('optional'),false)}${vaRow('va.nearc',e,NVA,t('vaNearC')+' · '+t('optional'),false)}
+  ${sec(t('vaRx'),vaRow('va.ucva',e,VA,t('vaDistUnaided'),false)+`<div class="st2">${t('curGlT')}</div>`+rxGrid('old',e,[['va','VA','va'],['sph','SPH','d'],['cyl','CYL','d'],['axis','AXIS','axis'],['add','ADD','d']])+vaRow('va.ph',e,VA,t('vaPh')+' · '+t('optional'),false)+`<label class="chk"><input type="checkbox" name="va.phSame" id="f_phSame" ${getP(e,'va.phSame')?'checked':''}> ${t('phSame')}</label>${vaRow('va.near',e,NVA,t('vaNearU')+' · '+t('optional'),false)}${vaRow('va.nearc',e,NVA,t('vaNearC')+' · '+t('optional'),false)}
     <div class="st2">${t('rxGlasses')} <span class="muted" style="font-size:.78rem">· ${t('vaInRx')}</span></div><div><button type="button" class="btn sm" id="fromAr">${t('fromAr')}</button></div>${rxGrid('rx',e,[['sph','SPH','d'],['cyl','CYL','d'],['axis','AXIS','axis'],['prism','PRISM','mm'],['va','VA','va']])}
     ${addNearUI(e)}
     <div class="fr">${fs(t('ipdMode'),'rx.pdMode',rx.pdMode||'bino',[['bino',t('ipdBino')],['mono',t('ipdMono')]])}</div>
     <div id="pdBino" class="fr" ${rx.pdMode==='mono'?'hidden':''}>${fi('IPD '+t('pdDist'),'rx.pdDist',rx.pdDist,'number','step="0.5"')}${fi('IPD '+t('pdNear'),'rx.pdNear',rx.pdNear,'number','step="0.5"')}</div>
     <div id="pdMono" ${rx.pdMode==='mono'?'':'hidden'}>${rxGrid('rx',e,[['pd','MONO PD DIST','mm'],['npd','MONO PD NEAR','mm']],'min-width:0;max-width:360px;margin-right:auto')}</div>
     <div class="fr">${fs(t('glassesType'),'rx.type',rx.type,keyOpts(spec('design')))}${fi(t('lensRec'),'rx.lensRec',rx.lensRec)}</div>${ft(t('rxNotes'),'rx.notes',rx.notes,'rows="2" placeholder="'+esc(t('rxNotesPh'))+'"')}`,true,true)}
-  ${sec(t('oldRxPr'),rxGrid('old',e,[['sph','SPH','d'],['cyl','CYL','d'],['axis','AXIS','axis'],['add','ADD','d'],['va','VA','va']]),hasEye(e.old,['sph','cyl','add','va']))}
+  ${sec('📎 '+t('attT'),attBox(),true)}
   ${sec(t('autoref'),rxGrid('ar',e,[['sph','SPH','d'],['cyl','CYL','d'],['axis','AXIS','axis']]),hasEye(e.ar,['sph','cyl']))}
   ${sec(t('ret'),`<div class="fr">${fs(t('cyclo'),'ret.cyclo',ret.cyclo||'none',CYCLO.map(([k,l])=>[k,k==='none'?t('dry'):l]))}${fi(t('wd'),'ret.wd',ret.wd||'67','number','step="1"')}</div>
     ${rxGrid('ret',e,[['sph','SPH','d'],['cyl','CYL','d'],['axis','AXIS','axis']])}${fi(t('retNotes'),'ret.notes',ret.notes)}`,openRet)}
@@ -1528,7 +1605,7 @@ function examForm(e={},pid){
   ${sec(t('extra'),`<div class="fr">${fi(t('iopR'),'iop.od',getP(e,'iop.od'),'number','step="1"')}${fi(t('iopL'),'iop.os',getP(e,'iop.os'),'number','step="1"')}</div>${fi(t('diagnosis'),'diagnosis',e.diagnosis)}${ft(t('examNotes'),'notes',e.notes)}`,openEx)}
   ${sec(t('follow'),`<div class="fr">${fi(t('followDate'),'followUp',e.followUp,'date')}</div><label class="chk"><input type="checkbox" name="followDone" id="f_followDone" ${e.followDone?'checked':''}> ${t('followDone')}</label>`,openFu)}${guidePick(e.guides)}`,
   {wide:true,extraFooter:e.id?delBtn('delE',t('delExam')):'',
-   onMount:f=>{const q=n=>f.querySelector(`[name="${n}"]`),E=['od','os'];patSearch(f.querySelector('#f_patientId'));wirePatFix(f,f.querySelector('#f_patientId'));wireNewCust(f,f.querySelector('#f_patientId'),()=>{const el=f.querySelector('#f_branchId');return el&&el.value});f.querySelector('#f_patientId').addEventListener('change',ev=>f.querySelector('#ageShow').value=patientAge(byId('patients',ev.target.value)));
+   onMount:f=>{const q=n=>f.querySelector(`[name="${n}"]`),E=['od','os'];patSearch(f.querySelector('#f_patientId'));wirePatFix(f,f.querySelector('#f_patientId'));wireNewCust(f,f.querySelector('#f_patientId'),()=>{const el=f.querySelector('#f_branchId');return el&&el.value});f._att=wireAtt(f,e);f.querySelector('#f_patientId').addEventListener('change',ev=>f.querySelector('#ageShow').value=patientAge(byId('patients',ev.target.value)));
      const bc=getP(e,'va.bcva')||{};E.forEach(k=>{const r=q('rx.'+k+'.va');if(r.value===''&&bc[k]){r.value=bc[k];if(r.value!==bc[k]){r.insertAdjacentHTML('beforeend',`<option>${esc(bc[k])}</option>`);r.value=bc[k]}}});
      const phSync=()=>{if(f.querySelector('#f_phSame').checked)E.forEach(k=>q('va.ph.'+k).value=q('rx.'+k+'.va').value)};f.querySelector('#f_phSame').onchange=phSync;
      E.forEach(k=>q('rx.'+k+'.va').addEventListener('change',phSync));
@@ -1546,9 +1623,10 @@ function examForm(e={},pid){
      if(mhNeeded(o.patientId)&&!o.medHx.length&&!o.medHxOther){toast(t('mhNeed'));f.querySelector('.mhbox').scrollIntoView({block:'center'});return false}
      o.va=o.va||{};o.va.bcva={od:((o.rx||{}).od||{}).va||'',os:((o.rx||{}).os||{}).va||''};const v=o.va;const anyVa=['ucva','bcva','ph','near','nearc'].some(k=>v[k]&&(v[k].od||v[k].os||v[k].ou));if(!anyVa){toast(t('needVa'));f.querySelector('details.sec').open=true;return false}
      if(!o.branchId)o.branchId=e.branchId||defBranch();o.guides=readGuides(f);if(!await refSave(f,o))return false;
+     if(!await attSave(f._att,o))return false;
      const fb=o.feeBox;delete o.feeBox;
      if(e.id&&((o.feeType||'')!==(e.feeType||'')||(o.feeMode||'sale')!==(e.feeMode||'sale')||feeSales(e.id).length)&&!await feeUpdate(e.id,{...e,...o,feeBox:fb}))return false;
-     const id=await put('exams',e.id,o);if(!id)return false;toast(t('savedExam'));if(!e.id&&o.feeMode==='now'&&!feeSales(id).length)await feeInvoice(id,{...o,feeBox:fb});UI.patientId=o.patientId;view='patients'}})}
+     const id=await put('exams',e.id,o);if(!id)return false;attGone(f._att);toast(t('savedExam'));if(!e.id&&o.feeMode==='now'&&!feeSales(id).length)await feeInvoice(id,{...o,feeBox:fb});UI.patientId=o.patientId;view='patients'}})}
 /* ---- referring ophthalmologists (per branch) ---- */
 const doctorsIn=b=>S.doctors.filter(d=>bid(d)===b).sort((x,y)=>(x.name||'').localeCompare(y.name||''));
 const drName=id=>{const d=id&&byId('doctors',id);return d?String(d.name||'').replace(/^\s*(د\.?|دكتور|Dr\.?)\s*/i,''):''};
@@ -1885,7 +1963,7 @@ var lt=0;addEventListener('touchend',function(e){if(e.changedTouches.length!==1|
 addEventListener('wheel',function(e){if(!e.ctrlKey&&!e.metaKey)return;e.preventDefault();z=Math.max(1,Math.min(ZM,z*Math.exp(-e.deltaY/300)));apply(e.clientX,e.clientY)},{passive:false});
 addEventListener('resize',fit);addEventListener('load',function(){setTimeout(fit,60)});setTimeout(fit,30);setTimeout(fit,800)})()<\/script>`;
 const pvHtml=h=>h.includes('</body>')?h.replace(/<\/body>(?![\s\S]*<\/body>)/,PV_ZOOM+'</body>'):h+PV_ZOOM;
-async function makePdf(fr){await Promise.all([lib('h2c'),lib('pdf')]);const d=fr.contentDocument;try{await d.fonts.ready}catch(_){}for(let i=0;i<60&&!d.body.hasAttribute('data-fit');i++)await new Promise(r=>setTimeout(r,100));
+async function makePdf(fr){await Promise.all([lib('h2c'),lib('pdf')]);const d=fr.contentDocument;try{await d.fonts.ready}catch(_){}for(let i=0;i<60&&!d.body.hasAttribute('data-fit');i++)await new Promise(r=>setTimeout(r,100));await Promise.all([...d.images].map(im=>(im.complete?Promise.resolve():new Promise(r=>{im.addEventListener('load',r,{once:true});im.addEventListener('error',r,{once:true});setTimeout(r,4000)})).then(()=>im.decode&&im.decode().catch(()=>{}))));
   const P=PAPER[S.settings.paper||'a5']||PAPER.a5,W=P[1],pages=[];let pdf=null;const zc=d.documentElement.classList.contains('pz');d.documentElement.classList.remove('pz');try{
   for(const el of d.querySelectorAll('.doc')){const cv=await html2canvas(el,{scale:2,backgroundColor:'#ffffff',useCORS:true}),ih=W*cv.height/cv.width,H=P[2]||ih,img=cv.toDataURL('image/jpeg',0.92);pages.push(cv.toDataURL('image/jpeg',0.7));
     if(!pdf)pdf=new jspdf.jsPDF({unit:'mm',format:[W,H],orientation:'portrait'});else pdf.addPage([W,H],'portrait');
@@ -1924,7 +2002,7 @@ function printPreview(title,html,{fname,waPhone,waText,waAny,waShop,top='',onTop
        const a=document.createElement('a');a.className='btn wa';a.href=href;a.target='_blank';a.rel='noopener';a.textContent=t('waOpenChat')+' ←';wp.replaceWith(a);a.click()};
      else if(wp)wp.onclick=async()=>{const ok=canShare&&(()=>{try{return navigator.canShare({files:[new File([''],'x.pdf',{type:'application/pdf'})]})}catch(_){return false}})();
        if(ok){const fresh=!pdfB,bl=await pdfNow(wp);if(bl)await share(bl,fresh);return}
-       const w=window.open('about:blank','_blank'),bl=await pdfNow(wp);if(!bl){if(w)w.close();return}await save(bl);const u=waLink(waPhone||'',t('waPdfMsg'));if(w)w.location.href=u;else window.open(u,'_blank');toast(t('waPdfDesk'))}}})}
+       const bl=await pdfNow(wp);if(!bl)return;await save(bl);toast(t('waPdfDesk'));const a=document.createElement('a');a.className='btn wa';a.href=waLink(waPhone||'',t('waPdfMsg'));a.textContent=t('waOpenChat')+' ←';wp.replaceWith(a);a.click()}}})}
 function printSale(s,opt){if(!s)return;opt=opt||printWithPref();const p=s.patientId?byId('patients',s.patientId):null;printPreview(t('invoice')+' #'+(s.no||''),()=>saleDoc(s,opt),{fname:'invoice-'+(s.no||''),waPhone:p&&p.phone,waText:saleText(s),waShop:branch(bid(s)).name,meta:{b:bid(s),p:s.patientId||'',k:'sale',ref:s.id||'',no:s.no||'',cust:p?p.name:(s.customer||'')}})}
 function printExam(e,kind='exam'){if(!e)return;const p=byId('patients',e.patientId)||{};const fn={exam:examReportDoc,rx:glassesRxDoc,cl:clRxDoc}[kind]||examReportDoc;printPreview(docT(kind)+' · '+(p.name||''),()=>fn(e),{fname:kind+'-'+(p.code||'')+'-'+(e.date||''),waPhone:p.phone,waText:rxText(e),waShop:branch(bid(e)).name,meta:{b:bid(e),p:e.patientId||'',k:kind,ref:e.id||'',cust:p.name||''}})}
 
@@ -2043,7 +2121,7 @@ const nextNo=(col,b)=>String(S[col].filter(s=>bid(s)===b).reduce((m,s)=>Math.max
 /* customer picker as a type-ahead search: nothing is listed until the user types; suggestions match name, code or phone. The hidden select keeps the value. */
 function patSearch(sel){if(!sel||sel.dataset.ps)return;sel.dataset.ps=1;sel.hidden=true;const w=document.createElement('div');w.className='psw';
   w.innerHTML=`<div class="psi"><input type="search" class="pSearch" autocomplete="off" placeholder="${esc(t('patSearchPh'))}"><button type="button" class="btn ghost sm psx" aria-label="${esc(t('del'))}" hidden>✕</button></div><div class="sugg psg"></div>`;sel.after(w);
-  const q=w.querySelector('input'),g=w.querySelector('.psg'),x=w.querySelector('.psx'),lbl=o=>o?o.textContent:'';let hi=-1;
+  const q=w.querySelector('input'),g=w.querySelector('.psg'),x=w.querySelector('.psx'),lbl=o=>{if(!o)return '';const p=o.value&&byId('patients',o.value);return p&&p.name?p.name+(p.code?' · '+p.code:''):o.textContent};let hi=-1;
   const sync=()=>{const o=sel.selectedOptions[0];q.value=sel.value?lbl(o):'';x.hidden=!sel.value};
   const nd=v=>String(v||'').toLowerCase().replace(/[إأآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').trim();
   const show=()=>{const v=nd(q.value),dg=q.value.replace(/\D/g,'');hi=-1;if(!v){g.innerHTML='';return}
@@ -3235,6 +3313,10 @@ $('#gsBtn').addEventListener('click',gSearch);
 document.addEventListener('keydown',e=>{const k=(e.key||'').toLowerCase();if((e.ctrlKey||e.metaKey)&&k==='k'){e.preventDefault();gSearch()}else if(k==='/'&&!(e.target.closest&&e.target.closest('input,textarea,select,[contenteditable]'))&&!$('#ov')&&!$('#gsOv')){e.preventDefault();gSearch()}});
 
 /* ================= boot ================= */
+/* v118: shop and partner logos are kept on this device too, so the header and every invoice show them the moment the app opens (before the data arrives) */
+const LGC='eyecon_logo_cache';
+(()=>{try{const c=JSON.parse(localStorage.getItem(LGC)||'null');if(c&&c.L){Object.assign(LOGO,c.L);Object.assign(BRANDS,c.B||{});Object.values(c.L).forEach(l=>{if(l&&l.data){const i=new Image();i.src=l.data}})}}catch(_){}})();
+let lgcT=0;function logoCacheSave(){clearTimeout(lgcT);lgcT=setTimeout(()=>{try{const j=JSON.stringify({L:LOGO,B:BRANDS});if(localStorage.getItem(LGC)!==j)localStorage.setItem(LGC,j)}catch(_){}},500)}
 render();
 (async()=>{
   if(!window.claude||!window.claude.use){dbState='none';render();return}
@@ -3247,7 +3329,7 @@ render();
   db.collection('settings').onSnapshot(s=>{[SET,LOGO,BRANDS].forEach(o=>Object.keys(o).forEach(k=>delete o[k]));RATE=null;
     s.docs.forEach(d=>{const id=d.id,v=d.data()||{};let m;if(id==='main')SET.main=v;else if(id==='rate')RATE=v;else if(id==='rules')RULES=v;else if(id==='logo')LOGO.main=v;else if(id==='brands')BRANDS.main=v.logos||{};
       else if((m=id.match(/^b_(.+)$/)))SET[m[1]]=v;else if((m=id.match(/^logo_(.+)$/)))LOGO[m[1]]=v;else if((m=id.match(/^brands_(.+)$/)))BRANDS[m[1]]=v.logos||{}});
-    applyBranch();try{applyLang()}catch(_){}setTimeout(maybeAskRate,300);setTimeout(brMigrate,900);setTimeout(brSyncAuto,1600);setTimeout(rulesSync,1100);const ae=document.activeElement;if(!(ae&&ae.closest&&ae.closest('#setForm')))schedule()},()=>{});
+    applyBranch();try{applyLang()}catch(_){}logoCacheSave();setTimeout(maybeAskRate,300);setTimeout(brMigrate,900);setTimeout(brSyncAuto,1600);setTimeout(rulesSync,1100);const ae=document.activeElement;if(!(ae&&ae.closest&&ae.closest('#setForm')))schedule()},()=>{});
   render();
 })();
 </script>
