@@ -159,7 +159,7 @@ tr.total td{font-weight:600;background:var(--bg)}
 .chip.bad{color:var(--bad);border-color:currentColor}
 .chip.good{color:var(--good);border-color:currentColor}
 .chip.acc{color:var(--accent);border-color:currentColor}
-.svcU{display:block;font-size:.76rem;color:var(--accent);font-weight:600;white-space:normal;line-height:1.3;margin-top:2px}.svcCs{display:flex;flex-wrap:wrap;gap:6px;margin:-2px 0 4px}.svcC{cursor:pointer;font:inherit;font-size:.85rem;padding:5px 12px;background:none}.svcC.acc{background:color-mix(in srgb,var(--accent) 12%,transparent);font-weight:600}.svcPrev{display:grid;justify-items:center;padding:10px;border:1px dashed var(--line);border-radius:10px;font-size:1.3rem}.svcPrev .svcU{font-size:.9rem}
+.svcU{display:block;font-size:.76rem;color:var(--accent);font-weight:600;white-space:normal;line-height:1.3;margin-top:2px}.svcCs{display:flex;flex-wrap:wrap;gap:6px;margin:-2px 0 4px}.svcC{cursor:pointer;font:inherit;font-size:.85rem;padding:5px 12px;background:none}.svcC.acc{background:color-mix(in srgb,var(--accent) 12%,transparent);font-weight:600}.svcPrev{display:grid;justify-items:center;padding:10px;border:1px dashed var(--line);border-radius:10px;font-size:1.3rem}.svcPrev .svcU{font-size:.9rem}.svcEdBox{display:grid;gap:6px;padding:10px;border:1px solid var(--line);border-radius:10px}.svcEr{display:grid;grid-template-columns:1fr 110px auto;gap:6px}.svcEr input{min-width:0}
 .chip.wa{color:var(--wa);border-color:currentColor}
 .seg{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .seg button{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--surface);color:var(--muted);padding:5px 12px;border-radius:99px;cursor:pointer}
@@ -2071,23 +2071,25 @@ function printExam(e,kind='exam'){if(!e)return;const p=byId('patients',e.patient
 
 /* ================= SALES ================= */
 /* ---- quick service sale: one tap from home / sales / customer page; the service type is a single service line, shown under the amount in lists ---- */
-Object.assign(D,{svcBtn:['بيع خدمة','Sell a service'],svcT:['بيع خدمة سريع','Quick service sale'],svcType:['نوع الخدمة','Service type'],svcTypePh:['اختر من الأسفل أو اكتب خدمة جديدة','Pick below or type a new service'],svcAmt:['مبلغ الخدمة','Service amount'],svcPaid:['المدفوع الآن','Paid now'],svcNeedType:['اختر نوع الخدمة','Choose the service type'],svcSaved:['تم تسجيل الخدمة','Service recorded'],svcCust:['زبون خدمات','Service customer'],svcSave:['تسجيل الخدمة','Record service'],svcRemNote:['الباقي يبقى ديناً على الزبون','The rest stays as the customer\'s balance due'],
+Object.assign(D,{svcBtn:['بيع خدمة','Sell a service'],svcT:['بيع خدمة سريع','Quick service sale'],svcType:['نوع الخدمة','Service type'],svcTypePh:['اختر من الأسفل أو اكتب خدمة جديدة','Pick below or type a new service'],svcAmt:['مبلغ الخدمة','Service amount'],svcPaid:['المدفوع الآن','Paid now'],svcNeedType:['اختر نوع الخدمة','Choose the service type'],svcSaved:['تم تسجيل الخدمة','Service recorded'],svcCust:['زبون خدمات','Service customer'],svcEdit:['✎ تعديل الخدمات والأسعار','✎ Edit services and prices'],svcEditSave:['حفظ','Save'],svcEditH:['عدّل الاسم أو السعر الافتراضي، احذف بـ ✕، أو أضف خدمة. تبقى محفوظة لهذا الفرع. السعر الفارغ يعني بدون سعر افتراضي.','Edit a name or default price, delete with ✕, or add a service. Kept for this branch. Empty price means no default.'],svcAdd:['＋ إضافة خدمة','＋ Add service'],svcPricesSaved:['تم حفظ الخدمات','Services saved'],svcNewName:['خدمة جديدة','New service'],svcSave:['تسجيل الخدمة','Record service'],svcRemNote:['الباقي يبقى ديناً على الزبون','The rest stays as the customer\'s balance due'],
   svc_fix:['تصليح نظارة','Glasses repair'],svc_adj:['ضبط وتعديل الإطار','Frame adjustment'],svc_fit:['تركيب عدسات بإطار الزبون','Lens fitting in customer frame'],svc_cl:['قياس وتجربة عدسات لاصقة','Contact lens fitting'],svc_clean:['تنظيف النظارة بالموجات','Ultrasonic glasses cleaning'],svc_screw:['تبديل براغي ومساند أنف','Screws and nose pads replacement']});
 const SVC_DEF=['svc_fix','svc_adj','svc_fit','svc_cl','svc_clean','svc_screw'];
 const svcOnly=s=>{const L=(s&&s.lines)||[];return L.length>0&&L.every(l=>l.type==='service')};
 /* the service names of a service-only invoice, printed small under its amount */
 const svcUnder=s=>svcOnly(s)?`<small class="svcU">🛠 ${esc(s.lines.map(l=>l.name).join('، '))}</small>`:'';
 /* services offered in a branch: exam fees, the defaults, then every service name already sold there (newest first), each with its last price */
-function svcList(b){const m=new Map(),add=(n,p)=>{n=String(n||'').trim();if(n&&!m.has(n))m.set(n,p)};
-  add(feeLineName('std'),feeAmt(b,'std'));add(feeLineName('kid'),feeAmt(b,'kid'));
+function svcList(b){const L=(setFor(b)||{}).svcItems;if(Array.isArray(L))return L.filter(x=>x&&x.n).map(x=>[x.n,x.p==null||x.p===''?null:num(x.p)]);
+  const m=new Map(),add=(n,p)=>{n=String(n||'').trim();if(n&&!m.has(n))m.set(n,p)};
   const used=S.sales.filter(s=>bid(s)===b).sort(sortDate),last=new Map();used.forEach(s=>(s.lines||[]).forEach(l=>{if(l.type==='service'&&l.name&&!last.has(l.name)&&(s.currency||'IQD')==='IQD')last.set(l.name,num(l.price))}));
-  SVC_DEF.forEach(k=>add(t(k),null));last.forEach((p,n)=>add(n,p));
+  add(feeLineName('std'),feeAmt(b,'std'));add(feeLineName('kid'),feeAmt(b,'kid'));SVC_DEF.forEach(k=>add(t(k),null));last.forEach((p,n)=>add(n,p));
   return [...m].map(([n,p])=>[n,last.has(n)?last.get(n):p])}
+/* once edited, a branch's service list (names, order, default prices) is stored in its settings doc as svcItems [{n,p}] */
+async function svcSaveItems(b,L){const v={...(SET[b]||{}),svcItems:L,updatedAt:Date.now()};delete v.rate;delete v.rateDate;await db.doc(sdoc('',b)).set(v);SET[b]=v}
 let svcBox='cash';try{svcBox=localStorage.getItem('eyecon_svcBox')||'cash'}catch(_){}
 function svcForm(){if(!canWrite)return;const b0=curBranch!=='all'?curBranch:defBranch();
   const chips=b=>svcList(b).map(([n,p])=>`<button type="button" class="chip svcC" data-n="${esc(n)}" data-p="${p==null?'':esc(p)}">${esc(n)}${p?` <span class="muted n">${fmtN(p)}</span>`:''}</button>`).join('');
   openModal('🛠 '+t('svcT'),`${multi()&&curBranch==='all'?`<div class="fr">${brF(b0)}</div>`:''}
-   <div class="svcCs" id="svcCs">${chips(b0)}</div>
+   <div class="svcCs" id="svcCs">${chips(b0)}</div>${isMgr()?`<div><button type="button" class="btn sm ghost" id="svcEd">${t('svcEdit')}</button></div><div id="svcEdBox" class="svcEdBox" hidden></div>`:''}
    <label class="f"><span class="req">${t('svcType')}</span><input id="f_svc" name="svc" autocomplete="off" placeholder="${esc(t('svcTypePh'))}" required></label>
    <div class="fr">${fi(`<span class="req">${t('svcAmt')}</span>`,'amount','','text','inputmode="decimal" dir="ltr" required')}${fs(t('box'),'box',BOXES.includes(svcBox)?svcBox:'cash',boxOpts())}</div>
    <div class="svcPrev" id="svcPrev" hidden></div>`,
@@ -2096,7 +2098,15 @@ function svcForm(){if(!canWrite)return;const b0=curBranch!=='all'?curBranch:defB
      const pick=c=>{q('svc').value=c.dataset.n;f.querySelectorAll('.svcC').forEach(x=>x.classList.toggle('acc',x===c));q('amount').value=c.dataset.p||'';prev();q('amount').focus();q('amount').select()};
      const wire=()=>f.querySelectorAll('.svcC').forEach(c=>c.onclick=()=>pick(c));wire();
      ['amount','svc'].forEach(n=>q(n).addEventListener('input',()=>{if(n==='svc')f.querySelectorAll('.svcC').forEach(x=>x.classList.toggle('acc',x.dataset.n===q('svc').value.trim()));prev()}));
-     const bs=f.querySelector('select#f_branchId');if(bs)bs.onchange=()=>{f.querySelector('#svcCs').innerHTML=chips(bs.value);wire()}},
+     const bs=f.querySelector('select#f_branchId'),curB=()=>bs?bs.value:b0,eb=f.querySelector('#svcEdBox'),ed=f.querySelector('#svcEd');
+     const edRow=(n,p)=>`<div class="svcEr"><input class="svcEn" value="${esc(n)}" placeholder="${esc(t('svcNewName'))}"><input class="svcEp" inputmode="decimal" dir="ltr" value="${p==null?'':esc(p)}" placeholder="—"><button type="button" class="btn ghost danger svcEx" aria-label="${esc(t('del'))}">✕</button></div>`;
+     const edOpen=()=>{eb.innerHTML=`<p class="note">${esc(t('svcEditH'))}</p><div id="svcErs" style="display:grid;gap:6px">${svcList(curB()).map(([n,p])=>edRow(n,p)).join('')}</div><div class="seg"><button type="button" class="btn sm" id="svcEdA">${t('svcAdd')}</button><button type="button" class="btn sm primary" id="svcEdS">${t('svcEditSave')}</button></div>`;eb.hidden=false;
+       const rs=eb.querySelector('#svcErs');rs.onclick=e=>{const x=e.target.closest('.svcEx');if(x)x.closest('.svcEr').remove()};
+       eb.querySelector('#svcEdA').onclick=()=>{rs.insertAdjacentHTML('beforeend',edRow('',''));rs.lastElementChild.querySelector('.svcEn').focus()};
+       eb.querySelector('#svcEdS').onclick=async()=>{const L=[],seen=new Set();eb.querySelectorAll('.svcEr').forEach(r=>{const n=r.querySelector('.svcEn').value.trim(),v=r.querySelector('.svcEp').value.trim();if(!n||seen.has(n))return;seen.add(n);L.push({n,p:v===''?null:Math.round(num(v))})});
+         try{await svcSaveItems(curB(),L)}catch(err){toast(errMsg(err));return}eb.hidden=true;f.querySelector('#svcCs').innerHTML=chips(curB());wire();toast(t('svcPricesSaved'))}};
+     if(ed)ed.onclick=()=>{if(eb.hidden)edOpen();else eb.hidden=true};
+     if(bs)bs.onchange=()=>{f.querySelector('#svcCs').innerHTML=chips(bs.value);wire();if(eb)eb.hidden=true}},
    onSubmit:async f=>{const o=formObj(f),b=o.branchId||b0,name=(o.svc||'').trim(),amt=Math.round(num(o.amount));
      if(!name){toast(t('svcNeedType'));return false}if(!(amt>0)){toast(t('needAmt'));return false}
      const r=rate(),m=BOXES.includes(o.box)?o.box:'cash',d=today();try{localStorage.setItem('eyecon_svcBox',m)}catch(_){}svcBox=m;
