@@ -94,11 +94,70 @@ function pubClean_(sh) {
 // Optional: if this script was created from script.google.com (not from the Sheet's Extensions menu),
 // paste the Sheet id here (the long part of the Sheet URL between /d/ and /edit).
 var SHEET_ID = '';
+var SS_ = null;
 function ss_() {
-  var s = SHEET_ID ? SpreadsheetApp.openById(SHEET_ID) : SpreadsheetApp.getActiveSpreadsheet();
+  if (SS_) return SS_;
+  var id = PropertiesService.getScriptProperties().getProperty('sheet_id') || SHEET_ID;
+  var s = id ? SpreadsheetApp.openById(id) : SpreadsheetApp.getActiveSpreadsheet();
   if (!s) throw new Error('no_sheet');
-  return s;
+  SS_ = s; return s;
 }
+
+/* ---------- rebuild: when Google refuses any change to the Sheet («grown too large») ----------
+ * Builds a fresh copy of the Sheet with the same data, big records moved to Drive, then the app switches to it.
+ * The old Sheet is left untouched as a backup. Runs in steps of ~4 minutes; call again until done. */
+function rebuildStep_(until) {
+  var P = props_(), st = JSON.parse(P.getProperty('rb_state') || 'null'), old = ss_();
+  if (!st) {
+    var nb = SpreadsheetApp.create(old.getName() + ' (جديد)');
+    st = { id: nb.getId(), names: old.getSheets().map(function (x) { return x.getName(); }).filter(function (n) { return n.indexOf(VIEW_PREFIX) !== 0; }), i: 0, row: 1, moved: 0 };
+    P.setProperty('rb_state', JSON.stringify(st));
+  }
+  var nb2 = SpreadsheetApp.openById(st.id);
+  while (st.i < st.names.length && Date.now() < until) {
+    var name = st.names[st.i], src = old.getSheetByName(name);
+    var dst = nb2.getSheetByName(name) || nb2.insertSheet(name);
+    if (!src) { st.i++; st.row = 1; continue; }
+    var last = src.getLastRow(), lc = Math.max(1, src.getLastColumn());
+    var start = name === '_pub' ? 4 : (/^_/.test(name) ? -1 : 3);
+    while (st.row <= last && Date.now() < until) {
+      var big = start >= 0 && lc > start + 1, n = Math.min(big ? 10 : 300, last - st.row + 1);
+      var vals = src.getRange(st.row, 1, n, lc).getValues(), out = [], w = 1;
+      vals.forEach(function (r, k) {
+        var abs = st.row + k, row = r.slice();
+        while (row.length && (row[row.length - 1] === '' || row[row.length - 1] === null)) row.pop();
+        if (abs > 1 && start >= 0 && row.length > start + 1 && String(row[start]).charAt(0) === '~') {
+          var json = ''; for (var j = start; j < row.length; j++) { var x = String(row[j] == null ? '' : row[j]); if (!x) break; json += x.charAt(0) === '~' ? x.slice(1) : x; }
+          row = row.slice(0, start); row.push(toDrive_((name === '_pub' ? 'pub_' : name + '_') + String(r[0]) + '.json', json)); st.moved++;
+        }
+        if (!row.length) row = [''];
+        w = Math.max(w, row.length); out.push(row);
+      });
+      out = out.map(function (row) { row = row.map(function (x) { return x === null ? '' : x; }); while (row.length < w) row.push(''); return row; });
+      if (dst.getMaxColumns() < w) dst.insertColumnsAfter(dst.getMaxColumns(), w - dst.getMaxColumns());
+      if (dst.getMaxRows() < st.row + n - 1) dst.insertRowsAfter(dst.getMaxRows(), st.row + n - 1 - dst.getMaxRows() + 50);
+      var rg = dst.getRange(st.row, 1, n, w); if (start === 3) rg.setNumberFormat('@'); rg.setValues(out);
+      st.row += n; P.setProperty('rb_state', JSON.stringify(st));
+    }
+    if (st.row > last) { try { if (last >= 1) dst.setFrozenRows(1); fit_(dst, Math.max(dst.getLastRow(), 1), dst.getLastColumn()); } catch (e) {} st.i++; st.row = 1; P.setProperty('rb_state', JSON.stringify(st)); }
+  }
+  if (st.i >= st.names.length) {
+    nb2.getSheets().forEach(function (x) { if (st.names.indexOf(x.getName()) < 0 && nb2.getSheets().length > 1) nb2.deleteSheet(x); });
+    P.setProperty('sheet_id_old', old.getId()); P.setProperty('sheet_id', st.id); P.deleteProperty('rb_state'); SS_ = null;
+    P.setProperty('ver', String(now_()));
+    return { done: true, moved: st.moved, url: nb2.getUrl() };
+  }
+  return { done: false, moved: st.moved, sheet: st.names[st.i], at: st.i + 1, of: st.names.length };
+}
+/** Settings button (owner/manager): rebuild the Sheet when it can no longer be changed. Call again until done. */
+function api_rebuild(token) {
+  var s = admin_(token);
+  var lock = LockService.getScriptLock(); lock.waitLock(30000);
+  try { var r = rebuildStep_(Date.now() + 240000); if (r.done) log_(s.u, 'نقل البيانات إلى ملف شيت جديد', '', '', r.url, 'نقل ' + r.moved + ' ملف إلى Drive'); return JSON.stringify(r); }
+  finally { lock.releaseLock(); }
+}
+/** Same from the editor: choose rebuildSheet → Run (run again until the log says done). */
+function rebuildSheet() { var r = rebuildStep_(Date.now() + 300000); Logger.log(JSON.stringify(r)); return r; }
 function props_() { return PropertiesService.getScriptProperties(); }
 
 /* ---------- big records live in Google Drive ----------
