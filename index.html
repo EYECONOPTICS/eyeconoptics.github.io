@@ -314,7 +314,7 @@ var TMO={pubPdf:120000,me:15000,status:15000,poll:20000,load:120000,import:18000
 function call(fn){var a=[].slice.call(arguments,1);return new Promise(function(res0,rej0){
   var done=false,res=function(x){if(done)return;done=true;clearTimeout(tt);res0(x)},rej=function(e){if(done)return;done=true;clearTimeout(tt);rej0(e)};
   var ac=window.AbortController?new AbortController():null,tt=setTimeout(function(){if(ac)try{ac.abort()}catch(_){}fail(new Error('timeout'))},TMO[fn]||30000);
-  var fail=function(e){var m=String(e&&e.message||e),er=new Error(m);er.code=/perm/.test(m)?'invalid_argument':/auth/.test(m)?'auth':'unavailable';if(er.code==='auth'&&fn!=='me'&&fn!=='login'&&fn!=='setup')showLogin(true);rej(er)};
+  var fail=function(e){var m=String(e&&e.message||e),er=new Error(m);if(!/perm|auth/.test(m))LASTERR=m;er.code=/perm/.test(m)?'invalid_argument':/auth/.test(m)?'auth':'unavailable';if(er.code==='auth'&&fn!=='me'&&fn!=='login'&&fn!=='setup')showLogin(true);rej(er)};
   if(GS){var r=google.script.run.withSuccessHandler(function(x){res(x)}).withFailureHandler(fail);r['api_'+fn].apply(r,a);return}
   if(!API){fail(new Error('no_api'));return}
   fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:fn,args:a}),redirect:'follow',cache:'no-store',signal:ac?ac.signal:undefined}).then(function(r){return r.text()}).then(function(x){var j;try{j=JSON.parse(x)}catch(e){fail(new Error(/accounts\.google|ServiceLogin|signin/i.test(x)?'google_login':'not_json: '+x.replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim().slice(0,160)));return}if(j&&'err' in j)fail(new Error(j.err));else res(j.ok)},function(e){fail(new Error('network: '+(e&&e.message||e)))})})}
@@ -328,8 +328,8 @@ var cT=null;function cSave(){if(!tok||!me)return;clearTimeout(cT);cT=setTimeout(
 /* ---- small connection status pill ---- */
 function pill(state){var p=document.getElementById('gasPill');if(state==='ok'){if(p)p.remove();return}
   if(!p){p=el('<div id="gasPill" dir="'+(AR?'rtl':'ltr')+'" style="position:fixed;bottom:12px;inset-inline-start:12px;z-index:9998;background:#fff;border:1px solid #D3E4F0;border-radius:999px;padding:7px 14px;font:13px system-ui,sans-serif;color:#0E2236;box-shadow:0 4px 16px rgba(2,107,178,.12);display:flex;gap:10px;align-items:center"><span id="gpT"></span><button type="button" id="gpR" style="font:inherit;font-weight:600;border:0;background:none;color:#026BB2;cursor:pointer;padding:0">'+L('إعادة الاتصال','Reconnect')+'</button></div>');document.body.appendChild(p);p.querySelector('#gpR').onclick=function(){sync(true)}}
-  p.querySelector('#gpT').textContent=state==='sync'?L('⟳ جاري المزامنة مع قاعدة البيانات…','⟳ Syncing with the database…'):state==='save'?L('⟳ جاري الإرسال إلى الشيت… (','⟳ Sending to the Sheet… (')+OB.length+')':L('⚠ غير متصل بالخادم. ما تحفظه يبقى على هذا الجهاز ويُرسل للشيت تلقائياً عند عودة الاتصال','⚠ Offline. What you save stays on this device and is sent to the Sheet when the connection returns')+(OB.length?' ('+OB.length+')':'')+'.';p.querySelector('#gpR').hidden=state!=='off'}
-var online=false,fails=0;
+  p.querySelector('#gpT').textContent=state==='sync'?L('⟳ جاري المزامنة مع قاعدة البيانات…','⟳ Syncing with the database…'):state==='save'?L('⟳ جاري الإرسال إلى الشيت… (','⟳ Sending to the Sheet… (')+OB.length+')':L('⚠ غير متصل بالخادم. ما تحفظه يبقى على هذا الجهاز ويُرسل للشيت تلقائياً عند عودة الاتصال','⚠ Offline. What you save stays on this device and is sent to the Sheet when the connection returns')+(OB.length?' ('+OB.length+')':'')+'.'+(state==='off'&&LASTERR?'\n'+L('السبب: ','Reason: ')+explain(LASTERR):'');p.querySelector('#gpT').style.whiteSpace='pre-wrap';p.querySelector('#gpR').hidden=state!=='off'}
+var online=false,fails=0,LASTERR='';
 /* ---- outbox: saves show instantly, then go to the Sheet in the background, in order; kept on the device until the server confirms ---- */
 var OB=[],obBusy=false,obWait=0,pendDoc={},obT=null;
 function obGet(){return idb().then(function(d){if(!d)return null;return new Promise(function(res){try{var q=d.transaction('kv').objectStore('kv').get('outbox');q.onsuccess=function(){res(q.result||null)};q.onerror=function(){res(null)}}catch(e){res(null)}})})}
@@ -367,7 +367,7 @@ var db={collection:function(c){return {doc:function(id){return docRef(c,id||rid(
   doc:function(p){var i=p.lastIndexOf('/');return docRef(p.slice(0,i),p.slice(i+1))},
   __incr:function(p,min){return call('incr',tok,p,min||0).then(Number)}};
 function load(onTry){return retry('load',[tok],4,onTry).then(function(r){r=J(r);Object.keys(store).forEach(function(c){var ids={};(r.cols[c]||[]).forEach(function(x){ids[x[0]]=1});Object.keys(store[c]).forEach(function(id){if(!ids[id]&&!pending(c,id))apply(c,id,null)})});
-  Object.keys(r.cols).forEach(function(c){r.cols[c].forEach(function(x){if(!pending(c,x[0]))apply(c,x[0],x[1])})});since=r.t-10000;online=true;fails=0;pill('ok');readyRes();cSave();obPill();flush();if(!polling){polling=true;setTimeout(poll,8000)}})}
+  Object.keys(r.cols).forEach(function(c){r.cols[c].forEach(function(x){if(!pending(c,x[0]))apply(c,x[0],x[1])})});since=r.t-10000;online=true;fails=0;LASTERR='';pill('ok');readyRes();cSave();obPill();flush();if(!polling){polling=true;setTimeout(poll,8000)}})}
 var syncing=false;
 function sync(manual){if(syncing)return;syncing=true;pill('sync');return retry('me',[tok],manual?2:3).then(function(r){me=J(r);window.__gas.me=me;return load()}).catch(function(e){if(e.code==='auth'){tok='';try{localStorage.removeItem(K)}catch(_){}showLogin(true);pill('ok');return}online=false;pill('off')}).then(function(){syncing=false})}
 function poll(){if(document.hidden||!tok||!me){setTimeout(poll,8000);return}
