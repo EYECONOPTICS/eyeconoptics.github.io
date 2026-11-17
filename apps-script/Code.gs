@@ -107,6 +107,7 @@ function sheet_(name, create) {
     else if (name === '_log') sh.appendRow(['الوقت', 'المستخدم', 'العملية', 'القسم', 'رقم السجل', 'ملخص', 'تفاصيل']);
     else sh.appendRow(['id', 'updatedAt', 'summary', 'data']);
     sh.setFrozenRows(1);
+    try { fit_(sh, 1, sh.getLastColumn()); } catch (e) {}
   }
   return sh;
 }
@@ -157,6 +158,7 @@ function writeRow_(sh, rowNo, row) {
   var full = row.slice();
   while (full.length < width) full.push('');
   if (sh.getMaxColumns() < width) sh.insertColumnsAfter(sh.getMaxColumns(), width - sh.getMaxColumns());
+  if (sh.getMaxRows() < rowNo) sh.insertRowsAfter(sh.getMaxRows(), rowNo - sh.getMaxRows() + 20);
   var rng = sh.getRange(rowNo, 1, 1, width);
   rng.setNumberFormat('@');
   rng.setValues([full.map(function (x) { return typeof x === 'number' ? String(x) : x; })]);
@@ -640,10 +642,11 @@ function flat_(o, pre, out) {
 function writeView_(name, rows) {
   var sh = ss_().getSheetByName(name) || ss_().insertSheet(name);
   sh.clear();
-  if (!rows.length) { sh.getRange(1, 1).setValue('—'); return; }
+  if (!rows.length) { fit_(sh, 1, 1, 1); sh.getRange(1, 1).setValue('—'); return; }
   var cols = [], seen = {};
-  rows.forEach(function (r) { for (var k in r) if (!seen[k] && cols.length < 120) { seen[k] = 1; cols.push(k); } });
+  rows.forEach(function (r) { for (var k in r) if (!seen[k] && cols.length < VIEW_COLS) { seen[k] = 1; cols.push(k); } });
   var data = [cols].concat(rows.map(function (r) { return cols.map(function (c) { return r[c] === undefined ? '' : r[c]; }); }));
+  fit_(sh, data.length, cols.length, 1);
   sh.getRange(1, 1, data.length, cols.length).setValues(data);
   sh.setFrozenRows(1);
   sh.getRange(1, 1, 1, cols.length).setFontWeight('bold').setBackground('#E1F1FB');
@@ -653,8 +656,10 @@ function snapshot_(force) {
   if (!force && props_().getProperty('snap_ver') === ver) return 'unchanged';
   var lock = LockService.getScriptLock(); lock.waitLock(30000);
   try {
+    var st = trimAll_();
+    if (st.cells > CELL_BUDGET) { props_().setProperty('snap_skip', String(st.cells)); return 'too_big'; }
     var all = {};
-    ss_().getSheets().forEach(function (sh) { var n = sh.getName(); if (RESERVED[n] || !/^[A-Za-z][A-Za-z0-9_]{0,40}$/.test(n) || rule_(n).lazy) return; all[n] = readCol_(n, 0); });
+    ss_().getSheets().forEach(function (sh) { var n = sh.getName(); if (RESERVED[n] || NO_VIEW[n] || !/^[A-Za-z][A-Za-z0-9_]{0,40}$/.test(n) || rule_(n).lazy) return; all[n] = readCol_(n, 0); });
     var pname = {}; (all.patients || []).forEach(function (x) { pname[x[0]] = (x[1].code ? x[1].code + ' · ' : '') + (x[1].name || ''); });
     var stamp = function (x) { var o = { id: x[0] }; var f = flat_(x[1]); for (var k in f) o[k] = f[k]; o['آخر تعديل'] = x[2] ? new Date(x[2]) : ''; return o; };
     for (var c in all) {
@@ -675,9 +680,46 @@ function snapshot_(force) {
     return 'ok';
   } finally { lock.releaseLock(); }
 }
+/* ---------- keep the Sheet small (Google allows 10 million cells per file; empty cells count too) ---------- */
+var VIEW_COLS = 40, CELL_BUDGET = 7000000, NO_VIEW = { files: 1, chat: 1, chatRe: 1, chatRead: 1, counters: 1, rates: 1 };
+function fit_(sh, rows, cols, spare) {
+  spare = spare == null ? 20 : spare; rows = Math.max(rows, 1) + spare; cols = Math.max(cols, 10);
+  var mr = sh.getMaxRows(), mc = sh.getMaxColumns();
+  if (mr > rows) sh.deleteRows(rows + 1, mr - rows); else if (mr < rows) sh.insertRowsAfter(mr, rows - mr);
+  if (mc > cols) sh.deleteColumns(cols + 1, mc - cols); else if (mc < cols) sh.insertColumnsAfter(mc, cols - mc);
+}
+/** Removes the empty rows and columns after the data in every sheet; returns the cell count per sheet. */
+function trimAll_() {
+  var out = { cells: 0, sheets: [] };
+  ss_().getSheets().forEach(function (sh) {
+    try { fit_(sh, Math.max(sh.getLastRow(), 1), Math.max(sh.getLastColumn(), 1)); } catch (e) {}
+    var n = sh.getMaxRows() * sh.getMaxColumns(); out.cells += n; out.sheets.push({ n: sh.getName(), cells: n, rows: sh.getLastRow(), cols: sh.getLastColumn() });
+  });
+  out.sheets.sort(function (a, b) { return b.cells - a.cells; });
+  return out;
+}
+/** Owner/manager button in Settings: shrink the Sheet so saving works again. Deletes the readable «عرض - …» sheets if still too big. */
+function api_cleanup(token) {
+  var s = admin_(token);
+  var lock = LockService.getScriptLock(); lock.waitLock(30000);
+  try {
+    var before = 0; ss_().getSheets().forEach(function (sh) { before += sh.getMaxRows() * sh.getMaxColumns(); });
+    var st = trimAll_(), dropped = 0;
+    if (st.cells > CELL_BUDGET) {
+      ss_().getSheets().forEach(function (sh) { if (sh.getName().indexOf(VIEW_PREFIX) === 0 && ss_().getSheets().length > 1) { ss_().deleteSheet(sh); dropped++; } });
+      st = trimAll_();
+    }
+    log_(s.u, 'تصغير ملف الشيت', '', '', before + ' → ' + st.cells + ' خلية', dropped ? 'حذف ' + dropped + ' ورقة عرض' : '');
+    return JSON.stringify({ before: before, after: st.cells, dropped: dropped, limit: 10000000, top: st.sheets.slice(0, 8) });
+  } finally { lock.releaseLock(); }
+}
+/** Run once from the editor if the app cannot reach the server: same as the Settings button. */
+function cleanupSheet() { var st = trimAll_(); Logger.log(JSON.stringify(st.sheets.slice(0, 10))); return st.cells; }
+
 function api_archiveStatus(token) {
   admin_(token);
   var on = false; try { on = ScriptApp.getProjectTriggers().some(function (t) { return t.getHandlerFunction() === 'hourlySnapshot'; }); } catch (e) {}
-  return JSON.stringify({ on: on, last: Number(props_().getProperty('snap_last') || 0), url: ss_().getUrl() });
+  var cells = 0; try { ss_().getSheets().forEach(function (sh) { cells += sh.getMaxRows() * sh.getMaxColumns(); }); } catch (e) {}
+  return JSON.stringify({ on: on, last: Number(props_().getProperty('snap_last') || 0), url: ss_().getUrl(), cells: cells, limit: 10000000 });
 }
 function api_archiveNow(token) { var s = admin_(token); var r = snapshot_(true); log_(s.u, 'تحديث الأرشيف المقروء', '', '', '', ''); return r; }
