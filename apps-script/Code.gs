@@ -48,7 +48,8 @@ function api_pubPdf(token, json) {
     var mt = o.meta || {}, m = { b: String(mt.b || '').slice(0, 40), p: String(mt.p || '').slice(0, 40), k: String(mt.k || '').slice(0, 20), ref: String(mt.ref || '').slice(0, 40), cust: String(mt.cust || '').slice(0, 120), no: String(mt.no || '').slice(0, 30) };
     var data = JSON.stringify({ name: name, title: String(o.title || '').slice(0, 200), shop: String(o.shop || '').slice(0, 120), at: Date.now(), m: m, pdf: String(o.pdf), pages: (Array.isArray(o.pages) ? o.pages : []).slice(0, 12).map(String) });
     var row = [id, new Date(), me.u, name];
-    for (var i = 0; i < data.length; i += PUB_CHUNK) row.push('~' + data.slice(i, i + PUB_CHUNK));
+    if (data.length > DRIVE_MIN) row.push(toDrive_('pub_' + id + '.json', data));
+    else for (var i = 0; i < data.length; i += PUB_CHUNK) row.push('~' + data.slice(i, i + PUB_CHUNK));
     sh.appendRow(row);
     log_(me.u, 'إرسال ملف للزبون', '_pub', id, name, '');
     return id;
@@ -58,6 +59,7 @@ function pubRead_(id) {
   id = String(id || ''); if (!/^[A-Za-z0-9]{24,64}$/.test(id)) throw new Error('not_found');
   var sh = sheet_('_pub', false); if (!sh || sh.getLastRow() < 2) throw new Error('not_found');
   var r = sh.getRange(2, 1, sh.getLastRow() - 1, 1).createTextFinder(id).matchEntireCell(true).findNext(); if (!r) throw new Error('not_found');
+  var v0 = sh.getRange(r.getRow(), 5).getValue(); if (isDrv_(v0)) return fromDrive_(v0);
   var v = sh.getRange(r.getRow(), 5, 1, Math.max(1, sh.getLastColumn() - 4)).getValues()[0], out = '';
   for (var i = 0; i < v.length; i++) { var c = String(v[i] || ''); if (!c) break; out += c.charAt(0) === '~' ? c.slice(1) : c; }
   return out;
@@ -85,7 +87,7 @@ function pubClean_(sh) {
   var n = sh.getLastRow(); if (n < 2) return;
   var t = sh.getRange(2, 2, n - 1, 1).getValues(), lim = Date.now() - PUB_DAYS * 864e5, k = 0;
   while (k < t.length && t[k][0] instanceof Date && t[k][0].getTime() < lim) k++;
-  if (k) sh.deleteRows(2, k);
+  if (k) { sh.getRange(2, 5, k, 1).getValues().forEach(function (x) { trashDrv_(x[0]); }); sh.deleteRows(2, k); }
 }
 
 /* ---------- helpers ---------- */
@@ -98,6 +100,27 @@ function ss_() {
   return s;
 }
 function props_() { return PropertiesService.getScriptProperties(); }
+
+/* ---------- big records live in Google Drive ----------
+ * A record larger than DRIVE_MIN characters (images, voice notes, PDFs, logos) is saved as a text file in the Drive folder
+ * «EYECON - الملفات (لا تحذف)»; its row in the Sheet keeps only "@drive:<file id>". The Sheet stays small. */
+var DRIVE_MIN = 45000, DRV = '@drive:';
+function folder_() {
+  var id = props_().getProperty('drive_folder');
+  if (id) try { var f0 = DriveApp.getFolderById(id); if (!f0.isTrashed()) return f0; } catch (e) {}
+  var f = DriveApp.createFolder('EYECON - الملفات (لا تحذف)'); props_().setProperty('drive_folder', f.getId()); return f;
+}
+function toDrive_(name, text) { return DRV + folder_().createFile(name, text, MimeType.PLAIN_TEXT).getId(); }
+function isDrv_(v) { return typeof v === 'string' && v.indexOf(DRV) === 0; }
+function fromDrive_(v) { return DriveApp.getFileById(String(v).slice(DRV.length)).getBlob().getDataAsString('UTF-8'); }
+function trashDrv_(v) { if (isDrv_(v)) try { DriveApp.getFileById(String(v).slice(DRV.length)).setTrashed(true); } catch (e) {} }
+/** Clears the data cells of a row (and moves its Drive file to the Drive trash). */
+function clearData_(sh, rowNo) {
+  trashDrv_(sh.getRange(rowNo, 4).getValue());
+  sh.getRange(rowNo, 4, 1, Math.max(1, sh.getLastColumn() - 3)).clearContent();
+}
+/** Run once from the Apps Script editor (choose setupDrive → Run → Allow) so the script may save files in your Drive. */
+function setupDrive() { var f = folder_(); Logger.log(f.getUrl()); return f.getUrl(); }
 function sheet_(name, create) {
   var sh = ss_().getSheetByName(name);
   if (!sh && create) {
@@ -140,11 +163,13 @@ function summary_(c, d) {
 function rowFor_(c, id, d, t) {
   var json = JSON.stringify(d), sm = summary_(c, d);
   var row = [id, t, /^[=+\-@]/.test(sm) ? ' ' + sm : sm];
+  if (json.length > DRIVE_MIN) { row.push(toDrive_(c + '_' + id + '.json', json)); return row; }
   for (var i = 0; i < json.length; i += CHUNK) row.push('~' + json.slice(i, i + CHUNK));
   return row;
 }
 function readRow_(r) {
   var json = '';
+  if (isDrv_(r[3])) { try { return JSON.parse(fromDrive_(r[3])); } catch (e) { return {}; } }
   for (var i = 3; i < r.length; i++) { if (r[i] === '' || r[i] === null) break; var x = String(r[i]); json += x.charAt(0) === '~' ? x.slice(1) : x; }
   try { return JSON.parse(json || '{}'); } catch (e) { return {}; }
 }
@@ -537,7 +562,7 @@ function api_set(token, c, id, json, merge) {
     if (!allowed_(me, c, id, prev, d)) throw new Error('perm');
     if (c === 'settings' && id === 'rules') d = { v: d.v || 0, cols: (function () { var o = {}; for (var k in (d.cols || {})) { var r = cleanRule_(d.cols[k]); if (r && /^[A-Za-z][A-Za-z0-9_]{0,40}$/.test(k)) o[k] = r; } return o; })(), _by: d._by, _at: d._at, _byName: d._byName };
     log_(me.u, prev ? 'تعديل' : 'إضافة', c, id, summary_(c, d), prev ? changed_(prev, d) : '');
-    if (rowNo) sh.getRange(rowNo, 4, 1, Math.max(1, sh.getLastColumn() - 3)).clearContent();
+    if (rowNo) clearData_(sh, rowNo);
     writeRow_(sh, rowNo || sh.getLastRow() + 1, rowFor_(c, id, d, t));
     touch_(c, t);
     return JSON.stringify({ t: t, data: d });
@@ -552,6 +577,7 @@ function api_del(token, c, id) {
     if (rowNo) {
       prev = readRow_(sh.getRange(rowNo, 1, 1, sh.getLastColumn()).getValues()[0]);
       if (!allowed_(me, c, id, prev, null)) throw new Error('perm');
+      trashDrv_(sh.getRange(rowNo, 4).getValue());
       sh.deleteRow(rowNo);
     }
     var pj = JSON.stringify(prev);
@@ -598,7 +624,7 @@ function api_import(token, json) {
     var put = function (c, id, d) {
       validCol_(c); validId_(id);
       var sh = sheet_(c, true), rowNo = findRow_(sh, id);
-      if (rowNo) sh.getRange(rowNo, 4, 1, Math.max(1, sh.getLastColumn() - 3)).clearContent();
+      if (rowNo) clearData_(sh, rowNo);
       writeRow_(sh, rowNo || sh.getLastRow() + 1, rowFor_(c, id, d, t)); n++;
     };
     if (data.settings) put('settings', 'main', data.settings);
@@ -698,23 +724,49 @@ function trimAll_() {
   out.sheets.sort(function (a, b) { return b.cells - a.cells; });
   return out;
 }
+/** Moves big records already in the Sheet to Drive (stops at `until`; the app calls again while `more` > 0). */
+function migrate_(until) {
+  var left = 0, done = 0;
+  ss_().getSheets().forEach(function (sh) {
+    var n = sh.getName(), pub = n === '_pub';
+    if (!pub && (RESERVED[n] || !/^[A-Za-z][A-Za-z0-9_]{0,40}$/.test(n))) return;
+    var start = pub ? 5 : 4, last = sh.getLastRow(), lc = sh.getLastColumn();
+    if (last < 2) return;
+    if (lc < start + 1) return;
+    var hits = sh.getRange(2, start + 1, last - 1, 1).createTextFinder('~').findAll();
+    hits.forEach(function (h) {
+      var row = h.getRow();
+      if (Date.now() > until) { left++; return; }
+      var v = sh.getRange(row, start, 1, lc - start + 1).getValues()[0], json = '';
+      if (isDrv_(v[0])) return;
+      for (var i = 0; i < v.length; i++) { var x = String(v[i] == null ? '' : v[i]); if (!x) break; json += x.charAt(0) === '~' ? x.slice(1) : x; }
+      if (json.length <= DRIVE_MIN) return;
+      var id = String(sh.getRange(row, 1).getValue());
+      var ptr = toDrive_((pub ? 'pub_' : n + '_') + id + '.json', json);
+      if (fromDrive_(ptr).length !== json.length) { trashDrv_(ptr); left++; return; }
+      sh.getRange(row, start, 1, v.length).clearContent(); sh.getRange(row, start).setValue(ptr); done++;
+    });
+  });
+  return { done: done, left: left };
+}
 /** Owner/manager button in Settings: shrink the Sheet so saving works again. Deletes the readable «عرض - …» sheets if still too big. */
 function api_cleanup(token) {
   var s = admin_(token);
   var lock = LockService.getScriptLock(); lock.waitLock(30000);
   try {
     var before = 0; ss_().getSheets().forEach(function (sh) { before += sh.getMaxRows() * sh.getMaxColumns(); });
+    var mg = migrate_(Date.now() + 200000);
     var st = trimAll_(), dropped = 0;
     if (st.cells > CELL_BUDGET) {
       ss_().getSheets().forEach(function (sh) { if (sh.getName().indexOf(VIEW_PREFIX) === 0 && ss_().getSheets().length > 1) { ss_().deleteSheet(sh); dropped++; } });
       st = trimAll_();
     }
-    log_(s.u, 'تصغير ملف الشيت', '', '', before + ' → ' + st.cells + ' خلية', dropped ? 'حذف ' + dropped + ' ورقة عرض' : '');
-    return JSON.stringify({ before: before, after: st.cells, dropped: dropped, limit: 10000000, top: st.sheets.slice(0, 8) });
+    log_(s.u, 'تصغير ملف الشيت', '', '', before + ' → ' + st.cells + ' خلية', 'نقل ' + mg.done + ' ملف إلى Drive' + (dropped ? ' · حذف ' + dropped + ' ورقة عرض' : ''));
+    return JSON.stringify({ before: before, after: st.cells, dropped: dropped, moved: mg.done, more: mg.left, limit: 10000000, top: st.sheets.slice(0, 8) });
   } finally { lock.releaseLock(); }
 }
 /** Run once from the editor if the app cannot reach the server: same as the Settings button. */
-function cleanupSheet() { var st = trimAll_(); Logger.log(JSON.stringify(st.sheets.slice(0, 10))); return st.cells; }
+function cleanupSheet() { Logger.log(JSON.stringify(migrate_(Date.now() + 300000))); var st = trimAll_(); Logger.log(JSON.stringify(st.sheets.slice(0, 10))); return st.cells; }
 
 function api_archiveStatus(token) {
   admin_(token);
