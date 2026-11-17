@@ -34,8 +34,21 @@ function doPost(e) {
 
 /* ---------- documents sent to a customer by WhatsApp link ----------
  * The app uploads the PDF (and page images for viewing); it is kept in the _pub sheet of this same Sheet and opened by an id nobody can guess
- * (https://eyeconoptics.github.io/v.html?f=<id>). Entries older than PUB_DAYS are removed. */
-var PUB_DAYS = 120, PUB_CHUNK = 45000;
+ * (https://eyeconoptics.github.io/v.html?f=<id>). Links never expire (PUB_DAYS = 0): the customer can open the same link any time. */
+var PUB_DAYS = 0, PUB_CHUNK = 45000;
+/* WhatsApp channel shown on the customer link page: settings field waChannel (+ waChannelText) of the record's branch; main falls back to this one */
+var WA_CHANNEL_MAIN = 'https://whatsapp.com/channel/0029VaqJwov5a23z21duJM3z';
+function setDoc_(id) {
+  try { var sh = sheet_('settings', false); if (!sh) return {}; var r = findRow_(sh, id); if (!r) return {};
+    return readRow_(sh.getRange(r, 1, 1, Math.max(4, sh.getLastColumn())).getValues()[0]) || {}; } catch (e) { return {}; }
+}
+function waChannel_(d) {
+  d.wa = ''; var b = String((d.m || {}).b || 'main'), st = setDoc_(b === 'main' ? 'main' : 'b_' + b);
+  var url = st.waChannel === undefined && b === 'main' ? WA_CHANNEL_MAIN : String(st.waChannel || '').trim();
+  if (!/^https:\/\/(www\.)?whatsapp\.com\/channel\/[A-Za-z0-9]+/.test(url)) return;
+  var shop = String(st.shopName || d.shop || '').trim();
+  d.wa = url; d.waText = String(st.waChannelText || '').trim() || ('نرحب بكم بالانضمام إلى قناتنا في تطبيق واتساب، ليصل إليكم كل ما هو جديد من ' + (b === 'main' ? 'آيكون للبصريات' : shop) + '.');
+}
 function api_pubPdf(token, json) {
   var me = session_(token); if (!STAFF[role_(me.role)]) throw new Error('perm');
   json = String(json || ''); if (json.length > 6000000) throw new Error('too_big');
@@ -66,9 +79,9 @@ function pubRead_(id) {
 }
 function rated_(id) { var sh = sheet_('ratings', false); return !!(sh && findRow_(sh, id)); }
 function api_pubGet(id) {
-  var out = pubRead_(id);
-  if (!rated_(String(id))) { var d = JSON.parse(out); d.rate = 1; delete d.m; return JSON.stringify(d); }
-  return out.replace(/"m":\{[^{}]*\},/, '');
+  var d = JSON.parse(pubRead_(id)); waChannel_(d);
+  if (!rated_(String(id))) d.rate = 1;
+  delete d.m; return JSON.stringify(d);
 }
 /* the customer rates the visit (1-5 stars + an optional comment) from the link page, once per link; kept in the ratings sheet of the branch */
 function api_pubRate(id, stars, text) {
@@ -84,7 +97,7 @@ function api_pubRate(id, stars, text) {
   } finally { lock.releaseLock(); }
 }
 function pubClean_(sh) {
-  var n = sh.getLastRow(); if (n < 2) return;
+  var n = sh.getLastRow(); if (n < 2 || !(PUB_DAYS > 0)) return;
   var t = sh.getRange(2, 2, n - 1, 1).getValues(), lim = Date.now() - PUB_DAYS * 864e5, k = 0;
   while (k < t.length && t[k][0] instanceof Date && t[k][0].getTime() < lim) k++;
   if (k) { sh.getRange(2, 5, k, 1).getValues().forEach(function (x) { trashDrv_(x[0]); }); sh.deleteRows(2, k); }

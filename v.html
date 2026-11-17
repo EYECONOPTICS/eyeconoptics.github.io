@@ -30,12 +30,16 @@ h1{font-size:1.15rem;margin:0}
 .lbl{min-height:1.4em;font-weight:600;color:var(--pri)}
 textarea{width:100%;min-height:96px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;background:var(--bg);color:var(--ink);resize:vertical}
 .btn[disabled]{opacity:.45;cursor:not-allowed}.thx{color:var(--pri);font-weight:600;text-align:center}
+.wa{display:flex;flex-wrap:wrap;align-items:center;gap:12px;background:var(--surface);border:1px solid #25D36655;border-radius:14px;padding:14px 16px;box-shadow:0 4px 16px rgba(0,0,0,.05)}
+.wa svg{flex:0 0 auto;width:40px;height:40px}.wa p{margin:0;flex:1 1 220px;line-height:1.8;font-weight:600}
+.wa a{display:inline-flex;align-items:center;gap:6px;padding:10px 16px;border-radius:10px;background:#25D366;color:#fff;font-weight:700;text-decoration:none;white-space:nowrap}
 .msg{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;text-align:center;color:var(--mut)}
 </style>
 </head>
 <body>
 <main>
   <header><div><h1 id="t">…</h1><p class="sub" id="s"></p></div><div class="btns" id="b" hidden><a class="btn primary" id="dl" download>⬇ تحميل PDF</a><a class="btn" id="op" target="_blank" rel="noopener">فتح الملف</a></div></header>
+  <section class="wa" id="wa" hidden><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="16" fill="#25D366"/><path fill="#fff" d="M16 6.5a9.4 9.4 0 0 0-8.1 14.2L6.6 25.5l4.9-1.3A9.4 9.4 0 1 0 16 6.5zm0 17.2c-1.4 0-2.8-.4-4-1.1l-.3-.2-2.9.8.8-2.8-.2-.3a7.8 7.8 0 1 1 6.6 3.6zm4.3-5.8c-.2-.1-1.4-.7-1.6-.8s-.4-.1-.5.1-.6.8-.7.9-.3.2-.5.1a6.4 6.4 0 0 1-3.2-2.8c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.7-1.7c-.2-.4-.4-.4-.5-.4h-.5a.9.9 0 0 0-.7.3 2.8 2.8 0 0 0-.9 2.1 4.9 4.9 0 0 0 1 2.6 11.2 11.2 0 0 0 4.3 3.8c1.6.7 2.2.7 3 .6.5-.1 1.4-.6 1.6-1.2s.2-1.1.1-1.2-.2-.1-.4-.2z"/></svg><p id="wt"></p><a id="wl" target="_blank" rel="noopener">انضم إلى القناة</a></section>
   <section class="rate" id="rt" hidden>
     <h2>زبوننا العزيز</h2>
     <p style="color:var(--ink);line-height:1.9">تشرفنا بزيارتك لعيادتنا، نتمنى أن نكون قد استطعنا تقديم الخدمة التي تليق بحضرتك. نود أن نطلب منك بكل لطف أن تقيّم تجربتك معنا، وذلك لسياسة ضمان الجودة التي نتبعها.</p>
@@ -57,10 +61,16 @@ textarea{width:100%;min-height:96px;border:1px solid var(--line);border-radius:1
   if(!/^[A-Za-z0-9]{24,64}$/.test(q)||!window.EYECON_API)return fail();
   fetch(window.EYECON_API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:'pubGet',args:[q]})})
    .then(function(r){return r.json()}).then(function(x){if(!x||!x.ok)return fail();var d=JSON.parse(x.ok);
-     document.title=(d.title||'')+(d.shop?' · '+d.shop:'');$('t').textContent=d.title||d.name||'';$('s').textContent=d.shop||'';
+     document.title=(d.title||'')+(d.shop?' · '+d.shop:'');
+     /* WhatsApp channel of the branch (server sends wa/waText; an older server sends neither, then the Eyecon channel is shown) */
+     var wa=d.wa===undefined?'https://whatsapp.com/channel/0029VaqJwov5a23z21duJM3z':d.wa,wt=d.waText||'نرحب بكم بالانضمام إلى قناتنا في تطبيق واتساب، ليصل إليكم كل ما هو جديد من آيكون للبصريات.';
+     if(/^https:\/\/(www\.)?whatsapp\.com\/channel\//.test(wa||'')){$('wt').textContent=wt;$('wl').href=wa;$('wa').hidden=false}$('t').textContent=d.title||d.name||'';$('s').textContent=d.shop||'';
+     var K='eyecon_rated_'+q,done=0;try{done=localStorage.getItem(K)}catch(_){}
+     /* already rated on this phone but the rating did not reach the shop: send it again quietly and open the file directly */
+     if(d.rate&&done){try{var o=JSON.parse(done);fetch(window.EYECON_API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:'pubRate',args:[q,o.v,o.t||'']})}).catch(function(){})}catch(_){}return show(d)}
      if(d.rate){$('m').hidden=true;$('rt').hidden=false;var v=0,L=['','سيئة','مقبولة','جيدة','جيدة جداً','ممتازة'],bs=[].slice.call($('st').querySelectorAll('button'));
        bs.forEach(function(b){b.onclick=function(){v=+b.dataset.v;bs.forEach(function(x){x.classList.toggle('on',+x.dataset.v<=v);x.setAttribute('aria-checked',+x.dataset.v===v)});$('sl').textContent=L[v];$('go').disabled=false}});
-       $('go').onclick=function(){if(!v)return;$('go').disabled=true;$('go').textContent='جارٍ الإرسال…';
+       $('go').onclick=function(){if(!v)return;$('go').disabled=true;$('go').textContent='جارٍ الإرسال…';try{localStorage.setItem(K,JSON.stringify({v:v,t:$('tx').value}))}catch(_){}
          fetch(window.EYECON_API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:'pubRate',args:[q,v,$('tx').value]})}).then(function(r){return r.json()}).catch(function(){return null})
           .then(function(){$('rt').hidden=true;$('ty').hidden=false;show(d)})};return}
      show(d)}).catch(fail);
