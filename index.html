@@ -343,7 +343,7 @@ function flush(){if(obBusy||!OB.length||!tok||!me)return;obBusy=true;var op=OB[0
     OB.shift();obMark(op,-1);obBusy=false;obWait=0;online=true;fails=0;
     if(op.t!=='del'&&r&&!pending(op.c,op.id)){try{apply(op.c,op.id,J(r).data)}catch(e){}}obSave();cSave();obPill();flush()},
    function(e){obBusy=false;if(e.code==='auth')return;
-    if(/network|timeout|not_json|lock|service|invoked|busy|unavailable|internal/i.test(e.message)){online=false;pill('off');obWait=Math.min((obWait||2000)*2,30000);setTimeout(flush,obWait);return}
+    if(/network|timeout|not_json|lock|service|invoked|busy|unavailable|internal|too large|cannot be modified/i.test(e.message)){LASTERR=e.message;online=false;pill('off');obWait=Math.min((obWait||2000)*2,30000);setTimeout(flush,obWait);return}
     OB.shift();obMark(op,-1);obSave();obPill();if(window.toast)try{window.toast(L('تعذّر حفظ تغيير في الشيت: ','A change could not be saved to the Sheet: ')+e.message)}catch(_){}
     load().catch(function(){});flush()})}
 window.addEventListener('beforeunload',function(e){if(OB.length){e.preventDefault();e.returnValue=''}});
