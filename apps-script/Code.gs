@@ -851,16 +851,23 @@ function api_archiveStatus(token) {
 function api_archiveNow(token) { var s = admin_(token); var r = snapshot_(true); log_(s.u, 'تحديث الأرشيف المقروء', '', '', '', ''); return r; }
 
 /* ---------- automatic full backup to Google Drive every 4 hours ----------
- * Every 4 hours ALL app data (every section of every branch, big files kept in Drive, users, the log, deleted records,
- * customer links and counters) is written to ONE file «eyecon-backup-….json» in the Drive folder «EYECON - نسخة احتياطية تلقائية».
- * The old backup is moved to the Drive trash only after the new file is fully saved and checked, so there is always one good copy.
- * The file has the same shape as «تحميل نسخة احتياطية» in the app, so it can be restored with «استيراد نسخة احتياطية».
+ * Every 4 hours ALL app data (every section of every branch, users, the log, deleted records, customer links, counters) is written to
+ * ONE file «eyecon-backup-….json» in the Drive folder «EYECON - نسخة احتياطية تلقائية». Big records (images, PDFs, voice notes) that
+ * live in Drive are copied (by Google, no memory used) into its sub-folder «ملفات النسخة»; each file is copied once and kept while used.
+ * The old backup file is moved to the Drive trash only after the new one is fully saved and checked, so there is always one good copy.
+ * Sheet records have the same shape as «تحميل نسخة احتياطية» in the app, so «استيراد نسخة احتياطية» can restore them; the Drive ones
+ * are listed in _drive (section, id, original file, backup copy).
  * Installs itself: the first time the app opens after this version (or run setupBackup once from the editor). */
-var BK_HOURS = 4, BK_FN = 'autoBackup', BK_PREFIX = 'eyecon-backup-', BK_ZIP_OVER = 40 * 1024 * 1024;
+var BK_HOURS = 4, BK_FN = 'autoBackup', BK_MORE = 'backupMore', BK_PREFIX = 'eyecon-backup-';
 function bkFolder_() {
   var id = props_().getProperty('bk_folder');
   if (id) try { var f0 = DriveApp.getFolderById(id); if (!f0.isTrashed()) return f0; } catch (e) {}
   var f = DriveApp.createFolder('EYECON - نسخة احتياطية تلقائية'); props_().setProperty('bk_folder', f.getId()); return f;
+}
+function bkFiles_() {
+  var id = props_().getProperty('bk_files');
+  if (id) try { var f0 = DriveApp.getFolderById(id); if (!f0.isTrashed()) return f0; } catch (e) {}
+  var f = bkFolder_().createFolder('ملفات النسخة'); props_().setProperty('bk_files', f.getId()); return f;
 }
 function bkTrigOn_() { return ScriptApp.getProjectTriggers().some(function (t) { return t.getHandlerFunction() === BK_FN; }); }
 function bkInstall_() { if (!bkTrigOn_()) ScriptApp.newTrigger(BK_FN).timeBased().everyHours(BK_HOURS).create(); }
@@ -872,46 +879,72 @@ function bkEnsure_() {
   try { bkInstall_(); P.deleteProperty('bk_inst_err'); } catch (e) { P.setProperty('bk_inst_err', String(e && e.message || e).slice(0, 300)); }
 }
 /** The 4-hour trigger runs this. */
-function autoBackup() { return backup_(now_() + 330000); }
-/** Run once from the Apps Script editor (choose setupBackup → Run → Allow): switches the 4-hour backup on and makes the first one now. */
-function setupBackup() { bkInstall_(); var r = backup_(now_() + 330000); Logger.log(JSON.stringify(r) + '  ' + bkFolder_().getUrl()); return r; }
+function autoBackup() { return backup_(now_() + 300000); }
+/** One-off follow-up run, 1 minute later, when copying the Drive files did not finish in one go (first backup). */
+function backupMore() {
+  try { ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === BK_MORE) ScriptApp.deleteTrigger(t); }); } catch (e) {}
+  return backup_(now_() + 300000);
+}
+/** Run once from the Apps Script editor (choose setupBackup → Run → Allow): switches the 4-hour backup on and starts the first one now. */
+function setupBackup() { bkInstall_(); var r = backup_(now_() + 300000); Logger.log(JSON.stringify(r) + '  ' + bkFolder_().getUrl()); return r; }
+
+function bkMoreLater_() {
+  try { if (!ScriptApp.getProjectTriggers().some(function (t) { return t.getHandlerFunction() === BK_MORE; })) ScriptApp.newTrigger(BK_MORE).timeBased().after(60000).create(); } catch (e) {}
+}
+function bkDrvId_(v) { return String(v).slice(DRV.length); }
+function bkOk_(name) { return /^[A-Za-z][A-Za-z0-9_]{0,40}$/.test(name) && !RESERVED[name]; }
 
 function backup_(until) {
   var P = props_(), t0 = now_();
   if (t0 - Number(P.getProperty('bk_run') || 0) < 7 * 60000) return { skipped: 'running' };
   P.setProperty('bk_run', String(t0));
   try {
-    var ss = ss_(), n = 0, miss = [], data = { exportedAt: new Date(t0).toISOString(), source: 'auto-backup', sheet: ss.getName(), sheetUrl: ss.getUrl() };
+    var ss = ss_(), sheets = ss.getSheets().filter(function (sh) { return sh.getName().indexOf(VIEW_PREFIX) !== 0; });
+    // 1) every Drive file the data points to (only column D, or E for _pub — cheap to read)
+    var refs = [];
+    sheets.forEach(function (sh) {
+      var name = sh.getName(), col = name === '_pub' ? 5 : 4, last = sh.getLastRow();
+      if ((name !== '_pub' && !bkOk_(name)) || last < 2 || sh.getLastColumn() < col) return;
+      var ids = sh.getRange(2, 1, last - 1, 1).getValues(), v = sh.getRange(2, col, last - 1, 1).getValues();
+      for (var i = 0; i < v.length; i++) if (ids[i][0] && isDrv_(v[i][0])) refs.push({ c: name, id: String(ids[i][0]), f: bkDrvId_(v[i][0]) });
+    });
+    // 2) copy the ones not copied yet (Google copies them inside Drive)
+    var dir = bkFiles_(), have = {}, it = dir.getFiles();
+    while (it.hasNext()) { var cf = it.next(), nm = cf.getName(), k = nm.indexOf('__'); if (k > 0) have[nm.slice(0, k)] = cf; }
+    var copied = 0, miss = [], more = 0;
+    for (var r = 0; r < refs.length; r++) {
+      var x = refs[r]; if (have[x.f]) continue;
+      if (now_() > until) { more++; continue; }
+      try { var src = DriveApp.getFileById(x.f); have[x.f] = src.makeCopy(x.f + '__' + src.getName(), dir); copied++; }
+      catch (e) { miss.push(x.c + '/' + x.id); }
+    }
+    if (more) { P.setProperty('bk_err', ''); P.setProperty('bk_prog', String(refs.length - more) + '/' + refs.length); bkMoreLater_(); return { ok: false, more: more, copied: copied, of: refs.length, note: 'copying files, continues automatically in 1 minute' }; }
+    // 3) the data file
+    var n = 0, data = { exportedAt: new Date(t0).toISOString(), source: 'auto-backup', sheet: ss.getName(), sheetUrl: ss.getUrl() };
     var srv = { users: [], deleted: [], log: [], pub: [], other: {}, counters: {} };
-    var late = function () { if (now_() > until) throw new Error('time'); };
-    ss.getSheets().forEach(function (sh) {
-      var name = sh.getName(); late();
-      if (name.indexOf(VIEW_PREFIX) === 0) return; // readable copies, rebuilt from the data
-      var last = sh.getLastRow(), lc = sh.getLastColumn();
-      if (/^[A-Za-z][A-Za-z0-9_]{0,40}$/.test(name) && !RESERVED[name]) {
+    sheets.forEach(function (sh) {
+      var name = sh.getName(), last = sh.getLastRow(), lc = sh.getLastColumn();
+      if (now_() > until + 40000) throw new Error('time');
+      if (bkOk_(name)) {
         var arr = []; data[name] = arr;
         if (last < 2) return;
         var vals = sh.getRange(2, 1, last - 1, Math.max(lc, 4)).getValues();
         for (var i = 0; i < vals.length; i++) {
-          var r = vals[i]; if (!r[0]) continue;
-          if (i % 50 === 0) late();
-          var d;
-          if (isDrv_(r[3])) { try { d = JSON.parse(fromDrive_(r[3])); } catch (e) { miss.push(name + '/' + r[0]); continue; } } // unreadable file: listed in _backupInfo.missing, never restored as an empty record
-          else d = readRow_(r);
-          var o = {}; for (var k in d) if (k !== 'id') o[k] = d[k]; o.id = String(r[0]);
+          var row = vals[i]; if (!row[0] || isDrv_(row[3])) continue; // Drive records: listed in _drive
+          var d = readRow_(row), o = {}; for (var kk in d) if (kk !== 'id') o[kk] = d[kk]; o.id = String(row[0]);
           arr.push(o); n++;
         }
-        return;
+        vals = null; return;
       }
       if (last < 1) return;
       var raw = sh.getRange(1, 1, last, Math.max(lc, 1)).getValues();
       if (name === '_pub') {
-        raw.slice(1).forEach(function (r, i) {
-          if (!r[0]) return; if (i % 50 === 0) late();
-          var body = '';
-          if (isDrv_(r[4])) { try { body = fromDrive_(r[4]); } catch (e) { miss.push('_pub/' + r[0]); } }
-          else for (var j = 4; j < r.length; j++) { var c = String(r[j] == null ? '' : r[j]); if (!c) break; body += c.charAt(0) === '~' ? c.slice(1) : c; }
-          srv.pub.push({ id: String(r[0]), time: r[1], by: r[2], name: r[3], data: body }); n++;
+        raw.slice(1).forEach(function (row) {
+          if (!row[0]) return;
+          var o = { id: String(row[0]), time: row[1], by: row[2], name: row[3] };
+          if (isDrv_(row[4])) o.drive = bkDrvId_(row[4]);
+          else { var body = ''; for (var j = 4; j < row.length; j++) { var c = String(row[j] == null ? '' : row[j]); if (!c) break; body += c.charAt(0) === '~' ? c.slice(1) : c; } o.data = body; }
+          srv.pub.push(o); n++;
         });
       } else if (name === '_users') srv.users = raw;
       else if (name === '_deleted') srv.deleted = raw;
@@ -920,29 +953,31 @@ function backup_(until) {
     });
     var all = P.getProperties();
     for (var key in all) if (key.indexOf('ctr_') === 0) srv.counters[key] = all[key];
+    data._drive = refs.map(function (x) { var c = have[x.f]; n++; return { c: x.c, id: x.id, file: x.f, copy: c ? c.getId() : '' }; });
     data._server = srv; // not an array, so «استيراد نسخة احتياطية» skips it; kept for a full manual restore
-    data._backupInfo = { records: n, missing: miss, tookMs: now_() - t0 };
-    late();
+    data._backupInfo = { records: n, driveFiles: refs.length, missing: miss, tookMs: now_() - t0 };
     var stamp = Utilities.formatDate(new Date(t0), Session.getScriptTimeZone() || 'Asia/Baghdad', 'yyyy-MM-dd_HH-mm');
-    var blob = Utilities.newBlob(JSON.stringify(data), 'application/json', BK_PREFIX + stamp + '.json'), size = blob.getBytes().length;
-    if (size > BK_ZIP_OVER) { blob = Utilities.zip([blob], BK_PREFIX + stamp + '.zip'); size = blob.getBytes().length; }
-    var folder = bkFolder_(), file = folder.createFile(blob);
-    // check the new file is complete before removing the old one
+    var blob = Utilities.newBlob(JSON.stringify(data), 'application/json', BK_PREFIX + stamp + '.json'); data = null; srv = null;
+    var size = blob.getBytes().length, folder = bkFolder_(), file = folder.createFile(blob);
+    // 4) check the new file is complete before removing the old one
     var ok = false; for (var a = 0; a < 3 && !ok; a++) { try { ok = DriveApp.getFileById(file.getId()).getSize() === size; } catch (e) {} if (!ok) Utilities.sleep(2000); }
     if (!ok) { try { file.setTrashed(true); } catch (e) {} throw new Error('verify'); }
-    var it = folder.getFiles();
-    while (it.hasNext()) { var f = it.next(); if (f.getId() !== file.getId() && f.getName().indexOf(BK_PREFIX) === 0) try { f.setTrashed(true); } catch (e) {} }
-    P.setProperties({ bk_last: String(t0), bk_size: String(size), bk_file: file.getId(), bk_n: String(n), bk_miss: String(miss.length), bk_err: '' });
-    return { ok: true, records: n, size: size, missing: miss.length, file: file.getUrl() };
+    var it2 = folder.getFiles();
+    while (it2.hasNext()) { var f = it2.next(); if (f.getId() !== file.getId() && f.getName().indexOf(BK_PREFIX) === 0) try { f.setTrashed(true); } catch (e) {} }
+    // copies of Drive files no longer used by any record go to the trash too
+    var used = {}; refs.forEach(function (x) { used[x.f] = 1; });
+    for (var fid in have) if (!used[fid]) try { have[fid].setTrashed(true); } catch (e) {}
+    P.setProperties({ bk_last: String(t0), bk_size: String(size), bk_file: file.getId(), bk_n: String(n), bk_miss: String(miss.length), bk_err: '', bk_prog: '' });
+    return { ok: true, records: n, driveFiles: refs.length, copiedNow: copied, size: size, missing: miss.length, file: file.getUrl() };
   } catch (err) {
     P.setProperties({ bk_err: String(err && err.message || err).slice(0, 300), bk_err_at: String(now_()) });
     return { ok: false, err: String(err && err.message || err) };
   } finally { P.deleteProperty('bk_run'); }
 }
 /** Settings button (owner/manager): make a backup now. */
-function api_backupNow(token) { var s = admin_(token); var r = backup_(now_() + 300000); log_(s.u, 'نسخة احتياطية إلى Drive', '', '', r.ok ? r.records + ' سجل' : '', r.ok ? '' : String(r.err || r.skipped || '')); return JSON.stringify(r); }
+function api_backupNow(token) { var s = admin_(token); var r = backup_(now_() + 270000); log_(s.u, 'نسخة احتياطية إلى Drive', '', '', r.ok ? r.records + ' سجل' : '', r.ok ? '' : String(r.err || r.note || r.skipped || '')); return JSON.stringify(r); }
 function bkStatus_() {
   var P = props_(), on = false, url = ''; try { on = bkTrigOn_(); } catch (e) {}
   try { var id = P.getProperty('bk_folder'); if (id) url = DriveApp.getFolderById(id).getUrl(); } catch (e) {}
-  return { on: on, last: Number(P.getProperty('bk_last') || 0), size: Number(P.getProperty('bk_size') || 0), n: Number(P.getProperty('bk_n') || 0), miss: Number(P.getProperty('bk_miss') || 0), err: P.getProperty('bk_err') || P.getProperty('bk_inst_err') || '', errAt: Number(P.getProperty('bk_err_at') || 0), url: url, every: BK_HOURS };
+  return { on: on, last: Number(P.getProperty('bk_last') || 0), size: Number(P.getProperty('bk_size') || 0), n: Number(P.getProperty('bk_n') || 0), miss: Number(P.getProperty('bk_miss') || 0), err: P.getProperty('bk_err') || P.getProperty('bk_inst_err') || '', errAt: Number(P.getProperty('bk_err_at') || 0), url: url, every: BK_HOURS, prog: P.getProperty('bk_prog') || '' };
 }
